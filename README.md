@@ -10,12 +10,12 @@
   <a href="https://local-markdown.github.io/"><strong>Open Local Markdown</strong></a>
 </p>
 
-Open Local Markdown in desktop Chrome or Edge, choose a Markdown file, and start writing. You do not need to download an app or create an account. Local Markdown saves changes directly to files on your computer.
+Open Local Markdown in desktop Chrome or Edge, choose a Markdown file or folder, and start writing. You do not need to download an app or create an account. Local Markdown saves changes directly to files on your computer.
 
 ## Get started
 
 1. Open the [online editor](https://local-markdown.github.io/) in desktop Chrome or Edge.
-2. Select **Open** for an existing `.md` file, or select **+** to create one.
+2. Select **Open → Open File** for one `.md` file, **Open → Open Folder** for a folder tree, or select **+** to create a file.
 3. Grant access to the file when your browser asks.
 4. Select **Save** once for a new file. After that, changes save automatically.
 
@@ -24,7 +24,8 @@ Open Local Markdown in desktop Chrome or Edge, choose a Markdown file, and start
 - Visual, Markdown, and Split editing views
 - White, Solarized Light, and Solarized Dark color themes
 - Multiple open files in a collapsible, responsive sidebar
-- Filename and content search across files in the sidebar
+- Recursive folder workspaces with expandable nested folders
+- Filename and content search across open files and folder workspaces
 - Workspace and unsaved edit recovery after refresh
 - Screenshot and copied image pasting
 - Editable Excalidraw drawings embedded directly in Markdown files

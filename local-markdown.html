@@ -168,6 +168,38 @@
     .LocalMarkdown-file[draggable="true"]:active { cursor: grabbing; }
     .LocalMarkdown-file[aria-current="true"] { background: var(--lm-selected); font-weight: 600; }
     .LocalMarkdown-file.LocalMarkdown-dragging { opacity: 0; }
+    .LocalMarkdown-sidebar-section {
+      padding: 9px 7px 4px; color: var(--lm-faint); font-size: 10px;
+      font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .LocalMarkdown-workspace { margin-bottom: 5px; }
+    .LocalMarkdown-tree-row {
+      min-width: 0; display: flex; align-items: center; gap: 2px;
+      padding-left: calc(var(--tree-depth, 0) * 13px);
+    }
+    .LocalMarkdown-tree-item {
+      min-width: 0; height: 30px; flex: 1; padding: 4px 5px;
+      display: flex; align-items: center; gap: 5px;
+      border: 0; border-radius: 4px; background: transparent; text-align: left;
+    }
+    .LocalMarkdown-tree-item[aria-current="true"] { background: var(--lm-selected); font-weight: 600; }
+    .LocalMarkdown-tree-item[data-root="true"] { font-weight: 600; }
+    .LocalMarkdown-tree-chevron {
+      width: 12px; flex: 0 0 12px; color: var(--lm-faint); font-size: 11px; text-align: center;
+    }
+    .LocalMarkdown-tree-icon { width: 15px; height: 15px; flex: 0 0 15px; color: var(--lm-muted); }
+    .LocalMarkdown-tree-name {
+      min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .LocalMarkdown-tree-remove {
+      width: 24px; height: 24px; flex: 0 0 24px; padding: 0;
+      border: 0; border-radius: 3px; color: var(--lm-faint); background: transparent;
+      font-size: 17px; line-height: 1;
+    }
+    .LocalMarkdown-tree-remove:hover { color: var(--lm-text); }
+    .LocalMarkdown-tree-empty {
+      padding: 4px 8px 6px; color: var(--lm-faint); font-size: 11px;
+    }
     .LocalMarkdown-search-summary,
     .LocalMarkdown-search-empty {
       padding: 5px 7px 8px; color: var(--lm-muted); font-size: 12px;
@@ -230,6 +262,25 @@
     .LocalMarkdown-actions { display: flex; align-items: center; justify-self: end; gap: 2px; }
     .LocalMarkdown-action {
       padding: 4px 7px; border: 0; border-radius: 3px; background: transparent; font-size: 13px;
+    }
+    .LocalMarkdown-open-picker { position: relative; }
+    .LocalMarkdown-open-toggle { display: inline-flex; align-items: center; gap: 3px; }
+    .LocalMarkdown-open-chevron { color: var(--lm-faint); font-size: 10px; }
+    .LocalMarkdown-open-menu {
+      position: absolute; z-index: 20; top: calc(100% + 7px); right: 0;
+      width: max-content; min-width: 164px; padding: 5px;
+      border: 1px solid var(--lm-control-border); border-radius: 7px;
+      background: var(--lm-background); box-shadow: 0 5px 18px var(--lm-menu-shadow);
+    }
+    .LocalMarkdown-open-menu[hidden] { display: none; }
+    .LocalMarkdown-open-option {
+      width: 100%; padding: 7px 9px; display: flex; align-items: center; gap: 8px;
+      border: 0; border-radius: 4px; color: var(--lm-text); background: transparent;
+      font-size: 13px; text-align: left; white-space: nowrap;
+    }
+    .LocalMarkdown-open-option svg { width: 15px; height: 15px; color: var(--lm-muted); }
+    .LocalMarkdown-open-option:focus-visible {
+      outline: 0; box-shadow: inset 0 0 0 1px var(--lm-accent);
     }
     .LocalMarkdown-theme-picker {
       position: relative;
@@ -407,6 +458,7 @@
       .LocalMarkdown-toolbar { padding: 0 8px; gap: 5px; }
       .LocalMarkdown-view { padding: 4px 3px; font-size: 12px; }
       .LocalMarkdown-action { padding: 4px 3px; font-size: 12px; }
+      .LocalMarkdown-open-option { font-size: 12px; }
       .LocalMarkdown-theme-option { font-size: 12px; }
       .LocalMarkdown-editor .vditor-toolbar { padding: 0 6px; }
       .LocalMarkdown-drawing-dialog {
@@ -434,7 +486,7 @@
 <body>
   <div class="LocalMarkdown-app" data-sidebar="open">
     <div class="LocalMarkdown-sidebar-backdrop" id="LocalMarkdown-sidebar-backdrop" aria-hidden="true"></div>
-    <aside class="LocalMarkdown-sidebar" id="LocalMarkdown-sidebar" aria-label="Local Markdown open files">
+    <aside class="LocalMarkdown-sidebar" id="LocalMarkdown-sidebar" aria-label="Local Markdown files and folders">
       <div class="LocalMarkdown-sidebar-header">
         <svg class="LocalMarkdown-logo" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
           <rect x="3.5" y="6.5" width="25" height="19" rx="3.5" fill="#fff" stroke="#111" stroke-width="2"></rect>
@@ -454,7 +506,7 @@
           <circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="1.5"></circle>
           <path d="m12.5 12.5 4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
         </svg>
-        <input class="LocalMarkdown-search-input" id="LocalMarkdown-search-input" type="search" placeholder="Search" aria-label="Search open files and content" autocomplete="off" spellcheck="false">
+        <input class="LocalMarkdown-search-input" id="LocalMarkdown-search-input" type="search" placeholder="Search" aria-label="Search files and content" autocomplete="off" spellcheck="false">
         <button class="LocalMarkdown-search-clear" id="LocalMarkdown-search-clear" type="button" aria-label="Clear search" title="Clear search" hidden>&times;</button>
       </div>
       <nav class="LocalMarkdown-files" id="LocalMarkdown-files" aria-label="Documents"></nav>
@@ -496,7 +548,21 @@
           <button class="LocalMarkdown-view" type="button" data-mode="sv" aria-pressed="false" title="Edit source beside a live preview" disabled>Split</button>
         </div>
         <div class="LocalMarkdown-actions">
-          <button class="LocalMarkdown-action" id="LocalMarkdown-open-file" type="button" title="Open file">Open</button>
+          <div class="LocalMarkdown-open-picker">
+            <button class="LocalMarkdown-action LocalMarkdown-open-toggle" id="LocalMarkdown-open-toggle" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="LocalMarkdown-open-menu">
+              Open <span class="LocalMarkdown-open-chevron" aria-hidden="true">▾</span>
+            </button>
+            <div class="LocalMarkdown-open-menu" id="LocalMarkdown-open-menu" role="menu" aria-label="Open" hidden>
+              <button class="LocalMarkdown-open-option" id="LocalMarkdown-open-file" type="button" role="menuitem">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 2.75h7l4 4v10.5H4zM11 2.75v4h4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"></path></svg>
+                Open File…
+              </button>
+              <button class="LocalMarkdown-open-option" id="LocalMarkdown-open-folder" type="button" role="menuitem">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M2.75 5.25h5l1.5 2h8v8.5h-14.5z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"></path></svg>
+                Open Folder…
+              </button>
+            </div>
+          </div>
           <button class="LocalMarkdown-action" id="LocalMarkdown-save-file" type="button">Save</button>
           <button class="LocalMarkdown-action" id="LocalMarkdown-close-file" type="button">Close</button>
         </div>
@@ -540,6 +606,11 @@
       const sidebarDismiss = document.querySelector("#LocalMarkdown-sidebar-dismiss");
       const searchInput = document.querySelector("#LocalMarkdown-search-input");
       const searchClear = document.querySelector("#LocalMarkdown-search-clear");
+      const openToggle = document.querySelector("#LocalMarkdown-open-toggle");
+      const openMenu = document.querySelector("#LocalMarkdown-open-menu");
+      const openOptions = Array.from(document.querySelectorAll(".LocalMarkdown-open-option"));
+      const openFileButton = document.querySelector("#LocalMarkdown-open-file");
+      const openFolderButton = document.querySelector("#LocalMarkdown-open-folder");
       const mainElement = document.querySelector(".LocalMarkdown-main");
       const statusElement = document.querySelector("#LocalMarkdown-status");
       const closeButton = document.querySelector("#LocalMarkdown-close-file");
@@ -577,6 +648,7 @@
       let sessionNeedsSave = false;
       let sessionRestored = false;
       let draggedFileId = null;
+      let workspaceSearchRenderPending = false;
       let excalidrawStylesPromise = null;
       let excalidrawModulesPromise = null;
       let drawingRoot = null;
@@ -612,6 +684,9 @@
         "solarized-dark": "Solarized Dark"
       };
       const markdownPickerId = "LocalMarkdownFile";
+      const directoryPickerId = "LocalMarkdownFolder";
+      const markdownFilePattern = /\.(?:md|markdown)$/i;
+      const ignoredDirectoryNames = new Set([".git", "node_modules"]);
       const markdownPickerTypes = [{
         description: "Markdown file",
         accept: { "text/markdown": [".md", ".markdown"] }
@@ -642,6 +717,12 @@
         if (!open || !focus) return;
         (themeOptions.find(option => option.getAttribute("aria-checked") === "true")
           || themeOptions[0]).focus();
+      }
+
+      function setOpenMenuOpen(open, { focus = false } = {}) {
+        openMenu.hidden = !open;
+        openToggle.setAttribute("aria-expanded", String(open));
+        if (open && focus) openOptions[0]?.focus();
       }
 
       setTheme(document.documentElement.dataset.theme, { persist: false });
@@ -680,7 +761,7 @@
         "# Markdown examples",
         "",
         "This built-in file shows common formatting in Markdown mode.",
-        "Local Markdown opens files individually and edits one active file at a time. Open files and edits are restored after a browser refresh. New files show Save until their first manual save; opened and saved files autosave about 700 milliseconds after you stop typing.",
+        "Local Markdown opens individual files or recursive folder workspaces and edits one active file at a time. Open files, folders, and edits are restored after a browser refresh. New files show Save until their first manual save; opened and saved files autosave about 700 milliseconds after you stop typing.",
         "",
         "## Inline text",
         "**Bold text**, *italic text*, ~~strikethrough~~, and `inline code`.",
@@ -784,10 +865,57 @@
         id: "LocalMarkdown-welcome", name: "", text: "", handle: null,
         attachments: new Map(), builtin: true, welcome: true, dirty: false
       };
-      const session = { activeId: example.id, files: [example], lastOpenHandle: null };
+      const session = {
+        activeId: example.id,
+        files: [example],
+        workspaces: [],
+        lastOpenHandle: null
+      };
 
       function activeFile() {
         return session.files.find(file => file.id === session.activeId);
+      }
+
+      function createDirectoryNode(handle, name, path = "") {
+        return {
+          kind: "directory",
+          name,
+          path,
+          handle,
+          children: null,
+          loading: false,
+          loadPromise: null,
+          error: null
+        };
+      }
+
+      function createWorkspace({ id = createId(), name, handle, expanded = [""] }) {
+        const root = createDirectoryNode(handle, name || handle?.name || "Folder");
+        const workspace = {
+          id,
+          name: root.name,
+          handle,
+          root,
+          expanded: new Set(Array.isArray(expanded) ? expanded : [""]),
+          nodesByPath: new Map([["", root]]),
+          needsPermission: false,
+          searchIndexed: false,
+          indexGeneration: 0,
+          indexPromise: null
+        };
+        return workspace;
+      }
+
+      function workspaceForId(id) {
+        return session.workspaces.find(workspace => workspace.id === id) || null;
+      }
+
+      function syncWorkspaceSearchText(file, { invalidate = false } = {}) {
+        if (!file?.workspaceId || typeof file.workspacePath !== "string") return;
+        const node = workspaceForId(file.workspaceId)?.nodesByPath.get(file.workspacePath);
+        if (!node || node.kind !== "file") return;
+        node.searchText = invalidate ? null : file.text;
+        node.searchError = false;
       }
 
       function openSessionDatabase() {
@@ -865,9 +993,17 @@
               name: file.name,
               text: file.text,
               handle: file.handle || null,
+              workspaceId: file.workspaceId || null,
+              workspacePath: file.workspacePath || null,
               dirty: Boolean(file.dirty),
               attachments: storedAttachments(file)
-            }))
+            })),
+          workspaces: session.workspaces.map(workspace => ({
+            id: workspace.id,
+            name: workspace.name,
+            handle: workspace.handle,
+            expanded: Array.from(workspace.expanded)
+          }))
         };
       }
 
@@ -922,6 +1058,101 @@
         }
       }
 
+      function isVisibleDirectoryEntry(name, handle) {
+        if (!name || name.startsWith(".")) return false;
+        if (handle.kind === "directory") return !ignoredDirectoryNames.has(name);
+        return handle.kind === "file" && markdownFilePattern.test(name);
+      }
+
+      function compareDirectoryEntries(left, right) {
+        if (left.kind !== right.kind) return left.kind === "directory" ? -1 : 1;
+        return left.name.localeCompare(right.name, undefined, { numeric: true, sensitivity: "base" });
+      }
+
+      async function loadWorkspaceDirectory(workspace, directory) {
+        if (directory.children) return directory.children;
+        if (directory.loadPromise) return directory.loadPromise;
+        directory.loading = true;
+        directory.error = null;
+        directory.loadPromise = (async () => {
+          const children = [];
+          for await (const [name, handle] of directory.handle.entries()) {
+            if (!isVisibleDirectoryEntry(name, handle)) continue;
+            const path = directory.path ? `${directory.path}/${name}` : name;
+            const node = handle.kind === "directory"
+              ? createDirectoryNode(handle, name, path)
+              : { kind: "file", name, path, handle, searchText: null, searchError: false };
+            children.push(node);
+            workspace.nodesByPath.set(path, node);
+          }
+          children.sort(compareDirectoryEntries);
+          directory.children = children;
+          return children;
+        })().catch(error => {
+          directory.error = error;
+          directory.children = [];
+          return directory.children;
+        }).finally(() => {
+          directory.loading = false;
+          directory.loadPromise = null;
+        });
+        return directory.loadPromise;
+      }
+
+      function forgetWorkspaceDescendants(workspace, directory) {
+        const prefix = directory.path ? `${directory.path}/` : "";
+        for (const path of workspace.nodesByPath.keys()) {
+          if (path === directory.path) continue;
+          if (!prefix || path.startsWith(prefix)) workspace.nodesByPath.delete(path);
+        }
+        directory.children = null;
+        directory.error = null;
+        workspace.searchIndexed = false;
+        workspace.indexGeneration += 1;
+      }
+
+      async function workspaceNodeAtPath(workspace, parts) {
+        let directory = workspace.root;
+        for (const [index, name] of parts.entries()) {
+          let children = await loadWorkspaceDirectory(workspace, directory);
+          let node = children.find(child => child.name === name);
+          if (!node) {
+            forgetWorkspaceDescendants(workspace, directory);
+            children = await loadWorkspaceDirectory(workspace, directory);
+            node = children.find(child => child.name === name);
+          }
+          if (!node) return null;
+          if (index === parts.length - 1) return node;
+          if (node.kind !== "directory") return null;
+          directory = node;
+        }
+        return workspace.root;
+      }
+
+      function revealWorkspacePath(workspace, path) {
+        workspace.expanded.add("");
+        const parts = path.split("/").filter(Boolean);
+        for (let index = 1; index < parts.length; index += 1) {
+          workspace.expanded.add(parts.slice(0, index).join("/"));
+        }
+      }
+
+      async function hydrateExpandedWorkspaceDirectory(workspace, directory = workspace.root) {
+        if (!workspace.expanded.has(directory.path)) return;
+        const children = await loadWorkspaceDirectory(workspace, directory);
+        await Promise.all(children
+          .filter(child => child.kind === "directory" && workspace.expanded.has(child.path))
+          .map(child => hydrateExpandedWorkspaceDirectory(workspace, child)));
+      }
+
+      async function refreshRestoredWorkspace(workspace) {
+        const writePermission = await handlePermission(workspace.handle, "readwrite");
+        workspace.needsPermission = writePermission !== null && writePermission !== "granted";
+        if (workspace.needsPermission) return false;
+        await hydrateExpandedWorkspaceDirectory(workspace);
+        return true;
+      }
+
       async function loadFileFromHandle(file) {
         const diskFile = await file.handle.getFile();
         const parsed = parseStoredMarkdown(await diskFile.text());
@@ -929,6 +1160,7 @@
         file.text = parsed.text;
         file.attachments = parsed.attachments;
         file.dirty = false;
+        syncWorkspaceSearchText(file);
         return parsed.warning;
       }
 
@@ -966,13 +1198,26 @@
               name: file.name,
               text: file.text,
               handle: file.handle || null,
+              workspaceId: typeof file.workspaceId === "string" ? file.workspaceId : null,
+              workspacePath: typeof file.workspacePath === "string" ? file.workspacePath : null,
               attachments: restoredAttachments(file.attachments),
               builtin: false,
               dirty: Boolean(file.dirty),
               needsPermission: false
             }));
 
-          const refreshedFiles = await Promise.all(restoredFiles.map(refreshRestoredFile));
+          const restoredWorkspaces = (Array.isArray(storedSession.workspaces)
+            ? storedSession.workspaces : [])
+            .filter(workspace => workspace && typeof workspace.id === "string"
+              && typeof workspace.name === "string" && workspace.handle?.kind === "directory")
+            .map(workspace => createWorkspace(workspace));
+          session.workspaces = restoredWorkspaces;
+
+          const [refreshedFiles, refreshedWorkspaces] = await Promise.all([
+            Promise.all(restoredFiles.map(refreshRestoredFile)),
+            Promise.all(restoredWorkspaces.map(refreshRestoredWorkspace))
+          ]);
+          for (const file of restoredFiles) syncWorkspaceSearchText(file);
           const availableFiles = [example, ...restoredFiles];
           const filesById = new Map(availableFiles.map(file => [file.id, file]));
           const orderedFiles = [];
@@ -989,7 +1234,9 @@
           session.lastOpenHandle = storedSession.lastOpenHandle?.kind === "file"
             ? storedSession.lastOpenHandle
             : (activeFile()?.handle || restoredFiles.find(file => file.handle)?.handle || null);
-          if (refreshedFiles.some(Boolean)) sessionNeedsSave = true;
+          if (refreshedFiles.some(Boolean) || refreshedWorkspaces.some(Boolean)) {
+            sessionNeedsSave = true;
+          }
         }
 
         sessionRestored = true;
@@ -1033,28 +1280,228 @@
         searchClear.hidden = !query;
         if (query) {
           renderSearchResults(query);
+          for (const workspace of session.workspaces) startWorkspaceSearchIndex(workspace);
           return;
         }
         filesElement.setAttribute("aria-label", "Documents");
-        for (const file of session.files) {
-          if (file.welcome) continue;
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className = "LocalMarkdown-file";
-          if (file === example) button.id = "LocalMarkdown-examples";
-          button.draggable = true;
-          button.dataset.fileId = file.id;
-          button.textContent = file === example
-            ? "Examples"
-            : `${file.name}${file.dirty ? " •" : ""}`;
-          button.title = "Drag to reorder";
-          button.setAttribute("aria-current", String(file.id === session.activeId));
-          button.addEventListener("click", file === example
-            ? showExamples
-            : () => selectFile(file.id));
-          enableFileReordering(button, file.id);
-          filesElement.append(button);
+        const openFiles = session.files.filter(file => !file.welcome
+          && (!file.workspaceId || !workspaceForId(file.workspaceId)?.nodesByPath.has(file.workspacePath)));
+        if (session.workspaces.length) appendSidebarSection("Open Files");
+        for (const file of openFiles) appendOpenFileButton(file);
+        if (session.workspaces.length) {
+          appendSidebarSection("Folders");
+          for (const workspace of session.workspaces) renderWorkspace(workspace);
         }
+      }
+
+      function appendSidebarSection(label) {
+        const heading = document.createElement("div");
+        heading.className = "LocalMarkdown-sidebar-section";
+        heading.textContent = label;
+        filesElement.append(heading);
+      }
+
+      function appendOpenFileButton(file) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "LocalMarkdown-file";
+        if (file === example) button.id = "LocalMarkdown-examples";
+        button.draggable = true;
+        button.dataset.fileId = file.id;
+        button.textContent = file === example
+          ? "Examples"
+          : `${file.name}${file.dirty ? " •" : ""}`;
+        button.title = "Drag to reorder";
+        button.setAttribute("aria-current", String(file.id === session.activeId));
+        button.addEventListener("click", file === example
+          ? showExamples
+          : () => selectFile(file.id));
+        enableFileReordering(button, file.id);
+        filesElement.append(button);
+      }
+
+      function workspaceTreeIcon(kind) {
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.classList.add("LocalMarkdown-tree-icon");
+        svg.setAttribute("viewBox", "0 0 20 20");
+        svg.setAttribute("aria-hidden", "true");
+        svg.setAttribute("focusable", "false");
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("fill", "none");
+        path.setAttribute("stroke", "currentColor");
+        path.setAttribute("stroke-width", "1.35");
+        path.setAttribute("stroke-linejoin", "round");
+        path.setAttribute("d", kind === "directory"
+          ? "M2.75 5.25h5l1.5 2h8v8.5h-14.5z"
+          : "M4 2.75h7l4 4v10.5H4zM11 2.75v4h4");
+        svg.append(path);
+        return svg;
+      }
+
+      function openFileForWorkspaceNode(workspace, node) {
+        return session.files.find(file => file.workspaceId === workspace.id
+          && file.workspacePath === node.path) || null;
+      }
+
+      function renderWorkspace(workspace) {
+        const container = document.createElement("div");
+        container.className = "LocalMarkdown-workspace";
+        container.dataset.workspaceId = workspace.id;
+        renderWorkspaceDirectory(workspace, workspace.root, 0, container, true);
+        filesElement.append(container);
+      }
+
+      function renderWorkspaceDirectory(workspace, directory, depth, container, isRoot = false) {
+        const row = document.createElement("div");
+        row.className = "LocalMarkdown-tree-row";
+        row.style.setProperty("--tree-depth", String(depth));
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "LocalMarkdown-tree-item";
+        button.dataset.kind = "directory";
+        button.dataset.root = String(isRoot);
+        button.dataset.workspacePath = directory.path;
+        const expanded = workspace.expanded.has(directory.path) && !workspace.needsPermission;
+        button.setAttribute("aria-expanded", String(expanded));
+        button.title = workspace.needsPermission && isRoot
+          ? `Reconnect ${workspace.name}`
+          : `${expanded ? "Collapse" : "Expand"} ${directory.name}`;
+
+        const chevron = document.createElement("span");
+        chevron.className = "LocalMarkdown-tree-chevron";
+        chevron.textContent = directory.loading ? "…" : (expanded ? "▾" : "▸");
+        const name = document.createElement("span");
+        name.className = "LocalMarkdown-tree-name";
+        name.textContent = workspace.needsPermission && isRoot
+          ? `${directory.name} (Reconnect)`
+          : directory.name;
+        button.append(chevron, workspaceTreeIcon("directory"), name);
+        button.addEventListener("click", () => {
+          if (workspace.needsPermission && isRoot) void reconnectWorkspace(workspace);
+          else void toggleWorkspaceDirectory(workspace, directory);
+        });
+        row.append(button);
+
+        if (isRoot) {
+          const remove = document.createElement("button");
+          remove.type = "button";
+          remove.className = "LocalMarkdown-tree-remove";
+          remove.setAttribute("aria-label", `Remove folder ${workspace.name}`);
+          remove.title = "Remove folder from sidebar";
+          remove.textContent = "×";
+          remove.addEventListener("click", () => removeWorkspace(workspace));
+          row.append(remove);
+        }
+        container.append(row);
+
+        if (!expanded) return;
+        if (directory.error) {
+          appendWorkspaceEmpty(container, depth + 1, "Could not read folder");
+          return;
+        }
+        if (!directory.children) {
+          appendWorkspaceEmpty(container, depth + 1, "Loading…");
+          return;
+        }
+        if (!directory.children.length) {
+          appendWorkspaceEmpty(container, depth + 1, "No Markdown files");
+          return;
+        }
+        for (const child of directory.children) {
+          if (child.kind === "directory") {
+            renderWorkspaceDirectory(workspace, child, depth + 1, container);
+          } else {
+            renderWorkspaceFile(workspace, child, depth + 1, container);
+          }
+        }
+      }
+
+      function appendWorkspaceEmpty(container, depth, message) {
+        const empty = document.createElement("div");
+        empty.className = "LocalMarkdown-tree-empty";
+        empty.style.marginLeft = `${depth * 13}px`;
+        empty.textContent = message;
+        container.append(empty);
+      }
+
+      function renderWorkspaceFile(workspace, node, depth, container) {
+        const openFile = openFileForWorkspaceNode(workspace, node);
+        const row = document.createElement("div");
+        row.className = "LocalMarkdown-tree-row";
+        row.style.setProperty("--tree-depth", String(depth));
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "LocalMarkdown-tree-item";
+        button.dataset.kind = "file";
+        button.dataset.workspacePath = node.path;
+        button.title = node.path;
+        button.setAttribute("aria-current", String(openFile?.id === session.activeId));
+        const spacer = document.createElement("span");
+        spacer.className = "LocalMarkdown-tree-chevron";
+        const name = document.createElement("span");
+        name.className = "LocalMarkdown-tree-name";
+        name.textContent = `${node.name}${openFile?.dirty ? " •" : ""}`;
+        button.append(spacer, workspaceTreeIcon("file"), name);
+        button.addEventListener("click", () => void openWorkspaceFile(workspace, node));
+        row.append(button);
+        container.append(row);
+      }
+
+      async function toggleWorkspaceDirectory(workspace, directory) {
+        if (workspace.expanded.has(directory.path)) {
+          workspace.expanded.delete(directory.path);
+          renderFiles();
+          scheduleSessionSave();
+          return;
+        }
+        workspace.expanded.add(directory.path);
+        renderFiles();
+        await loadWorkspaceDirectory(workspace, directory);
+        renderFiles();
+        scheduleSessionSave();
+      }
+
+      function markWorkspaceAccessRestored(workspace) {
+        workspace.needsPermission = false;
+        for (const file of session.files) {
+          if (file.workspaceId !== workspace.id) continue;
+          file.needsPermission = false;
+          if (file.dirty) scheduleAutoSave(file);
+        }
+      }
+
+      async function reconnectWorkspace(workspace) {
+        updateStatus(`Reconnecting ${workspace.name}…`);
+        try {
+          const permission = typeof workspace.handle.requestPermission === "function"
+            ? await workspace.handle.requestPermission({ mode: "readwrite" })
+            : "granted";
+          if (permission !== "granted") {
+            updateStatus("Folder access was not restored");
+            return;
+          }
+          markWorkspaceAccessRestored(workspace);
+          forgetWorkspaceDescendants(workspace, workspace.root);
+          await hydrateExpandedWorkspaceDirectory(workspace);
+          renderFiles();
+          updateStatus(`Reconnected ${workspace.name}`);
+          scheduleSessionSave();
+        } catch {
+          updateStatus("Could not reconnect folder");
+        }
+      }
+
+      function removeWorkspace(workspace) {
+        for (const file of session.files) {
+          if (file.workspaceId !== workspace.id) continue;
+          file.workspaceId = null;
+          file.workspacePath = null;
+        }
+        session.workspaces = session.workspaces.filter(item => item !== workspace);
+        renderFiles();
+        updateStatus(`Removed ${workspace.name} from sidebar`);
+        scheduleSessionSave();
       }
 
       function normalizedSearchText(value) {
@@ -1137,15 +1584,121 @@
         element.append(mark, document.createTextNode(text.slice(matchIndex + query.length)));
       }
 
+      function workspaceFileNodes(workspace) {
+        return Array.from(workspace.nodesByPath.values()).filter(node => node.kind === "file");
+      }
+
+      function searchCandidates() {
+        const candidates = [];
+        const representedOpenFiles = new Set();
+        let order = 0;
+        for (const workspace of session.workspaces) {
+          for (const node of workspaceFileNodes(workspace)) {
+            const file = openFileForWorkspaceNode(workspace, node);
+            if (file) representedOpenFiles.add(file.id);
+            candidates.push({
+              id: `${workspace.id}:${node.path}`,
+              name: node.name,
+              searchName: `${node.name} ${node.path}`,
+              path: `${workspace.name}/${node.path}`,
+              text: file?.text ?? node.searchText ?? "",
+              file,
+              workspace,
+              node,
+              order: order++
+            });
+          }
+        }
+        for (const file of session.files) {
+          if (file.welcome || representedOpenFiles.has(file.id)) continue;
+          const name = file === example ? "Examples" : file.name;
+          candidates.push({
+            id: file.id,
+            name,
+            searchName: name,
+            path: name,
+            text: file.text,
+            file,
+            workspace: null,
+            node: null,
+            order: order++
+          });
+        }
+        return candidates;
+      }
+
+      async function collectWorkspaceFiles(workspace, directory, files) {
+        const children = await loadWorkspaceDirectory(workspace, directory);
+        for (const child of children) {
+          if (child.kind === "file") files.push(child);
+          else await collectWorkspaceFiles(workspace, child, files);
+        }
+      }
+
+      async function loadWorkspaceSearchText(workspace, node) {
+        const openFile = openFileForWorkspaceNode(workspace, node);
+        if (openFile) {
+          node.searchText = openFile.text;
+          node.searchError = false;
+          return;
+        }
+        if (node.searchText !== null) return;
+        try {
+          const diskFile = await node.handle.getFile();
+          node.searchText = markdownTextWithoutAttachments(await diskFile.text());
+          node.searchError = false;
+        } catch {
+          node.searchText = "";
+          node.searchError = true;
+        }
+      }
+
+      async function runWithConcurrency(items, concurrency, operation) {
+        let nextIndex = 0;
+        const workers = Array.from({ length: Math.min(concurrency, items.length) }, async () => {
+          while (nextIndex < items.length) {
+            const item = items[nextIndex++];
+            await operation(item);
+          }
+        });
+        await Promise.all(workers);
+      }
+
+      function requestWorkspaceSearchRender() {
+        if (workspaceSearchRenderPending) return;
+        workspaceSearchRenderPending = true;
+        requestAnimationFrame(() => {
+          workspaceSearchRenderPending = false;
+          if (searchInput.value.trim()) renderFiles();
+        });
+      }
+
+      function startWorkspaceSearchIndex(workspace) {
+        if (workspace.needsPermission || workspace.searchIndexed || workspace.indexPromise) return;
+        const generation = workspace.indexGeneration;
+        const indexPromise = (async () => {
+          const files = [];
+          await collectWorkspaceFiles(workspace, workspace.root, files);
+          await runWithConcurrency(files, 4, node => loadWorkspaceSearchText(workspace, node));
+          if (workspace.indexGeneration === generation) workspace.searchIndexed = true;
+        })().catch(() => {
+          if (workspace.indexGeneration === generation) workspace.searchIndexed = true;
+        }).finally(() => {
+          if (workspace.indexPromise === indexPromise) workspace.indexPromise = null;
+          requestWorkspaceSearchRender();
+        });
+        workspace.indexPromise = indexPromise;
+        requestWorkspaceSearchRender();
+      }
+
       function renderSearchResults(query) {
         filesElement.setAttribute("aria-label", `Search results for ${query}`);
-        const results = session.files
-          .filter(file => !file.welcome)
-          .map(file => {
-            const contentResults = contentSearchMatches(file, query);
+        const results = searchCandidates()
+          .map(candidate => {
+            const contentResults = contentSearchMatches(candidate, query);
             return {
-              file,
-              nameScore: fuzzyNameScore(file === example ? "Examples" : file.name, query),
+              candidate,
+              nameScore: fuzzyNameScore(candidate.searchName, query),
               matches: contentResults.matches,
               hasMoreMatches: contentResults.hasMore
             };
@@ -1156,33 +1709,37 @@
             if (left.nameScore === null && right.nameScore !== null) return 1;
             if (left.nameScore !== null && right.nameScore !== null
                 && left.nameScore !== right.nameScore) return left.nameScore - right.nameScore;
-            return session.files.indexOf(left.file) - session.files.indexOf(right.file);
+            return left.candidate.order - right.candidate.order;
           });
+
+        const indexing = session.workspaces.some(workspace => workspace.indexPromise);
 
         if (!results.length) {
           const empty = document.createElement("div");
           empty.className = "LocalMarkdown-search-empty";
-          empty.textContent = "No matching files or content";
+          empty.textContent = indexing ? "Searching folder contents…" : "No matching files or content";
           filesElement.append(empty);
           return;
         }
 
         const summary = document.createElement("div");
         summary.className = "LocalMarkdown-search-summary";
-        summary.textContent = `${results.length} matching ${results.length === 1 ? "file" : "files"}`;
+        summary.textContent = `${results.length} matching ${results.length === 1 ? "file" : "files"}`
+          + (indexing ? " · searching folders…" : "");
         filesElement.append(summary);
 
-        for (const { file, nameScore, matches, hasMoreMatches } of results) {
+        for (const { candidate, nameScore, matches, hasMoreMatches } of results) {
           const result = document.createElement("div");
           result.className = "LocalMarkdown-search-result";
 
           const fileButton = document.createElement("button");
           fileButton.type = "button";
           fileButton.className = "LocalMarkdown-search-file";
-          fileButton.setAttribute("aria-current", String(file.id === session.activeId));
+          fileButton.title = candidate.path;
+          fileButton.setAttribute("aria-current", String(candidate.file?.id === session.activeId));
           const name = document.createElement("span");
           name.className = "LocalMarkdown-search-file-name";
-          const displayName = file === example ? "Examples" : `${file.name}${file.dirty ? " •" : ""}`;
+          const displayName = `${candidate.name}${candidate.file?.dirty ? " •" : ""}`;
           if (nameScore !== null) appendHighlightedText(name, displayName, query);
           else name.textContent = displayName;
           fileButton.append(name);
@@ -1192,7 +1749,7 @@
             count.textContent = hasMoreMatches ? `${matches.length}+` : String(matches.length);
             fileButton.append(count);
           }
-          fileButton.addEventListener("click", () => openSearchResult(file));
+          fileButton.addEventListener("click", () => void openSearchResult(candidate));
           result.append(fileButton);
 
           for (const match of matches) {
@@ -1207,7 +1764,7 @@
             snippet.className = "LocalMarkdown-search-snippet";
             appendHighlightedText(snippet, match.snippet, query);
             hit.append(line, snippet);
-            hit.addEventListener("click", () => openSearchResult(file, match, query));
+            hit.addEventListener("click", () => void openSearchResult(candidate, match, query));
             result.append(hit);
           }
           filesElement.append(result);
@@ -1259,8 +1816,12 @@
         return true;
       }
 
-      function openSearchResult(file, match = null, query = searchInput.value.trim()) {
+      async function openSearchResult(candidate, match = null, query = searchInput.value.trim()) {
         captureEditorValue();
+        const file = candidate.workspace
+          ? await openWorkspaceFile(candidate.workspace, candidate.node, { closeMobileSidebar: false })
+          : candidate.file;
+        if (!file) return;
         if (file === example) showExamples();
         else if (file.id !== session.activeId) activateFile(file);
         else updateStatus();
@@ -1327,16 +1888,13 @@
       }
 
       function commitPreviewedFileOrder() {
-        const filesById = new Map(session.files
-          .filter(file => !file.welcome)
-          .map(file => [file.id, file]));
+        const filesById = new Map(session.files.map(file => [file.id, file]));
         const orderedFiles = Array.from(filesElement.querySelectorAll("[data-file-id]"))
-          .map(button => filesById.get(button.dataset.fileId))
-          .filter(Boolean);
-        let orderedIndex = 0;
-        session.files = session.files.map(file => file.welcome
-          ? file
-          : (orderedFiles[orderedIndex++] || file));
+          .map(button => filesById.get(button.dataset.fileId)).filter(Boolean);
+        const reorderableIds = new Set(orderedFiles.map(file => file.id));
+        session.files = session.files.map(file => reorderableIds.has(file.id)
+          ? orderedFiles.shift()
+          : file);
         draggedFileId = null;
         renderFiles();
         scheduleSessionSave();
@@ -1590,6 +2148,19 @@
 
       function attachmentPath(id) {
         return `${attachmentPathPrefix}${id}`;
+      }
+
+      function markdownTextWithoutAttachments(storedText) {
+        const blockIndex = storedText.lastIndexOf(attachmentBlockStart);
+        if (blockIndex === -1) return storedText;
+        const body = storedText.slice(0, blockIndex);
+        const block = storedText.slice(blockIndex).trimEnd();
+        if ((blockIndex && !body.endsWith("\n\n"))
+            || !block.startsWith(`${attachmentBlockStart}\n`)
+            || !block.endsWith(`\n${attachmentBlockEnd}`)) {
+          return storedText;
+        }
+        return body.replace(/\n+$/, "");
       }
 
       function parseStoredMarkdown(storedText) {
@@ -2294,6 +2865,7 @@
             file.name = file.handle.name;
             file.needsPermission = false;
             if (file.text === text) file.dirty = false;
+            syncWorkspaceSearchText(file);
             scheduleSessionSave();
             return true;
           } catch (error) {
@@ -2387,6 +2959,10 @@
           file.name = previousName;
         } else {
           session.lastOpenHandle = handle;
+          const workspaceLocation = await workspaceLocationForHandle(handle);
+          file.workspaceId = workspaceLocation?.workspace.id || null;
+          file.workspacePath = workspaceLocation?.node.path || null;
+          syncWorkspaceSearchText(file);
         }
         renderFiles();
         updateStatus(saved
@@ -2427,14 +3003,156 @@
         try {
           const file = await handle.getFile();
           const parsed = parseStoredMarkdown(await file.text());
+          const workspaceLocation = await workspaceLocationForHandle(handle);
           activateFile({
             id: createId(), name: file.name, text: parsed.text, handle,
             attachments: parsed.attachments, builtin: false, dirty: false,
-            needsPermission: false
+            needsPermission: false,
+            workspaceId: workspaceLocation?.workspace.id || null,
+            workspacePath: workspaceLocation?.node.path || null
           }, parsed.warning || "Opened local file");
         } catch {
           updateStatus("Could not open file");
         }
+      }
+
+      async function workspaceLocationForHandle(handle) {
+        if (!handle || typeof handle.isSameEntry !== "function") return null;
+        for (const workspace of session.workspaces) {
+          if (typeof workspace.handle.resolve === "function") {
+            try {
+              const parts = await workspace.handle.resolve(handle);
+              if (Array.isArray(parts) && parts.length) {
+                const node = await workspaceNodeAtPath(workspace, parts);
+                if (node?.kind === "file") {
+                  revealWorkspacePath(workspace, node.path);
+                  await hydrateExpandedWorkspaceDirectory(workspace);
+                  return { workspace, node };
+                }
+              }
+            } catch {}
+          }
+          for (const node of workspaceFileNodes(workspace)) {
+            try {
+              if (await node.handle.isSameEntry(handle)) {
+                revealWorkspacePath(workspace, node.path);
+                return { workspace, node };
+              }
+            } catch {}
+          }
+        }
+        return null;
+      }
+
+      async function openWorkspaceFile(workspace, node, { closeMobileSidebar = true } = {}) {
+        if (!workspace || !node || node.kind !== "file") return null;
+        let file = openFileForWorkspaceNode(workspace, node);
+        if (!file) {
+          for (const candidate of session.files) {
+            if (!candidate.handle || typeof candidate.handle.isSameEntry !== "function") continue;
+            try {
+              if (await candidate.handle.isSameEntry(node.handle)) {
+                file = candidate;
+                file.workspaceId = workspace.id;
+                file.workspacePath = node.path;
+                break;
+              }
+            } catch {}
+          }
+        }
+
+        if (!file) {
+          updateStatus(`Opening ${node.name}…`);
+          try {
+            const diskFile = await node.handle.getFile();
+            const parsed = parseStoredMarkdown(await diskFile.text());
+            node.searchText = parsed.text;
+            node.searchError = false;
+            file = {
+              id: createId(),
+              name: diskFile.name,
+              text: parsed.text,
+              handle: node.handle,
+              attachments: parsed.attachments,
+              builtin: false,
+              dirty: false,
+              needsPermission: false,
+              workspaceId: workspace.id,
+              workspacePath: node.path
+            };
+            activateFile(file, parsed.warning || "Opened workspace file");
+          } catch (error) {
+            if (["NotAllowedError", "SecurityError"].includes(error?.name)) {
+              workspace.needsPermission = true;
+              renderFiles();
+              updateStatus("Reconnect the folder to open this file");
+            } else {
+              updateStatus("Could not open workspace file");
+            }
+            return null;
+          }
+        } else if (file.id !== session.activeId) {
+          captureEditorValue();
+          activateFile(file);
+        } else {
+          renderFiles();
+          updateStatus();
+        }
+
+        scheduleSessionSave();
+        if (closeMobileSidebar && mobileSidebarQuery.matches) setSidebarOpen(false);
+        return file;
+      }
+
+      async function openLocalFolder() {
+        if (typeof window.showDirectoryPicker !== "function") {
+          updateStatus("Opening folders requires Chrome or Edge");
+          return;
+        }
+
+        let handle;
+        try {
+          handle = await window.showDirectoryPicker({
+            id: directoryPickerId,
+            mode: "readwrite"
+          });
+        } catch (error) {
+          if (error?.name === "AbortError") updateStatus();
+          else updateStatus("Could not choose folder");
+          return;
+        }
+
+        for (const workspace of session.workspaces) {
+          if (typeof workspace.handle.isSameEntry !== "function") continue;
+          try {
+            if (await workspace.handle.isSameEntry(handle)) {
+              workspace.handle = handle;
+              workspace.root.handle = handle;
+              workspace.name = handle.name;
+              workspace.root.name = handle.name;
+              markWorkspaceAccessRestored(workspace);
+              workspace.expanded.add("");
+              forgetWorkspaceDescendants(workspace, workspace.root);
+              await hydrateExpandedWorkspaceDirectory(workspace);
+              renderFiles();
+              updateStatus("Refreshed open folder");
+              scheduleSessionSave();
+              return;
+            }
+          } catch {}
+        }
+
+        captureEditorValue();
+        const workspace = createWorkspace({ name: handle.name, handle });
+        session.workspaces.push(workspace);
+        renderFiles();
+        updateStatus(`Opening ${workspace.name}…`);
+        await loadWorkspaceDirectory(workspace, workspace.root);
+        renderFiles();
+        updateStatus(workspace.root.error
+          ? `Could not read folder ${workspace.name}`
+          : `Opened folder ${workspace.name}`);
+        scheduleSessionSave();
       }
 
       function createNewFile() {
@@ -2467,7 +3185,32 @@
         renderFiles();
         searchInput.focus();
       });
+      openToggle.addEventListener("click", () => {
+        setThemeMenuOpen(false);
+        setOpenMenuOpen(openToggle.getAttribute("aria-expanded") !== "true", { focus: true });
+      });
+      openMenu.addEventListener("keydown", event => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          setOpenMenuOpen(false);
+          openToggle.focus();
+          return;
+        }
+        if (event.key === "Tab") {
+          setOpenMenuOpen(false);
+          return;
+        }
+        if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+        event.preventDefault();
+        const currentIndex = Math.max(0, openOptions.indexOf(document.activeElement));
+        const nextIndex = event.key === "Home" ? 0
+          : event.key === "End" ? openOptions.length - 1
+          : (currentIndex + (event.key === "ArrowDown" ? 1 : -1) + openOptions.length)
+            % openOptions.length;
+        openOptions[nextIndex].focus();
+      });
       themeToggle.addEventListener("click", () => {
+        setOpenMenuOpen(false);
         setThemeMenuOpen(themeToggle.getAttribute("aria-expanded") !== "true", { focus: true });
       });
       for (const option of themeOptions) {
@@ -2502,6 +3245,10 @@
         setThemeMenuOpen(false);
       });
       document.addEventListener("pointerdown", event => {
+        if (openMenu.hidden || openMenu.parentElement.contains(event.target)) return;
+        setOpenMenuOpen(false);
+      });
+      document.addEventListener("pointerdown", event => {
         if (tableEdgeTools.some(tools => tools.contains(event.target))) return;
         hideTableEdgeTools();
       });
@@ -2533,7 +3280,14 @@
         event.preventDefault();
         commitPreviewedFileOrder();
       });
-      document.querySelector("#LocalMarkdown-open-file").addEventListener("click", openLocalFile);
+      openFileButton.addEventListener("click", () => {
+        setOpenMenuOpen(false);
+        void openLocalFile();
+      });
+      openFolderButton.addEventListener("click", () => {
+        setOpenMenuOpen(false);
+        void openLocalFolder();
+      });
       document.querySelector("#LocalMarkdown-save-file").addEventListener("click", saveActiveFile);
       for (const button of viewButtons) {
         button.addEventListener("click", () => switchEditorMode(button.dataset.mode));
@@ -2595,6 +3349,7 @@
 
         cancelAutoSave(file);
         releaseAttachmentPreviews(file.id);
+        syncWorkspaceSearchText(file, { invalidate: file.dirty });
         session.files = session.files.filter(item => item !== file && !item.welcome);
         let next = session.files.find(item => !item.builtin) || session.files[0];
         if (!next) {
