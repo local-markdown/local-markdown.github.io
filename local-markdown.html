@@ -425,6 +425,41 @@
     .vditor-reset > :is(h1, h2, h3, h4, h5, h6)::before { content: none !important; }
     .LocalMarkdown-editor img.LocalMarkdown-excalidraw-image { cursor: zoom-in; }
 
+    .LocalMarkdown-image-resizer {
+      position: fixed; z-index: 26; pointer-events: none;
+      border: 1px solid var(--lm-accent);
+    }
+    .LocalMarkdown-image-resizer[hidden] { display: none; }
+    .LocalMarkdown-image-alignment {
+      position: absolute; top: -36px; left: 50%; display: flex; gap: 2px;
+      padding: 3px; border: 1px solid var(--lm-control-border); border-radius: 6px;
+      background: var(--lm-background); box-shadow: 0 3px 10px var(--lm-menu-shadow);
+      pointer-events: auto; transform: translateX(-50%);
+    }
+    .LocalMarkdown-image-resizer[data-toolbar-position="bottom"] .LocalMarkdown-image-alignment {
+      top: calc(100% + 8px);
+    }
+    .LocalMarkdown-image-align {
+      width: 26px; height: 24px; padding: 4px; display: grid; place-items: center;
+      border: 0; border-radius: 3px; color: var(--lm-muted); background: transparent;
+    }
+    .LocalMarkdown-image-align:hover,
+    .LocalMarkdown-image-align[aria-pressed="true"] {
+      color: var(--lm-text); background: var(--lm-selected);
+    }
+    .LocalMarkdown-image-align svg { width: 16px; height: 16px; }
+    .LocalMarkdown-image-resize-handle {
+      position: absolute; width: 12px; height: 12px; padding: 0;
+      border: 2px solid var(--lm-background); border-radius: 2px;
+      background: var(--lm-accent); box-shadow: 0 1px 4px var(--lm-menu-shadow);
+      pointer-events: auto; touch-action: none;
+      transform: translate(-50%, -50%);
+    }
+    .LocalMarkdown-image-resize-handle[data-corner="nw"] { top: 0; left: 0; cursor: nwse-resize; }
+    .LocalMarkdown-image-resize-handle[data-corner="ne"] { top: 0; left: 100%; cursor: nesw-resize; }
+    .LocalMarkdown-image-resize-handle[data-corner="sw"] { top: 100%; left: 0; cursor: nesw-resize; }
+    .LocalMarkdown-image-resize-handle[data-corner="se"] { top: 100%; left: 100%; cursor: nwse-resize; }
+
     .LocalMarkdown-table-edge-tools {
       position: fixed; z-index: 24; display: flex; padding: 2px;
       border: 1px solid var(--lm-control-border); border-radius: 6px;
@@ -658,6 +693,23 @@
     <button class="LocalMarkdown-table-edge-tool" type="button" data-table-action="column-right" aria-label="Add column to the right" title="Add column to the right">+</button>
     <button class="LocalMarkdown-table-edge-tool" type="button" data-table-action="delete-column" data-destructive="true" aria-label="Delete column" title="Delete column">−</button>
   </div>
+  <div class="LocalMarkdown-image-resizer" id="LocalMarkdown-image-resizer" hidden>
+    <div class="LocalMarkdown-image-alignment" role="group" aria-label="Image alignment">
+      <button class="LocalMarkdown-image-align" type="button" data-image-align="left" aria-label="Align image left" aria-pressed="false" title="Align left">
+        <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M2.5 3v12M5.5 5.5h9v7h-9z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"></path></svg>
+      </button>
+      <button class="LocalMarkdown-image-align" type="button" data-image-align="center" aria-label="Align image centre" aria-pressed="false" title="Align centre">
+        <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M9 2.5v13M4.5 5.5h9v7h-9z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"></path></svg>
+      </button>
+      <button class="LocalMarkdown-image-align" type="button" data-image-align="right" aria-label="Align image right" aria-pressed="false" title="Align right">
+        <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M15.5 3v12M3.5 5.5h9v7h-9z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"></path></svg>
+      </button>
+    </div>
+    <button class="LocalMarkdown-image-resize-handle" type="button" data-corner="nw" tabindex="-1" aria-label="Resize image from top left"></button>
+    <button class="LocalMarkdown-image-resize-handle" type="button" data-corner="ne" tabindex="-1" aria-label="Resize image from top right"></button>
+    <button class="LocalMarkdown-image-resize-handle" type="button" data-corner="sw" tabindex="-1" aria-label="Resize image from bottom left"></button>
+    <button class="LocalMarkdown-image-resize-handle" type="button" data-corner="se" tabindex="-1" aria-label="Resize image from bottom right"></button>
+  </div>
   <dialog class="LocalMarkdown-drawing-dialog" id="LocalMarkdown-drawing-dialog" aria-labelledby="LocalMarkdown-drawing-title">
     <div class="LocalMarkdown-drawing-shell">
       <header class="LocalMarkdown-drawing-header">
@@ -702,6 +754,11 @@
       const tableToolButtons = tableEdgeTools.flatMap(tools =>
         Array.from(tools.querySelectorAll("[data-table-action]")));
       const deleteTableRowButton = tableRowTools.querySelector('[data-table-action="delete-row"]');
+      const imageResizer = document.querySelector("#LocalMarkdown-image-resizer");
+      const imageResizeHandles = Array.from(
+        imageResizer.querySelectorAll(".LocalMarkdown-image-resize-handle"));
+      const imageAlignButtons = Array.from(
+        imageResizer.querySelectorAll(".LocalMarkdown-image-align"));
       const viewButtons = document.querySelectorAll(".LocalMarkdown-view");
       const themeToggle = document.querySelector("#LocalMarkdown-theme-toggle");
       const themeMenu = document.querySelector("#LocalMarkdown-theme-menu");
@@ -727,6 +784,8 @@
       let irScrollTopBeforeInput = null;
       let irScrollRestoreFrame = null;
       let tableHoverCell = null;
+      let selectedImage = null;
+      let imageResizeSession = null;
       let attachmentPreviewTimer = null;
       let attachmentPreviewObserver = null;
       let imageWorker = null;
@@ -765,6 +824,7 @@
         .map(prefix => prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
         .join("|");
       const pastedImageMaxDimension = 2000;
+      const minimumImageWidth = 48;
       const pastedImageWebpQuality = 0.9;
       const pastedLinkTitleTimeout = 1500;
       const pastedLinkTitleByteLimit = 128 * 1024;
@@ -2224,6 +2284,7 @@
       function activateFile(file, message = null) {
         const previous = activeFile();
         if (previous) releaseAttachmentPreviews(previous.id);
+        hideImageResizer();
         if (!(file.attachments instanceof Map)) file.attachments = new Map();
         if (!session.files.includes(file)) session.files.push(file);
         session.activeId = file.id;
@@ -2281,6 +2342,7 @@
         if (!editorReady || editor.getCurrentMode() === mode) return;
         captureEditorValue();
         hideTableEdgeTools();
+        hideImageResizer();
         const editModeElement = editor.vditor?.toolbar?.elements?.["edit-mode"];
         const modeButton = editModeElement?.querySelector(`button[data-mode="${mode}"]`);
         if (!modeButton) {
@@ -2427,6 +2489,372 @@
         surface.dispatchEvent(event);
         if (event.defaultPrevented) updateStatus(shortcut.status);
         hideTableEdgeTools();
+      }
+
+      function editableImageFromNode(node) {
+        const element = node?.nodeType === Node.ELEMENT_NODE ? node : node?.parentElement;
+        const image = element?.closest?.("img");
+        if (!image || !editorElement.contains(image)) return null;
+        const surface = image.closest(".vditor-ir, .vditor-wysiwyg, .vditor-preview");
+        if (!surface || getComputedStyle(surface).display === "none") return null;
+        return image;
+      }
+
+      function positionImageResizer() {
+        if (!selectedImage?.isConnected || imageResizer.hidden) {
+          hideImageResizer();
+          return;
+        }
+        const rect = selectedImage.getBoundingClientRect();
+        if (!rect.width || !rect.height) {
+          hideImageResizer();
+          return;
+        }
+        imageResizer.style.left = `${rect.left}px`;
+        imageResizer.style.top = `${rect.top}px`;
+        imageResizer.style.width = `${rect.width}px`;
+        imageResizer.style.height = `${rect.height}px`;
+        imageResizer.dataset.toolbarPosition = rect.top < 44 ? "bottom" : "top";
+      }
+
+      function imageAlignment(image) {
+        if (image.style.display !== "block") return null;
+        const left = image.style.marginLeft;
+        const right = image.style.marginRight;
+        const zero = value => value === "0" || value === "0px";
+        if (zero(left) && right === "auto") return "left";
+        if (left === "auto" && right === "auto") return "center";
+        if (left === "auto" && zero(right)) return "right";
+        return null;
+      }
+
+      function showImageResizer(image) {
+        selectedImage = image;
+        const alignment = imageAlignment(image);
+        for (const button of imageAlignButtons) {
+          button.setAttribute("aria-pressed", String(button.dataset.imageAlign === alignment));
+        }
+        imageResizer.hidden = false;
+        positionImageResizer();
+      }
+
+      function hideImageResizer() {
+        if (imageResizeSession) return;
+        selectedImage = null;
+        imageResizer.hidden = true;
+      }
+
+      function escapeHtmlAttribute(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/"/g, "&quot;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      function imageAlignmentStyle(alignment) {
+        const margins = {
+          left: ["0", "auto"],
+          center: ["auto", "auto"],
+          right: ["auto", "0"]
+        }[alignment];
+        return margins
+          ? `display: block; margin-left: ${margins[0]}; margin-right: ${margins[1]};`
+          : "";
+      }
+
+      function imageHtml(source, alt, title, width = null, alignment = null) {
+        const attributes = [
+          `src="${escapeHtmlAttribute(source)}"`,
+          `alt="${escapeHtmlAttribute(alt || "")}"`
+        ];
+        if (title) attributes.push(`title="${escapeHtmlAttribute(title)}"`);
+        if (width !== null) attributes.push(`width="${width}"`);
+        if (alignment) attributes.push(`style="${imageAlignmentStyle(alignment)}"`);
+        return `<img ${attributes.join(" ")}>`;
+      }
+
+      function replaceOccurrence(value, search, replacement, occurrence) {
+        let index = -1;
+        for (let count = 0; count <= occurrence; count += 1) {
+          index = value.indexOf(search, index + 1);
+          if (index < 0) return value;
+        }
+        return value.slice(0, index) + replacement + value.slice(index + search.length);
+      }
+
+      function directMarkdownImageReplacement(image, value, tag) {
+        const imageNode = image.closest('.vditor-ir [data-type="img"]');
+        if (!imageNode?.contains(image)) return null;
+        const linkNode = imageNode.parentElement?.matches('[data-type="a"]')
+          ? imageNode.parentElement
+          : null;
+        const targetNode = linkNode || imageNode;
+        const raw = targetNode.textContent;
+        if (!raw) return null;
+
+        const root = image.closest(".vditor-ir");
+        const selector = linkNode ? '[data-type="a"]' : '[data-type="img"]';
+        const matches = Array.from(root.querySelectorAll(selector))
+          .filter(node => node.textContent === raw);
+        const occurrence = matches.indexOf(targetNode);
+        if (occurrence < 0) return null;
+
+        let replacement = tag;
+        if (linkNode) {
+          const href = Array.from(linkNode.children)
+            .find(child => child.matches(".vditor-ir__marker--link"))?.textContent;
+          if (href) replacement = `<a href="${escapeHtmlAttribute(href)}">${tag}</a>`;
+        }
+        const updated = replaceOccurrence(value, raw, replacement, occurrence);
+        return updated === value ? null : updated;
+      }
+
+      function decodedHtmlAttribute(value) {
+        const textarea = document.createElement("textarea");
+        textarea.innerHTML = value;
+        return textarea.value;
+      }
+
+      function htmlAttribute(tag, name) {
+        const pattern = new RegExp(
+          `(?:^|\\s)${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s"'=<>\u0060]+))`,
+          "i"
+        );
+        const match = tag.match(pattern);
+        return match ? decodedHtmlAttribute(match[1] ?? match[2] ?? match[3] ?? "") : "";
+      }
+
+      function imageMarkupCandidates(value) {
+        const candidates = [];
+        const htmlPattern = /<img\b[^>]*>/gi;
+        for (const match of value.matchAll(htmlPattern)) {
+          candidates.push({
+            type: "html",
+            start: match.index,
+            end: match.index + match[0].length,
+            markup: match[0],
+            source: htmlAttribute(match[0], "src")
+          });
+        }
+
+        const markdownPattern = /!\[([^\]\n]*)\]\(\s*(<[^>\n]+>|[^\s)\n]+)(?:\s+(["'])(.*?)\3)?\s*\)/g;
+        for (const match of value.matchAll(markdownPattern)) {
+          candidates.push({
+            type: "markdown",
+            start: match.index,
+            end: match.index + match[0].length,
+            markup: match[0],
+            source: match[2].replace(/^<|>$/g, "")
+          });
+        }
+        return candidates.sort((left, right) => left.start - right.start);
+      }
+
+      function imageSourceReference(image, file) {
+        const attachmentId = attachmentIdForImage(image, file);
+        return attachmentId ? attachmentPath(attachmentId) : (image.getAttribute("src") || "");
+      }
+
+      function imageMarkupCandidate(image, value, file) {
+        const source = imageSourceReference(image, file);
+        if (!source) return null;
+        const root = image.closest(".vditor-ir, .vditor-wysiwyg, .vditor-preview");
+        const occurrence = Array.from(root.querySelectorAll("img"))
+          .filter(candidate => imageSourceReference(candidate, file) === source)
+          .indexOf(image);
+        const candidate = imageMarkupCandidates(value)
+          .filter(item => item.source === source)[occurrence];
+        return candidate ? { candidate, source } : null;
+      }
+
+      function replaceMarkdownImageCandidate(value, candidate, tag) {
+        let start = candidate.start;
+        let end = candidate.end;
+        let replacement = tag;
+        if (value[start - 1] === "[") {
+          const linkSuffix = value.slice(end).match(
+            /^\]\(\s*(<[^>\n]+>|[^\s)\n]+)(?:\s+(["'])(.*?)\2)?\s*\)/
+          );
+          if (linkSuffix) {
+            start -= 1;
+            end += linkSuffix[0].length;
+            const href = linkSuffix[1].replace(/^<|>$/g, "");
+            replacement = `<a href="${escapeHtmlAttribute(href)}">${tag}</a>`;
+          }
+        }
+        return value.slice(0, start) + replacement + value.slice(end);
+      }
+
+      function setHtmlImageWidth(tag, width) {
+        let updated = tag.replace(
+          /\s+(?:width|height)\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi,
+          ""
+        );
+        const close = updated.endsWith("/>") ? "/>" : ">";
+        updated = updated.slice(0, -close.length).replace(/\s+$/, "");
+        return `${updated} width="${width}"${close}`;
+      }
+
+      function setHtmlImageAlignment(tag, alignment) {
+        const preservedStyles = htmlAttribute(tag, "style")
+          .split(";")
+          .map(declaration => declaration.trim())
+          .filter(Boolean)
+          .filter(declaration => !/^(?:display|margin(?:-left|-right)?)\s*:/i.test(declaration));
+        preservedStyles.push(imageAlignmentStyle(alignment).replace(/;$/, ""));
+        const style = `${preservedStyles.join("; ")};`;
+        let updated = tag.replace(
+          /\s+style\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/i,
+          ""
+        );
+        const close = updated.endsWith("/>") ? "/>" : ">";
+        updated = updated.slice(0, -close.length).replace(/\s+$/, "");
+        return `${updated} style="${escapeHtmlAttribute(style)}"${close}`;
+      }
+
+      function genericImageResize(image, value, width, file) {
+        const match = imageMarkupCandidate(image, value, file);
+        if (!match) return null;
+        const { candidate, source } = match;
+
+        if (candidate.type === "html") {
+          const replacement = setHtmlImageWidth(candidate.markup, width);
+          return value.slice(0, candidate.start) + replacement + value.slice(candidate.end);
+        }
+
+        const tag = imageHtml(source, image.getAttribute("alt"), image.getAttribute("title"), width);
+        return replaceMarkdownImageCandidate(value, candidate, tag);
+      }
+
+      function genericImageAlignment(image, value, alignment, file) {
+        const match = imageMarkupCandidate(image, value, file);
+        if (!match) return null;
+        const { candidate, source } = match;
+        if (candidate.type === "html") {
+          const replacement = setHtmlImageAlignment(candidate.markup, alignment);
+          return value.slice(0, candidate.start) + replacement + value.slice(candidate.end);
+        }
+        const tag = imageHtml(
+          source,
+          image.getAttribute("alt"),
+          image.getAttribute("title"),
+          null,
+          alignment
+        );
+        return replaceMarkdownImageCandidate(value, candidate, tag);
+      }
+
+      function applyImageUpdate(file, value, updated, message) {
+        if (!updated || updated === value) return false;
+        file.text = updated;
+        if (!file.builtin) {
+          file.dirty = true;
+          scheduleAutoSave(file);
+          scheduleSessionSave();
+        }
+        imageResizeSession = null;
+        hideImageResizer();
+        editor.setValue(updated, true);
+        renderFiles();
+        updateStatus(message);
+        scheduleAttachmentPreviews();
+        return true;
+      }
+
+      function commitImageResize(image, width) {
+        const file = activeFile();
+        if (!file || !editorReady) return false;
+        const value = canonicalEditorText(editor.getValue(), file);
+        const source = imageSourceReference(image, file);
+        const tag = source
+          ? imageHtml(source, image.getAttribute("alt"), image.getAttribute("title"), width)
+          : null;
+        const updated = (tag && directMarkdownImageReplacement(image, value, tag))
+          || genericImageResize(image, value, width, file);
+        return applyImageUpdate(file, value, updated, `Image resized to ${width}px`);
+      }
+
+      function commitImageAlignment(image, alignment) {
+        if (!image || !["left", "center", "right"].includes(alignment)) return false;
+        const file = activeFile();
+        if (!file || !editorReady) return false;
+        const value = canonicalEditorText(editor.getValue(), file);
+        const source = imageSourceReference(image, file);
+        const tag = source
+          ? imageHtml(
+            source,
+            image.getAttribute("alt"),
+            image.getAttribute("title"),
+            null,
+            alignment
+          )
+          : null;
+        const updated = (tag && directMarkdownImageReplacement(image, value, tag))
+          || genericImageAlignment(image, value, alignment, file);
+        const label = alignment === "center" ? "centre" : alignment;
+        return applyImageUpdate(file, value, updated, `Image aligned ${label}`);
+      }
+
+      function startImageResize(event) {
+        if (!selectedImage?.isConnected || event.button !== 0) return;
+        event.preventDefault();
+        event.stopPropagation();
+        const image = selectedImage;
+        const rect = image.getBoundingClientRect();
+        const corner = event.currentTarget.dataset.corner;
+        const container = image.closest("td, th, [data-block]") || image.parentElement;
+        const maximumWidth = Math.max(
+          minimumImageWidth,
+          Math.floor((container?.getBoundingClientRect().width || innerWidth) - 8)
+        );
+        imageResizeSession = {
+          image,
+          pointerId: event.pointerId,
+          corner,
+          startX: event.clientX,
+          startY: event.clientY,
+          startWidth: rect.width,
+          aspectRatio: rect.width / rect.height,
+          maximumWidth,
+          inlineWidth: image.style.width,
+          inlineHeight: image.style.height,
+          width: Math.round(rect.width)
+        };
+        event.currentTarget.setPointerCapture(event.pointerId);
+      }
+
+      function continueImageResize(event) {
+        const resize = imageResizeSession;
+        if (!resize || resize.pointerId !== event.pointerId) return;
+        event.preventDefault();
+        const horizontalDirection = resize.corner.endsWith("e") ? 1 : -1;
+        const verticalDirection = resize.corner.startsWith("s") ? 1 : -1;
+        const diagonalY = verticalDirection / resize.aspectRatio;
+        const delta = ((event.clientX - resize.startX) * horizontalDirection
+          + (event.clientY - resize.startY) * diagonalY)
+          / (1 + diagonalY ** 2);
+        const width = Math.round(Math.max(
+          minimumImageWidth,
+          Math.min(resize.maximumWidth, resize.startWidth + delta)
+        ));
+        resize.width = width;
+        resize.image.style.width = `${width}px`;
+        resize.image.style.height = "auto";
+        positionImageResizer();
+      }
+
+      function finishImageResize(event, commit = true) {
+        const resize = imageResizeSession;
+        if (!resize || resize.pointerId !== event.pointerId) return;
+        event.preventDefault();
+        imageResizeSession = null;
+        if (commit && resize.width === Math.round(resize.startWidth)) commit = false;
+        if (commit && commitImageResize(resize.image, resize.width)) return;
+        resize.image.style.width = resize.inlineWidth;
+        resize.image.style.height = resize.inlineHeight;
+        hideImageResizer();
+        if (commit) updateStatus("Could not resize this image");
       }
 
       function noteTitle(file) {
@@ -4050,16 +4478,36 @@
         if (tableEdgeTools.some(tools => tools.contains(event.target))) return;
         hideTableEdgeTools();
       });
+      document.addEventListener("pointerdown", event => {
+        if (imageResizer.contains(event.target) || editableImageFromNode(event.target)) return;
+        hideImageResizer();
+      });
       document.addEventListener("pointermove", handleTableEdgePointerMove);
       document.addEventListener("scroll", () => {
         hideTableEdgeTools();
         closeFileContextMenu();
+        positionImageResizer();
       }, true);
       addEventListener("resize", () => {
         hideTableEdgeTools();
         closeFileContextMenu();
+        positionImageResizer();
       });
       addEventListener("keydown", event => {
+        if (event.key === "Escape" && imageResizeSession) {
+          event.preventDefault();
+          const resize = imageResizeSession;
+          imageResizeSession = null;
+          resize.image.style.width = resize.inlineWidth;
+          resize.image.style.height = resize.inlineHeight;
+          hideImageResizer();
+          return;
+        }
+        if (event.key === "Escape" && !imageResizer.hidden) {
+          event.preventDefault();
+          hideImageResizer();
+          return;
+        }
         if (event.key === "Escape" && !fileContextMenu.hidden) {
           event.preventDefault();
           closeFileContextMenu({ restoreFocus: true });
@@ -4113,14 +4561,42 @@
       for (const button of tableToolButtons) {
         button.addEventListener("click", () => runTableAction(button.dataset.tableAction));
       }
+      for (const button of imageAlignButtons) {
+        button.addEventListener("pointerdown", event => event.preventDefault());
+        button.addEventListener("click", () => {
+          const image = selectedImage;
+          const alignment = button.dataset.imageAlign;
+          if (!image || imageAlignment(image) === alignment) return;
+          if (!commitImageAlignment(image, alignment)) {
+            updateStatus("Could not align this image");
+          }
+        });
+      }
+      for (const handle of imageResizeHandles) {
+        handle.addEventListener("pointerdown", startImageResize);
+        handle.addEventListener("pointermove", continueImageResize);
+        handle.addEventListener("pointerup", event => finishImageResize(event));
+        handle.addEventListener("pointercancel", event => finishImageResize(event, false));
+      }
       editorElement.addEventListener("beforeinput", rememberIrScrollPosition, true);
       editorElement.addEventListener("input", () => {
         restoreIrScrollPosition();
         hideTableEdgeTools();
+        hideImageResizer();
       });
       editorElement.addEventListener("keydown", handleEditorViewShortcut, true);
       editorElement.addEventListener("keydown", handleEditorKeydown, true);
       editorElement.addEventListener("paste", event => void pasteFormattedLink(event), true);
+      editorElement.addEventListener("pointerdown", event => {
+        if (event.button !== 0) return;
+        const image = editableImageFromNode(event.target);
+        if (image) showImageResizer(image);
+      }, true);
+      editorElement.addEventListener("click", event => {
+        const image = editableImageFromNode(event.target);
+        if (!image?.closest("a") || event.metaKey || event.ctrlKey || event.shiftKey) return;
+        event.preventDefault();
+      }, true);
       editorElement.addEventListener("click", event => {
         if (!excalidrawAttachmentFromEvent(event)) return;
         event.preventDefault();
