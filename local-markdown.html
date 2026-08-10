@@ -161,8 +161,13 @@
     .LocalMarkdown-files::-webkit-scrollbar { display: none; width: 0; height: 0; }
     .LocalMarkdown-file {
       width: 100%; margin: 0 0 3px; padding: 8px 9px; overflow: hidden;
-      border: 0; text-align: left; text-overflow: ellipsis; white-space: nowrap;
+      display: flex; align-items: center; gap: 6px;
+      border: 0; text-align: left; white-space: nowrap;
       transition: opacity 80ms ease;
+    }
+    .LocalMarkdown-file-name { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; }
+    .LocalMarkdown-favorite-marker {
+      flex: 0 0 auto; color: var(--lm-faint); font-size: 12px; line-height: 1;
     }
     .LocalMarkdown-file[draggable="true"] { cursor: grab; }
     .LocalMarkdown-file[draggable="true"]:active { cursor: grabbing; }
@@ -191,6 +196,7 @@
     .LocalMarkdown-tree-name {
       min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
+    .LocalMarkdown-tree-item .LocalMarkdown-tree-name { flex: 1; }
     .LocalMarkdown-tree-remove {
       width: 24px; height: 24px; flex: 0 0 24px; padding: 0;
       border: 0; border-radius: 3px; color: var(--lm-faint); background: transparent;
@@ -307,6 +313,55 @@
     }
     .LocalMarkdown-theme-option:focus-visible {
       outline: 0; box-shadow: inset 0 0 0 1px var(--lm-accent);
+    }
+    .LocalMarkdown-file-context-menu {
+      position: fixed; z-index: 50; width: max-content; min-width: 176px; padding: 5px;
+      border: 1px solid var(--lm-control-border); border-radius: 7px;
+      background: var(--lm-background); box-shadow: 0 5px 18px var(--lm-menu-shadow);
+    }
+    .LocalMarkdown-file-context-menu[hidden] { display: none; }
+    .LocalMarkdown-file-context-item {
+      width: 100%; padding: 7px 9px; display: flex; align-items: center; gap: 8px;
+      border: 0; border-radius: 4px; color: var(--lm-text); background: transparent;
+      font-size: 13px; text-align: left; white-space: nowrap;
+    }
+    .LocalMarkdown-file-context-item svg {
+      width: 15px; height: 15px; flex: 0 0 15px; color: var(--lm-muted);
+    }
+    .LocalMarkdown-file-context-item:focus-visible {
+      outline: 0; box-shadow: inset 0 0 0 1px var(--lm-accent);
+    }
+    .LocalMarkdown-file-context-item:disabled { color: var(--lm-faint); }
+    .LocalMarkdown-file-context-item[data-action="delete"] {
+      margin-top: 4px; border-top: 1px solid var(--lm-border); border-radius: 0 0 4px 4px;
+      color: #c0342b;
+    }
+    .LocalMarkdown-file-context-item[data-action="delete"] svg { color: currentColor; }
+    .LocalMarkdown-file-dialog {
+      width: min(420px, calc(100vw - 24px)); padding: 0;
+      border: 1px solid var(--lm-control-border); border-radius: 9px;
+      color: var(--lm-text); background: var(--lm-background);
+      box-shadow: 0 18px 60px var(--lm-menu-shadow);
+    }
+    .LocalMarkdown-file-dialog::backdrop { background: var(--lm-overlay); }
+    .LocalMarkdown-file-dialog-form { padding: 18px; }
+    .LocalMarkdown-file-dialog-form h2 { margin: 0 0 7px; font-size: 17px; }
+    .LocalMarkdown-file-dialog-message { margin: 0 0 14px; color: var(--lm-muted); font-size: 13px; }
+    .LocalMarkdown-file-dialog-input {
+      width: 100%; height: 34px; margin-bottom: 16px; padding: 6px 8px;
+      border: 1px solid var(--lm-control-border); border-radius: 5px;
+      color: var(--lm-text); background: var(--lm-surface); font: inherit;
+    }
+    .LocalMarkdown-file-dialog-input:focus {
+      outline: 0; border-color: var(--lm-accent); box-shadow: 0 0 0 1px var(--lm-accent);
+    }
+    .LocalMarkdown-file-dialog-actions { display: flex; justify-content: flex-end; gap: 7px; }
+    .LocalMarkdown-file-dialog-button { padding: 6px 12px; }
+    .LocalMarkdown-file-dialog-button[data-destructive="true"] {
+      color: #fff; border-color: #b42318; background: #b42318;
+    }
+    .LocalMarkdown-file-dialog-button[data-destructive="true"]:hover {
+      background: #9f1f17;
     }
     .LocalMarkdown-editor {
       position: relative; z-index: 1;
@@ -570,6 +625,31 @@
       <div class="LocalMarkdown-editor" id="LocalMarkdown-editor"></div>
     </main>
   </div>
+  <div class="LocalMarkdown-file-context-menu" id="LocalMarkdown-file-context-menu" role="menu" aria-label="File actions" hidden>
+    <button class="LocalMarkdown-file-context-item" type="button" role="menuitem" data-action="rename">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m4 14.75.65-3.15 8.7-8.7 3 3-8.7 8.7-3.15.65Zm7.9-10.4 3 3" fill="none" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      Rename
+    </button>
+    <button class="LocalMarkdown-file-context-item" type="button" role="menuitem" data-action="favorite">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m10 2.75 2.1 4.35 4.8.65-3.5 3.35.85 4.75L10 13.55 5.75 15.8l.85-4.7-3.5-3.35 4.8-.65z" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"></path></svg>
+      <span>Favorite</span>
+    </button>
+    <button class="LocalMarkdown-file-context-item" type="button" role="menuitem" data-action="delete">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 5.25h13M7 5.25V3h6v2.25m2 0-.7 11H5.7l-.7-11M8 8v5.5m4-5.5v5.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      Delete
+    </button>
+  </div>
+  <dialog class="LocalMarkdown-file-dialog" id="LocalMarkdown-file-dialog" aria-labelledby="LocalMarkdown-file-dialog-title" aria-describedby="LocalMarkdown-file-dialog-message">
+    <form class="LocalMarkdown-file-dialog-form" id="LocalMarkdown-file-dialog-form">
+      <h2 id="LocalMarkdown-file-dialog-title"></h2>
+      <p class="LocalMarkdown-file-dialog-message" id="LocalMarkdown-file-dialog-message"></p>
+      <input class="LocalMarkdown-file-dialog-input" id="LocalMarkdown-file-dialog-input" type="text" autocomplete="off" spellcheck="false">
+      <div class="LocalMarkdown-file-dialog-actions">
+        <button class="LocalMarkdown-file-dialog-button" id="LocalMarkdown-file-dialog-cancel" type="button">Cancel</button>
+        <button class="LocalMarkdown-file-dialog-button" id="LocalMarkdown-file-dialog-submit" type="submit"></button>
+      </div>
+    </form>
+  </dialog>
   <div class="LocalMarkdown-table-edge-tools" id="LocalMarkdown-table-row-tools" data-axis="row" role="toolbar" aria-label="Row edge actions" aria-controls="LocalMarkdown-editor" hidden>
     <button class="LocalMarkdown-table-edge-tool" type="button" data-table-action="row-below" aria-label="Add row below" title="Add row below">+</button>
     <button class="LocalMarkdown-table-edge-tool" type="button" data-table-action="delete-row" data-destructive="true" aria-label="Delete row" title="Delete row">−</button>
@@ -626,6 +706,16 @@
       const themeToggle = document.querySelector("#LocalMarkdown-theme-toggle");
       const themeMenu = document.querySelector("#LocalMarkdown-theme-menu");
       const themeOptions = Array.from(document.querySelectorAll(".LocalMarkdown-theme-option"));
+      const fileContextMenu = document.querySelector("#LocalMarkdown-file-context-menu");
+      const fileContextItems = Array.from(fileContextMenu.querySelectorAll(".LocalMarkdown-file-context-item"));
+      const favoriteContextLabel = fileContextMenu.querySelector('[data-action="favorite"] span');
+      const fileDialog = document.querySelector("#LocalMarkdown-file-dialog");
+      const fileDialogForm = document.querySelector("#LocalMarkdown-file-dialog-form");
+      const fileDialogTitle = document.querySelector("#LocalMarkdown-file-dialog-title");
+      const fileDialogMessage = document.querySelector("#LocalMarkdown-file-dialog-message");
+      const fileDialogInput = document.querySelector("#LocalMarkdown-file-dialog-input");
+      const fileDialogCancel = document.querySelector("#LocalMarkdown-file-dialog-cancel");
+      const fileDialogSubmit = document.querySelector("#LocalMarkdown-file-dialog-submit");
       const drawingDialog = document.querySelector("#LocalMarkdown-drawing-dialog");
       const drawingCanvas = document.querySelector("#LocalMarkdown-drawing-canvas");
       const drawingLoading = document.querySelector("#LocalMarkdown-drawing-loading");
@@ -653,6 +743,10 @@
       let excalidrawModulesPromise = null;
       let drawingRoot = null;
       let drawingSession = null;
+      let fileContextTarget = null;
+      let fileContextTrigger = null;
+      let fileDialogMode = null;
+      let fileDialogResolve = null;
       const autoSaveTimers = new Map();
       const activeSaves = new Map();
       const attachmentPreviewUrls = new Map();
@@ -742,6 +836,100 @@
         openMenu.hidden = !open;
         openToggle.setAttribute("aria-expanded", String(open));
         if (open && focus) openOptions[0]?.focus();
+      }
+
+      function fileContextActionAvailable(action, target) {
+        const location = workspaceLocationForTarget(target);
+        const file = target?.file;
+        if (action === "favorite") return Boolean(favoriteKeyForTarget(target));
+        if (action === "rename") {
+          return Boolean(location || (file && (!file.handle || typeof file.handle.move === "function")));
+        }
+        if (action === "delete") {
+          return Boolean(location || (file && (!file.handle || typeof file.handle.remove === "function")));
+        }
+        return false;
+      }
+
+      function closeFileContextMenu({ restoreFocus = false } = {}) {
+        if (fileContextMenu.hidden) return;
+        fileContextMenu.hidden = true;
+        if (restoreFocus && fileContextTrigger?.isConnected) fileContextTrigger.focus();
+        fileContextTarget = null;
+        fileContextTrigger = null;
+      }
+
+      function openFileContextMenu(event, target, trigger) {
+        setOpenMenuOpen(false);
+        setThemeMenuOpen(false);
+        fileContextTarget = target;
+        fileContextTrigger = trigger;
+        favoriteContextLabel.textContent = targetIsFavorite(target) ? "Remove from Favorites" : "Favorite";
+        for (const item of fileContextItems) {
+          item.disabled = !fileContextActionAvailable(item.dataset.action, target);
+          item.title = item.disabled ? "Open the containing folder to use this action" : "";
+        }
+        fileContextMenu.setAttribute("aria-label", `Actions for ${targetName(target)}`);
+        fileContextMenu.hidden = false;
+        const triggerBounds = trigger.getBoundingClientRect();
+        const menuBounds = fileContextMenu.getBoundingClientRect();
+        const requestedLeft = event.clientX || triggerBounds.left + 12;
+        const requestedTop = event.clientY || triggerBounds.top + triggerBounds.height;
+        fileContextMenu.style.left = `${Math.max(6, Math.min(requestedLeft, innerWidth - menuBounds.width - 6))}px`;
+        fileContextMenu.style.top = `${Math.max(6, Math.min(requestedTop, innerHeight - menuBounds.height - 6))}px`;
+        fileContextItems.find(item => !item.disabled)?.focus();
+      }
+
+      function attachFileContextMenu(element, target) {
+        element.addEventListener("contextmenu", event => {
+          event.preventDefault();
+          openFileContextMenu(event, target, element);
+        });
+        element.addEventListener("keydown", event => {
+          if (event.key !== "ContextMenu" && !(event.shiftKey && event.key === "F10")) return;
+          event.preventDefault();
+          openFileContextMenu(event, target, element);
+        });
+      }
+
+      async function runFileContextAction(action, target) {
+        if (action === "favorite") toggleFavorite(target);
+        else if (action === "rename") await renameFileTarget(target);
+        else if (action === "delete") await deleteFileTarget(target);
+      }
+
+      function settleFileDialog(value) {
+        const resolve = fileDialogResolve;
+        fileDialogResolve = null;
+        fileDialogMode = null;
+        if (fileDialog.open) fileDialog.close();
+        resolve?.(value);
+      }
+
+      function requestFileDialog(mode, name, { dirty = false } = {}) {
+        if (fileDialogResolve) settleFileDialog(null);
+        fileDialogMode = mode;
+        const renaming = mode === "rename";
+        fileDialogTitle.textContent = renaming ? "Rename file" : "Delete file?";
+        fileDialogMessage.textContent = renaming
+          ? "Enter a new Markdown file name."
+          : `“${name}” will be permanently deleted.${dirty ? " Unsaved changes will also be lost." : ""}`;
+        fileDialogInput.hidden = !renaming;
+        fileDialogInput.required = renaming;
+        fileDialogInput.value = renaming ? name : "";
+        fileDialogSubmit.textContent = renaming ? "Rename" : "Delete";
+        fileDialogSubmit.dataset.destructive = String(!renaming);
+        fileDialog.showModal();
+        requestAnimationFrame(() => {
+          if (renaming) {
+            fileDialogInput.focus();
+            const extensionIndex = name.search(/\.(?:md|markdown)$/i);
+            fileDialogInput.setSelectionRange(0, extensionIndex > 0 ? extensionIndex : name.length);
+          } else {
+            fileDialogCancel.focus();
+          }
+        });
+        return new Promise(resolve => { fileDialogResolve = resolve; });
       }
 
       setTheme(document.documentElement.dataset.theme, { persist: false });
@@ -888,6 +1076,7 @@
         activeId: example.id,
         files: [example],
         workspaces: [],
+        favoriteKeys: new Set(),
         lastOpenHandle: null
       };
 
@@ -927,6 +1116,59 @@
 
       function workspaceForId(id) {
         return session.workspaces.find(workspace => workspace.id === id) || null;
+      }
+
+      function workspaceFavoriteKey(workspace, node) {
+        return `workspace:${workspace.id}:${node.path}`;
+      }
+
+      function workspaceLocationForTarget(target) {
+        if (target?.workspace && target.node?.kind === "file") {
+          return { workspace: target.workspace, node: target.node };
+        }
+        const file = target?.file;
+        if (!file?.workspaceId || typeof file.workspacePath !== "string") return null;
+        const workspace = workspaceForId(file.workspaceId);
+        const node = workspace?.nodesByPath.get(file.workspacePath);
+        return node?.kind === "file" ? { workspace, node } : null;
+      }
+
+      function favoriteKeyForTarget(target) {
+        const fileKey = target?.file && !target.file.builtin ? `file:${target.file.id}` : null;
+        if (fileKey && session.favoriteKeys.has(fileKey)) return fileKey;
+        const location = workspaceLocationForTarget(target);
+        if (location) return workspaceFavoriteKey(location.workspace, location.node);
+        return fileKey;
+      }
+
+      function targetIsFavorite(target) {
+        const key = favoriteKeyForTarget(target);
+        return Boolean(key && session.favoriteKeys.has(key));
+      }
+
+      function targetName(target) {
+        return workspaceLocationForTarget(target)?.node.name || target?.file?.name || "file";
+      }
+
+      function favoriteTarget(key) {
+        if (key.startsWith("file:")) {
+          const file = session.files.find(candidate => candidate.id === key.slice(5));
+          return file && !file.builtin ? { file } : null;
+        }
+        if (!key.startsWith("workspace:")) return null;
+        for (const workspace of session.workspaces) {
+          const prefix = `workspace:${workspace.id}:`;
+          if (!key.startsWith(prefix)) continue;
+          const node = workspace.nodesByPath.get(key.slice(prefix.length));
+          return node?.kind === "file"
+            ? { workspace, node, file: openFileForWorkspaceNode(workspace, node) }
+            : null;
+        }
+        return null;
+      }
+
+      function favoriteTargets() {
+        return Array.from(session.favoriteKeys, favoriteTarget).filter(Boolean);
       }
 
       function syncWorkspaceSearchText(file, { invalidate = false } = {}) {
@@ -1002,6 +1244,7 @@
           version: 1,
           activeId: session.activeId,
           lastOpenHandle: session.lastOpenHandle,
+          favoriteKeys: Array.from(session.favoriteKeys),
           fileOrder: session.files
             .filter(file => !file.welcome)
             .map(file => file.id),
@@ -1231,6 +1474,8 @@
               && typeof workspace.name === "string" && workspace.handle?.kind === "directory")
             .map(workspace => createWorkspace(workspace));
           session.workspaces = restoredWorkspaces;
+          session.favoriteKeys = new Set((Array.isArray(storedSession.favoriteKeys)
+            ? storedSession.favoriteKeys : []).filter(key => typeof key === "string"));
 
           const [refreshedFiles, refreshedWorkspaces] = await Promise.all([
             Promise.all(restoredFiles.map(refreshRestoredFile)),
@@ -1303,9 +1548,15 @@
           return;
         }
         filesElement.setAttribute("aria-label", "Documents");
+        const favorites = favoriteTargets();
+        if (favorites.length) {
+          appendSidebarSection("Favorites");
+          for (const target of favorites) appendFavoriteButton(target);
+        }
         const openFiles = session.files.filter(file => !file.welcome
+          && !session.favoriteKeys.has(`file:${file.id}`)
           && (!file.workspaceId || !workspaceForId(file.workspaceId)?.nodesByPath.has(file.workspacePath)));
-        if (session.workspaces.length) appendSidebarSection("Open Files");
+        if (session.workspaces.length || favorites.length) appendSidebarSection("Files");
         for (const file of openFiles) appendOpenFileButton(file);
         if (session.workspaces.length) {
           appendSidebarSection("Folders");
@@ -1327,15 +1578,51 @@
         if (file === example) button.id = "LocalMarkdown-examples";
         button.draggable = true;
         button.dataset.fileId = file.id;
-        button.textContent = file === example
+        const name = document.createElement("span");
+        name.className = "LocalMarkdown-file-name";
+        name.textContent = file === example
           ? "Examples"
           : `${file.name}${file.dirty ? " •" : ""}`;
+        button.append(name);
+        if (targetIsFavorite({ file })) appendFavoriteMarker(button);
         button.title = "Drag to reorder";
         button.setAttribute("aria-current", String(file.id === session.activeId));
         button.addEventListener("click", file === example
           ? showExamples
           : () => selectFile(file.id));
+        if (!file.builtin) attachFileContextMenu(button, { file });
         enableFileReordering(button, file.id);
+        filesElement.append(button);
+      }
+
+      function appendFavoriteMarker(element) {
+        const marker = document.createElement("span");
+        marker.className = "LocalMarkdown-favorite-marker";
+        marker.setAttribute("aria-hidden", "true");
+        marker.textContent = "★";
+        element.append(marker);
+      }
+
+      function appendFavoriteButton(target) {
+        const location = workspaceLocationForTarget(target);
+        const file = location
+          ? (target.file || openFileForWorkspaceNode(location.workspace, location.node))
+          : target.file;
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "LocalMarkdown-file";
+        button.title = location ? `${location.workspace.name}/${location.node.path}` : targetName(target);
+        button.setAttribute("aria-current", String(file?.id === session.activeId));
+        const name = document.createElement("span");
+        name.className = "LocalMarkdown-file-name";
+        name.textContent = `${targetName(target)}${file?.dirty ? " •" : ""}`;
+        button.append(name);
+        appendFavoriteMarker(button);
+        button.addEventListener("click", () => {
+          if (location) void openWorkspaceFile(location.workspace, location.node);
+          else selectFile(file.id);
+        });
+        attachFileContextMenu(button, { ...target, file });
         filesElement.append(button);
       }
 
@@ -1462,7 +1749,9 @@
         name.className = "LocalMarkdown-tree-name";
         name.textContent = `${node.name}${openFile?.dirty ? " •" : ""}`;
         button.append(spacer, workspaceTreeIcon("file"), name);
+        if (targetIsFavorite({ workspace, node, file: openFile })) appendFavoriteMarker(button);
         button.addEventListener("click", () => void openWorkspaceFile(workspace, node));
+        attachFileContextMenu(button, { workspace, node, file: openFile });
         row.append(button);
         container.append(row);
       }
@@ -1516,6 +1805,10 @@
           if (file.workspaceId !== workspace.id) continue;
           file.workspaceId = null;
           file.workspacePath = null;
+        }
+        const favoritePrefix = `workspace:${workspace.id}:`;
+        for (const key of session.favoriteKeys) {
+          if (key.startsWith(favoritePrefix)) session.favoriteKeys.delete(key);
         }
         session.workspaces = session.workspaces.filter(item => item !== workspace);
         renderFiles();
@@ -1750,6 +2043,11 @@
         for (const { candidate, nameScore, matches, hasMoreMatches } of results) {
           const result = document.createElement("div");
           result.className = "LocalMarkdown-search-result";
+          const contextTarget = {
+            file: candidate.file,
+            workspace: candidate.workspace,
+            node: candidate.node
+          };
 
           const fileButton = document.createElement("button");
           fileButton.type = "button";
@@ -1762,6 +2060,7 @@
           if (nameScore !== null) appendHighlightedText(name, displayName, query);
           else name.textContent = displayName;
           fileButton.append(name);
+          if (targetIsFavorite(contextTarget)) appendFavoriteMarker(fileButton);
           if (matches.length) {
             const count = document.createElement("span");
             count.className = "LocalMarkdown-search-count";
@@ -1769,6 +2068,9 @@
             fileButton.append(count);
           }
           fileButton.addEventListener("click", () => void openSearchResult(candidate));
+          if (candidate.file !== example) {
+            attachFileContextMenu(fileButton, contextTarget);
+          }
           result.append(fileButton);
 
           for (const match of matches) {
@@ -3305,6 +3607,240 @@
         return file;
       }
 
+      function toggleFavorite(target) {
+        const key = favoriteKeyForTarget(target);
+        if (!key) return;
+        const adding = !session.favoriteKeys.has(key);
+        if (adding) session.favoriteKeys.add(key);
+        else session.favoriteKeys.delete(key);
+        renderFiles();
+        updateStatus(adding
+          ? `Added ${targetName(target)} to Favorites`
+          : `Removed ${targetName(target)} from Favorites`);
+        scheduleSessionSave();
+      }
+
+      async function requestedMarkdownName(currentName) {
+        const requested = await requestFileDialog("rename", currentName);
+        if (requested === null) return null;
+        let name = requested.trim();
+        if (!name) {
+          updateStatus("A file name is required");
+          return null;
+        }
+        if (/[\\/]/.test(name) || name === "." || name === "..") {
+          updateStatus("File names cannot contain slashes");
+          return null;
+        }
+        if (!/\.[^.]+$/.test(name)) {
+          name += currentName.match(/\.(?:md|markdown)$/i)?.[0] || ".md";
+        }
+        if (!markdownFilePattern.test(name)) {
+          updateStatus("Use a .md or .markdown file name");
+          return null;
+        }
+        return name;
+      }
+
+      function workspaceParentDirectory(workspace, node) {
+        const parts = node.path.split("/");
+        parts.pop();
+        return workspace.nodesByPath.get(parts.join("/")) || null;
+      }
+
+      async function ensureWorkspaceWriteAccess(workspace) {
+        try {
+          const permission = typeof workspace.handle.requestPermission === "function"
+            ? await workspace.handle.requestPermission({ mode: "readwrite" })
+            : "granted";
+          if (permission !== "granted") {
+            workspace.needsPermission = true;
+            renderFiles();
+            updateStatus("Folder access was not granted");
+            return false;
+          }
+          markWorkspaceAccessRestored(workspace);
+          return true;
+        } catch {
+          updateStatus("Could not access the folder");
+          return false;
+        }
+      }
+
+      async function workspaceNameIsAvailable(parent, currentName, nextName) {
+        if (currentName === nextName) return false;
+        try {
+          await parent.handle.getFileHandle(nextName);
+          updateStatus(`A file named ${nextName} already exists`);
+          return false;
+        } catch (error) {
+          if (error?.name === "NotFoundError") return true;
+          updateStatus("Could not check the new file name");
+          return false;
+        }
+      }
+
+      async function renameWorkspaceFile(workspace, node, openFile, nextName) {
+        const parent = workspaceParentDirectory(workspace, node);
+        if (!parent || !await ensureWorkspaceWriteAccess(workspace)
+            || !await workspaceNameIsAvailable(parent, node.name, nextName)) return;
+
+        if (openFile) {
+          if (activeFile() === openFile) captureEditorValue();
+          cancelAutoSave(openFile);
+          if (activeSaves.has(openFile.id) && !await activeSaves.get(openFile.id)) {
+            if (openFile.dirty) scheduleAutoSave(openFile);
+            updateStatus("Could not finish saving before rename");
+            return;
+          }
+          if (!await waitForFileAttachments(openFile)) {
+            if (openFile.dirty) scheduleAutoSave(openFile);
+            updateStatus("Could not prepare the file for rename");
+            return;
+          }
+        }
+
+        updateStatus(`Renaming ${node.name}…`);
+        let nextHandle = null;
+        const textBeforeWrite = openFile?.text;
+        try {
+          nextHandle = await parent.handle.getFileHandle(nextName, { create: true });
+          const writable = await nextHandle.createWritable();
+          await writable.write(openFile ? serializeFile(openFile) : await node.handle.getFile());
+          await writable.close();
+          await parent.handle.removeEntry(node.name);
+        } catch {
+          if (nextHandle) {
+            try { await parent.handle.removeEntry(nextName); } catch {}
+          }
+          if (openFile?.dirty) scheduleAutoSave(openFile);
+          updateStatus(`Could not rename ${node.name}`);
+          return;
+        }
+
+        const oldPath = node.path;
+        const parentPath = parent.path;
+        const nextPath = parentPath ? `${parentPath}/${nextName}` : nextName;
+        const oldFavoriteKey = workspaceFavoriteKey(workspace, node);
+        workspace.nodesByPath.delete(oldPath);
+        node.name = nextName;
+        node.path = nextPath;
+        node.handle = nextHandle;
+        workspace.nodesByPath.set(nextPath, node);
+        parent.children?.sort(compareDirectoryEntries);
+        if (session.favoriteKeys.delete(oldFavoriteKey)) {
+          session.favoriteKeys.add(workspaceFavoriteKey(workspace, node));
+        }
+        if (openFile) {
+          openFile.name = nextName;
+          openFile.handle = nextHandle;
+          openFile.workspacePath = nextPath;
+          openFile.needsPermission = false;
+          if (openFile.text === textBeforeWrite) openFile.dirty = false;
+          else scheduleAutoSave(openFile);
+        }
+        revealWorkspacePath(workspace, nextPath);
+        workspace.searchIndexed = false;
+        workspace.indexGeneration += 1;
+        renderFiles();
+        updateStatus(`Renamed to ${nextName}`);
+        scheduleSessionSave();
+      }
+
+      async function renameFileTarget(target) {
+        const location = workspaceLocationForTarget(target);
+        const file = target.file || (location
+          ? openFileForWorkspaceNode(location.workspace, location.node) : null);
+        const currentName = location?.node.name || file?.name;
+        if (!currentName) return;
+        const nextName = await requestedMarkdownName(currentName);
+        if (!nextName || nextName === currentName) return;
+        if (location) {
+          await renameWorkspaceFile(location.workspace, location.node, file, nextName);
+          return;
+        }
+        if (!file.handle) {
+          file.name = nextName;
+          renderFiles();
+          updateStatus(`Renamed to ${nextName}`);
+          scheduleSessionSave();
+          return;
+        }
+        try {
+          await file.handle.move(nextName);
+          file.name = file.handle.name || nextName;
+          renderFiles();
+          updateStatus(`Renamed to ${file.name}`);
+          scheduleSessionSave();
+        } catch {
+          updateStatus("Open the containing folder to rename this file");
+        }
+      }
+
+      function removeSessionFile(file) {
+        if (!file) return;
+        const wasActive = file.id === session.activeId;
+        cancelAutoSave(file);
+        releaseAttachmentPreviews(file.id);
+        session.files = session.files.filter(candidate => candidate !== file && !candidate.welcome);
+        session.favoriteKeys.delete(`file:${file.id}`);
+        if (!wasActive) return;
+        let next = session.files.find(candidate => !candidate.builtin) || session.files[0];
+        if (!next) {
+          session.files.push(welcome);
+          next = welcome;
+        }
+        activateFile(next);
+      }
+
+      async function deleteFileTarget(target) {
+        const location = workspaceLocationForTarget(target);
+        const file = target.file || (location
+          ? openFileForWorkspaceNode(location.workspace, location.node) : null);
+        const name = location?.node.name || file?.name;
+        if (!name) return;
+        if (!await requestFileDialog("delete", name, { dirty: file?.dirty })) {
+          updateStatus("Delete cancelled");
+          return;
+        }
+
+        if (location) {
+          const { workspace, node } = location;
+          const parent = workspaceParentDirectory(workspace, node);
+          if (!parent || !await ensureWorkspaceWriteAccess(workspace)) return;
+          updateStatus(`Deleting ${name}…`);
+          try {
+            await parent.handle.removeEntry(node.name);
+            parent.children = parent.children?.filter(child => child !== node) || parent.children;
+            workspace.nodesByPath.delete(node.path);
+            session.favoriteKeys.delete(workspaceFavoriteKey(workspace, node));
+            workspace.searchIndexed = false;
+            workspace.indexGeneration += 1;
+            removeSessionFile(file);
+            renderFiles();
+            updateStatus(`Deleted ${name}`);
+            scheduleSessionSave();
+          } catch {
+            updateStatus(`Could not delete ${name}`);
+          }
+          return;
+        }
+
+        if (file.handle) {
+          updateStatus(`Deleting ${name}…`);
+          try {
+            await file.handle.remove();
+          } catch {
+            updateStatus("Open the containing folder to delete this file");
+            return;
+          }
+        }
+        removeSessionFile(file);
+        renderFiles();
+        updateStatus(`Deleted ${name}`);
+        scheduleSessionSave();
+      }
+
       async function openLocalFolder() {
         if (typeof window.showDirectoryPicker !== "function") {
           updateStatus("Opening folders requires Chrome or Edge");
@@ -3387,6 +3923,7 @@
         searchInput.focus();
       });
       openToggle.addEventListener("click", () => {
+        closeFileContextMenu();
         setThemeMenuOpen(false);
         setOpenMenuOpen(openToggle.getAttribute("aria-expanded") !== "true", { focus: true });
       });
@@ -3411,6 +3948,7 @@
         openOptions[nextIndex].focus();
       });
       themeToggle.addEventListener("click", () => {
+        closeFileContextMenu();
         setOpenMenuOpen(false);
         setThemeMenuOpen(themeToggle.getAttribute("aria-expanded") !== "true", { focus: true });
       });
@@ -3441,6 +3979,61 @@
             % themeOptions.length;
         themeOptions[nextIndex].focus();
       });
+      fileContextMenu.addEventListener("click", event => {
+        const item = event.target.closest("[data-action]");
+        if (!item || item.disabled || !fileContextTarget) return;
+        const target = fileContextTarget;
+        const action = item.dataset.action;
+        closeFileContextMenu();
+        void runFileContextAction(action, target);
+      });
+      fileContextMenu.addEventListener("keydown", event => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          closeFileContextMenu({ restoreFocus: true });
+          return;
+        }
+        if (event.key === "Tab") {
+          closeFileContextMenu();
+          return;
+        }
+        if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+        event.preventDefault();
+        const enabledItems = fileContextItems.filter(item => !item.disabled);
+        const currentIndex = Math.max(0, enabledItems.indexOf(document.activeElement));
+        const nextIndex = event.key === "Home" ? 0
+          : event.key === "End" ? enabledItems.length - 1
+          : (currentIndex + (event.key === "ArrowDown" ? 1 : -1) + enabledItems.length)
+            % enabledItems.length;
+        enabledItems[nextIndex]?.focus();
+      });
+      fileDialogForm.addEventListener("submit", event => {
+        event.preventDefault();
+        if (fileDialogMode === "rename") {
+          const name = fileDialogInput.value.trim();
+          let error = "";
+          if (!name) error = "Enter a file name.";
+          else if (/[\\/]/.test(name) || name === "." || name === "..") {
+            error = "File names cannot contain slashes.";
+          } else if (/\.[^.]+$/.test(name) && !markdownFilePattern.test(name)) {
+            error = "Use a .md or .markdown file name.";
+          }
+          fileDialogInput.setCustomValidity(error);
+          if (error) {
+            fileDialogInput.reportValidity();
+            return;
+          }
+          settleFileDialog(name);
+          return;
+        }
+        settleFileDialog(true);
+      });
+      fileDialogInput.addEventListener("input", () => fileDialogInput.setCustomValidity(""));
+      fileDialogCancel.addEventListener("click", () => settleFileDialog(null));
+      fileDialog.addEventListener("cancel", event => {
+        event.preventDefault();
+        settleFileDialog(null);
+      });
       document.addEventListener("pointerdown", event => {
         if (themeMenu.hidden || themeMenu.parentElement.contains(event.target)) return;
         setThemeMenuOpen(false);
@@ -3450,13 +4043,28 @@
         setOpenMenuOpen(false);
       });
       document.addEventListener("pointerdown", event => {
+        if (fileContextMenu.hidden || fileContextMenu.contains(event.target)) return;
+        closeFileContextMenu();
+      });
+      document.addEventListener("pointerdown", event => {
         if (tableEdgeTools.some(tools => tools.contains(event.target))) return;
         hideTableEdgeTools();
       });
       document.addEventListener("pointermove", handleTableEdgePointerMove);
-      document.addEventListener("scroll", hideTableEdgeTools, true);
-      addEventListener("resize", hideTableEdgeTools);
+      document.addEventListener("scroll", () => {
+        hideTableEdgeTools();
+        closeFileContextMenu();
+      }, true);
+      addEventListener("resize", () => {
+        hideTableEdgeTools();
+        closeFileContextMenu();
+      });
       addEventListener("keydown", event => {
+        if (event.key === "Escape" && !fileContextMenu.hidden) {
+          event.preventDefault();
+          closeFileContextMenu({ restoreFocus: true });
+          return;
+        }
         const sidebarShortcut = event.key.toLowerCase() === "b" && event.altKey
           && (event.metaKey || event.ctrlKey) && !event.shiftKey;
         if (sidebarShortcut) {
@@ -3553,6 +4161,7 @@
         releaseAttachmentPreviews(file.id);
         syncWorkspaceSearchText(file, { invalidate: file.dirty });
         session.files = session.files.filter(item => item !== file && !item.welcome);
+        session.favoriteKeys.delete(`file:${file.id}`);
         let next = session.files.find(item => !item.builtin) || session.files[0];
         if (!next) {
           session.files.push(welcome);
