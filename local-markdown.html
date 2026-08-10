@@ -672,6 +672,25 @@
         .join("|");
       const pastedImageMaxDimension = 2000;
       const pastedImageWebpQuality = 0.9;
+      const pastedLinkTitleTimeout = 1500;
+      const pastedLinkTitleByteLimit = 128 * 1024;
+      const pastedLinkWebPageExtensions = new Set([
+        "asp", "aspx", "cfm", "htm", "html", "jsp", "php", "xhtml"
+      ]);
+      const pastedLinkOEmbedProviders = [
+        { hosts: ["youtube.com", "youtu.be"], endpoint: "https://www.youtube.com/oembed", format: true },
+        { hosts: ["vimeo.com"], endpoint: "https://vimeo.com/api/oembed.json" },
+        { hosts: ["open.spotify.com"], endpoint: "https://open.spotify.com/oembed" },
+        { hosts: ["soundcloud.com"], endpoint: "https://soundcloud.com/oembed", format: true },
+        { hosts: ["tiktok.com"], endpoint: "https://www.tiktok.com/oembed" },
+        { hosts: ["twitter.com", "x.com"], endpoint: "https://publish.twitter.com/oembed" },
+        { hosts: ["reddit.com"], endpoint: "https://www.reddit.com/oembed" },
+        { hosts: ["figma.com"], endpoint: "https://www.figma.com/api/oembed" },
+        { hosts: ["codepen.io"], endpoint: "https://codepen.io/api/oembed", format: true },
+        { hosts: ["dailymotion.com", "dai.ly"], endpoint: "https://www.dailymotion.com/services/oembed", format: true },
+        { hosts: ["flickr.com", "flic.kr"], endpoint: "https://www.flickr.com/services/oembed/", format: true },
+        { hosts: ["giphy.com"], endpoint: "https://giphy.com/services/oembed" }
+      ];
       const sessionDatabaseName = "LocalMarkdown";
       const sessionStoreName = "workspace";
       const sessionStorageKey = "current:v1";
@@ -2789,6 +2808,188 @@
         return null;
       }
 
+      function pastedUrlFromText(text) {
+        const candidate = String(text || "").trim();
+        if (!candidate || /\s/.test(candidate)) return null;
+        try {
+          const url = new URL(candidate);
+          return ["http:", "https:"].includes(url.protocol) ? url : null;
+        } catch {
+          return null;
+        }
+      }
+
+      function cleanLinkTitle(value) {
+        return String(value || "").replace(/\s+/g, " ").trim().slice(0, 300);
+      }
+
+      function decodedUrlSegment(value) {
+        try {
+          return decodeURIComponent(value);
+        } catch {
+          return value;
+        }
+      }
+
+      function urlFilename(url) {
+        const segment = url.pathname.split("/").filter(Boolean).at(-1) || "";
+        return cleanLinkTitle(decodedUrlSegment(segment));
+      }
+
+      function isLikelyFileUrl(url) {
+        const extension = urlFilename(url).match(/\.([a-z0-9]{1,12})$/i)?.[1]?.toLowerCase();
+        return Boolean(extension && !pastedLinkWebPageExtensions.has(extension));
+      }
+
+      function fallbackLinkTitle(url) {
+        const filename = urlFilename(url);
+        if (/\.pdf$/i.test(filename)) return filename;
+        const pageName = filename
+          .replace(/\.(?:html?|xhtml)$/i, "")
+          .replace(/[-_]+/g, " ");
+        if (pageName && !/^index$/i.test(pageName)) return cleanLinkTitle(pageName);
+        return url.hostname.replace(/^www\./i, "") || url.href;
+      }
+
+      function clipboardLinkTitle(html, url) {
+        if (!html) return "";
+        const documentFragment = new DOMParser().parseFromString(html, "text/html");
+        for (const anchor of documentFragment.querySelectorAll("a[href]")) {
+          let href;
+          try {
+            href = new URL(anchor.getAttribute("href"), url).href;
+          } catch {
+            continue;
+          }
+          const title = cleanLinkTitle(anchor.textContent);
+          const titleUrl = pastedUrlFromText(title);
+          if (href === url.href && title && titleUrl?.href !== url.href) return title;
+        }
+        return "";
+      }
+
+      async function responseTextPrefix(response, byteLimit) {
+        if (!response.body?.getReader) return (await response.text()).slice(0, byteLimit);
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let text = "";
+        let bytesRead = 0;
+        try {
+          while (bytesRead < byteLimit) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            const remaining = byteLimit - bytesRead;
+            const chunk = value.byteLength > remaining ? value.subarray(0, remaining) : value;
+            bytesRead += chunk.byteLength;
+            text += decoder.decode(chunk, { stream: bytesRead < byteLimit });
+          }
+          text += decoder.decode();
+        } finally {
+          void reader.cancel().catch(() => {});
+        }
+        return text;
+      }
+
+      async function fetchLinkTitle(url) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), pastedLinkTitleTimeout);
+        try {
+          const response = await fetch(url.href, {
+            credentials: "omit",
+            referrerPolicy: "no-referrer",
+            signal: controller.signal
+          });
+          if (!response.ok) return "";
+          const contentType = response.headers.get("content-type") || "";
+          if (contentType && !/\b(?:text\/html|application\/xhtml\+xml)\b/i.test(contentType)) {
+            return "";
+          }
+          const html = await responseTextPrefix(response, pastedLinkTitleByteLimit);
+          return cleanLinkTitle(new DOMParser()
+            .parseFromString(html, "text/html")
+            .querySelector("title")?.textContent);
+        } catch {
+          return "";
+        } finally {
+          clearTimeout(timer);
+        }
+      }
+
+      function hostnameMatches(hostname, candidate) {
+        return hostname === candidate || hostname.endsWith(`.${candidate}`);
+      }
+
+      function oEmbedRequestUrl(url) {
+        const provider = pastedLinkOEmbedProviders.find(candidate =>
+          candidate.hosts.some(host => hostnameMatches(url.hostname, host)));
+        if (!provider) return null;
+        const requestUrl = new URL(provider.endpoint);
+        requestUrl.searchParams.set("url", url.href);
+        if (provider.format) requestUrl.searchParams.set("format", "json");
+        return requestUrl;
+      }
+
+      async function fetchOEmbedTitle(url) {
+        const requestUrl = oEmbedRequestUrl(url);
+        if (!requestUrl) return null;
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), pastedLinkTitleTimeout);
+        try {
+          const response = await fetch(requestUrl.href, {
+            credentials: "omit",
+            referrerPolicy: "no-referrer",
+            signal: controller.signal
+          });
+          if (!response.ok) return "";
+          const result = await response.json();
+          return cleanLinkTitle(result?.title);
+        } catch {
+          return "";
+        } finally {
+          clearTimeout(timer);
+        }
+      }
+
+      async function resolveRemoteLinkTitle(url) {
+        const oEmbedTitle = await fetchOEmbedTitle(url);
+        if (oEmbedTitle !== null) return oEmbedTitle;
+        return fetchLinkTitle(url);
+      }
+
+      function markdownLink(title, url) {
+        const label = title.replace(/\\/g, "\\\\").replace(/[\[\]]/g, "\\$&");
+        const destination = url.href.replace(/</g, "%3C").replace(/>/g, "%3E");
+        return `[${label}](<${destination}>)`;
+      }
+
+      async function pasteFormattedLink(event) {
+        if (!editorReady || Array.from(event.clipboardData?.files || [])
+          .some(file => file.type?.startsWith("image/"))) return;
+
+        const url = pastedUrlFromText(event.clipboardData?.getData("text/plain"));
+        if (!url) return;
+
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        const file = activeFile();
+        if (!file || file.builtin || file.welcome) {
+          updateStatus("Create or open a Markdown file before pasting links");
+          return;
+        }
+
+        let title = clipboardLinkTitle(event.clipboardData?.getData("text/html"), url);
+        const hasOEmbedProvider = Boolean(oEmbedRequestUrl(url));
+        if (!title && !hasOEmbedProvider && isLikelyFileUrl(url)) title = urlFilename(url);
+        if (!title) {
+          updateStatus("Getting link title…");
+          title = await resolveRemoteLinkTitle(url);
+        }
+        if (activeFile() !== file) return;
+
+        editor.insertMD(markdownLink(title || fallbackLinkTitle(url), url));
+        updateStatus(title ? "Link pasted with title" : "Link pasted");
+      }
+
       function handleEditorKeydown(event) {
         const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.platform);
         const commandKey = isMac ? event.metaKey : event.ctrlKey;
@@ -3311,6 +3512,7 @@
       });
       editorElement.addEventListener("keydown", handleEditorViewShortcut, true);
       editorElement.addEventListener("keydown", handleEditorKeydown, true);
+      editorElement.addEventListener("paste", event => void pasteFormattedLink(event), true);
       editorElement.addEventListener("click", event => {
         if (!excalidrawAttachmentFromEvent(event)) return;
         event.preventDefault();
