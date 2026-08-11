@@ -32,7 +32,7 @@ Open Local Markdown in desktop Chrome or Edge, choose a Markdown file or folder,
 - Proportional image resizing and left, centre, or right alignment
 - Automatic Markdown links for pasted URLs, using webpage titles or document filenames
 - Editable Excalidraw drawings embedded directly in Markdown files
-- Hover controls on table edges for adding and deleting rows and columns
+- Hover controls for resizing table columns or the whole table, and adding or deleting rows and columns
 - Formatting toolbar, keyboard shortcuts, outline, and export
 - Access only to the files you choose
 

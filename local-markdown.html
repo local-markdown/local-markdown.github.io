@@ -416,6 +416,7 @@
     .LocalMarkdown-editor .vditor-reset code:not(.hljs):not(.highlight-chroma) {
       color: var(--lm-text); background-color: var(--lm-surface);
     }
+    .LocalMarkdown-editor .vditor-reset table { display: table; width: 100%; }
     .LocalMarkdown-editor .vditor-reset table tr { background-color: var(--lm-background); }
     .LocalMarkdown-editor .vditor-reset table tr:nth-child(2n) { background-color: var(--lm-subtle); }
     .LocalMarkdown-editor .vditor-reset :is(td, th) { border-color: var(--lm-border); }
@@ -474,6 +475,27 @@
       font-size: 17px; line-height: 1;
     }
     .LocalMarkdown-table-edge-tool[data-destructive="true"] { color: var(--lm-muted); }
+    .LocalMarkdown-table-resize-handle {
+      position: fixed; z-index: 25; width: 11px; padding: 0;
+      border: 0; background: transparent; cursor: col-resize;
+      touch-action: none; transform: translateX(-50%);
+    }
+    .LocalMarkdown-table-resize-handle::after {
+      content: ""; position: absolute; inset: 0 auto 0 5px; width: 1px;
+      background: var(--lm-accent); opacity: .55;
+    }
+    .LocalMarkdown-table-resize-handle[data-active="true"]::after {
+      width: 2px; opacity: 1;
+    }
+    .LocalMarkdown-table-resize-handle[hidden] { display: none; }
+    .LocalMarkdown-sized-table {
+      width: var(--lm-table-width, 100%) !important; table-layout: fixed;
+    }
+    .LocalMarkdown-sized-table :is(td, th) {
+      width: var(--lm-table-column-width); overflow-wrap: anywhere;
+    }
+    .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg)
+    [data-type="html-block"].LocalMarkdown-table-widths-metadata { display: none; }
 
     .LocalMarkdown-drawing-dialog {
       width: calc(100vw - 24px); height: calc(100vh - 24px);
@@ -693,6 +715,7 @@
     <button class="LocalMarkdown-table-edge-tool" type="button" data-table-action="column-right" aria-label="Add column to the right" title="Add column to the right">+</button>
     <button class="LocalMarkdown-table-edge-tool" type="button" data-table-action="delete-column" data-destructive="true" aria-label="Delete column" title="Delete column">−</button>
   </div>
+  <button class="LocalMarkdown-table-resize-handle" id="LocalMarkdown-table-resize-handle" type="button" tabindex="-1" role="separator" aria-orientation="vertical" aria-label="Resize table columns" hidden></button>
   <div class="LocalMarkdown-image-resizer" id="LocalMarkdown-image-resizer" hidden>
     <div class="LocalMarkdown-image-alignment" role="group" aria-label="Image alignment">
       <button class="LocalMarkdown-image-align" type="button" data-image-align="left" aria-label="Align image left" aria-pressed="false" title="Align left">
@@ -754,6 +777,7 @@
       const tableToolButtons = tableEdgeTools.flatMap(tools =>
         Array.from(tools.querySelectorAll("[data-table-action]")));
       const deleteTableRowButton = tableRowTools.querySelector('[data-table-action="delete-row"]');
+      const tableResizeHandle = document.querySelector("#LocalMarkdown-table-resize-handle");
       const imageResizer = document.querySelector("#LocalMarkdown-image-resizer");
       const imageResizeHandles = Array.from(
         imageResizer.querySelectorAll(".LocalMarkdown-image-resize-handle"));
@@ -784,6 +808,9 @@
       let irScrollTopBeforeInput = null;
       let irScrollRestoreFrame = null;
       let tableHoverCell = null;
+      let tableResizeCell = null;
+      let tableResizeSession = null;
+      let tableWidthRefreshTimer = null;
       let selectedImage = null;
       let imageResizeSession = null;
       let attachmentPreviewTimer = null;
@@ -825,6 +852,8 @@
         .join("|");
       const pastedImageMaxDimension = 2000;
       const minimumImageWidth = 48;
+      const minimumTableColumnWidth = 48;
+      const tableWidthsCommentName = "local-markdown:table-widths";
       const pastedImageWebpQuality = 0.9;
       const pastedLinkTitleTimeout = 1500;
       const pastedLinkTitleByteLimit = 128 * 1024;
@@ -1088,7 +1117,7 @@
         "| Split | `⌘ + Option + 9` | `Ctrl + Alt + 9` |",
         "",
         "### Tables",
-        "Hover the left edge of a row or the top edge of a column to show + and − controls. The same actions are also available with these shortcuts.",
+        "Drag a divider between columns to resize them, or drag the right edge to resize the whole table. Hover the left edge of a row or the top edge of a column to show + and − controls. The same actions are also available with these shortcuts.",
         "",
         "| Action | Mac | Windows |",
         "| --- | --- | --- |",
@@ -2284,6 +2313,8 @@
       function activateFile(file, message = null) {
         const previous = activeFile();
         if (previous) releaseAttachmentPreviews(previous.id);
+        if (tableResizeSession) finishTableResize(null, false);
+        else hideTableResizeHandle();
         hideImageResizer();
         if (!(file.attachments instanceof Map)) file.attachments = new Map();
         if (!session.files.includes(file)) session.files.push(file);
@@ -2293,6 +2324,7 @@
         renderFiles();
         updateStatus(message);
         scheduleAttachmentPreviews();
+        scheduleTableWidths();
         scheduleSessionSave();
       }
 
@@ -2342,6 +2374,7 @@
         if (!editorReady || editor.getCurrentMode() === mode) return;
         captureEditorValue();
         hideTableEdgeTools();
+        hideTableResizeHandle();
         hideImageResizer();
         const editModeElement = editor.vditor?.toolbar?.elements?.["edit-mode"];
         const modeButton = editModeElement?.querySelector(`button[data-mode="${mode}"]`);
@@ -2358,7 +2391,239 @@
           return;
         }
         scheduleAttachmentPreviews();
+        scheduleTableWidths();
         editor.focus();
+      }
+
+      function markdownLineRecords(value) {
+        const records = [];
+        const pattern = /[^\r\n]*(?:\r\n|\n|\r|$)/g;
+        for (const match of value.matchAll(pattern)) {
+          const raw = match[0];
+          if (!raw) break;
+          const newline = raw.match(/(?:\r\n|\n|\r)$/)?.[0] || "";
+          records.push({
+            text: newline ? raw.slice(0, -newline.length) : raw,
+            newline,
+            start: match.index,
+            end: match.index + raw.length
+          });
+        }
+        return records;
+      }
+
+      function characterIsEscaped(value, index) {
+        let slashCount = 0;
+        for (let cursor = index - 1; cursor >= 0 && value[cursor] === "\\"; cursor -= 1) {
+          slashCount += 1;
+        }
+        return slashCount % 2 === 1;
+      }
+
+      function markdownTableCells(line) {
+        let value = line.trim();
+        if (!value || /^ {4}/.test(line)) return null;
+        let hasBoundary = false;
+        if (value.startsWith("|")) {
+          hasBoundary = true;
+          value = value.slice(1);
+        }
+        if (value.endsWith("|") && !characterIsEscaped(value, value.length - 1)) {
+          hasBoundary = true;
+          value = value.slice(0, -1);
+        }
+
+        const cells = [];
+        let start = 0;
+        let codeTicks = 0;
+        for (let index = 0; index < value.length; index += 1) {
+          if (value[index] === "`" && !characterIsEscaped(value, index)) {
+            let end = index + 1;
+            while (value[end] === "`") end += 1;
+            const count = end - index;
+            if (!codeTicks) codeTicks = count;
+            else if (codeTicks === count) codeTicks = 0;
+            index = end - 1;
+            continue;
+          }
+          if (value[index] !== "|" || codeTicks || characterIsEscaped(value, index)) continue;
+          hasBoundary = true;
+          cells.push(value.slice(start, index).trim());
+          start = index + 1;
+        }
+        cells.push(value.slice(start).trim());
+        return hasBoundary ? cells : null;
+      }
+
+      function normalizedTableWidths(widths, columnCount = widths?.length) {
+        if (!Array.isArray(widths) || widths.length !== columnCount
+          || widths.some(width => !Number.isFinite(width) || width <= 0)) return null;
+        const total = widths.reduce((sum, width) => sum + width, 0);
+        if (!total) return null;
+        const normalized = widths.map(width => Math.round(width / total * 10000) / 100);
+        const difference = Math.round((100 - normalized.reduce((sum, width) => sum + width, 0)) * 100) / 100;
+        normalized[normalized.length - 1] = Math.round(
+          (normalized[normalized.length - 1] + difference) * 100) / 100;
+        return normalized.every(width => width > 0) ? normalized : null;
+      }
+
+      function normalizedTableWidth(width = 100) {
+        const value = Number(width);
+        if (!Number.isFinite(value) || value <= 0 || value > 100) return null;
+        return Math.round(value * 100) / 100;
+      }
+
+      function parseTableWidthsComment(line, columnCount) {
+        const match = line.match(/^([ \t]*)<!--\s*local-markdown:table-widths\s*=\s*([\d.]+(?:\s*,\s*[\d.]+)*)(?:\s*;\s*table-width\s*=\s*([\d.]+))?\s*-->[ \t]*$/i);
+        if (!match) return null;
+        const values = match[2].split(",").map(value => Number(value.trim()));
+        return {
+          indent: match[1],
+          widths: normalizedTableWidths(values, columnCount),
+          tableWidth: normalizedTableWidth(match[3] ?? 100) || 100
+        };
+      }
+
+      function markdownTableBlocks(value) {
+        const lines = markdownLineRecords(value);
+        const tables = [];
+        let fence = null;
+        for (let index = 0; index < lines.length - 1; index += 1) {
+          const line = lines[index].text;
+          const fenceMatch = line.match(/^ {0,3}(`{3,}|~{3,})/);
+          if (fenceMatch) {
+            const marker = fenceMatch[1];
+            if (!fence) fence = { character: marker[0], length: marker.length };
+            else if (marker[0] === fence.character && marker.length >= fence.length) fence = null;
+            continue;
+          }
+          if (fence) continue;
+
+          const header = markdownTableCells(line);
+          const delimiter = markdownTableCells(lines[index + 1].text);
+          if (!header || !delimiter || header.length !== delimiter.length
+            || !delimiter.every(cell => /^:?-+:?$/.test(cell))) continue;
+
+          let metadataIndex = index - 1;
+          while (metadataIndex >= 0 && !lines[metadataIndex].text.trim()) metadataIndex -= 1;
+          const metadataLine = metadataIndex >= 0 ? lines[metadataIndex] : null;
+          const metadataMatch = metadataLine?.text.match(
+            /^([ \t]*)<!--\s*local-markdown:table-widths\s*=/i);
+          const metadata = metadataLine
+            ? parseTableWidthsComment(metadataLine.text, header.length)
+            : null;
+          const hasMetadata = Boolean(metadataMatch);
+          tables.push({
+            start: lines[index].start,
+            newline: lines[index].newline || (value.includes("\r\n") ? "\r\n" : "\n"),
+            indent: line.match(/^[ \t]*/)?.[0] || "",
+            columnCount: header.length,
+            widths: metadata?.widths || null,
+            tableWidth: metadata?.tableWidth || 100,
+            metadataStart: hasMetadata ? metadataLine.start : null,
+            metadataEnd: hasMetadata ? metadataLine.end : null,
+            metadataIndent: metadata?.indent || metadataMatch?.[1] || ""
+          });
+          index += 1;
+        }
+        return tables;
+      }
+
+      function formattedTableWidth(width) {
+        return Number(width.toFixed(2)).toString();
+      }
+
+      function replaceTableWidthsMetadata(value, table, widths, tableWidth = table.tableWidth) {
+        const normalized = normalizedTableWidths(widths, table.columnCount);
+        const normalizedWidth = normalizedTableWidth(tableWidth) || 100;
+        if (!normalized) return null;
+        const indent = table.metadataStart === null ? table.indent : table.metadataIndent;
+        const widthSetting = normalizedWidth < 100
+          ? `;table-width=${formattedTableWidth(normalizedWidth)}`
+          : "";
+        const comment = `${indent}<!-- ${tableWidthsCommentName}=${normalized.map(formattedTableWidth).join(",")}${widthSetting} -->${table.newline}`;
+        if (table.metadataStart !== null) {
+          return value.slice(0, table.metadataStart) + comment + value.slice(table.metadataEnd);
+        }
+        return value.slice(0, table.start) + comment + value.slice(table.start);
+      }
+
+      function tableColumnCount(table) {
+        return table.rows[0]?.cells.length || 0;
+      }
+
+      function clearTableWidths(table) {
+        table.classList.remove("LocalMarkdown-sized-table");
+        table.style.removeProperty("--lm-table-width");
+        for (const cell of table.querySelectorAll("th, td")) {
+          cell.style.removeProperty("--lm-table-column-width");
+        }
+      }
+
+      function applyTableWidths(table, widths, tableWidth = 100) {
+        const normalized = normalizedTableWidths(widths, tableColumnCount(table));
+        const normalizedWidth = normalizedTableWidth(tableWidth);
+        if (!normalized || !normalizedWidth) {
+          clearTableWidths(table);
+          return false;
+        }
+        table.classList.add("LocalMarkdown-sized-table");
+        table.style.setProperty("--lm-table-width", `${normalizedWidth}%`);
+        for (const row of table.rows) {
+          for (const cell of row.cells) {
+            const width = normalized[cell.cellIndex];
+            if (width) cell.style.setProperty("--lm-table-column-width", `${width}%`);
+          }
+        }
+        return true;
+      }
+
+      function tableSurface(table) {
+        return table?.closest?.(".vditor-ir, .vditor-wysiwyg, .vditor-preview") || null;
+      }
+
+      function tablesInSurface(surface) {
+        return Array.from(surface?.querySelectorAll("table") || [])
+          .filter(table => tableSurface(table) === surface);
+      }
+
+      function markdownTableContext(table, value) {
+        const surface = tableSurface(table);
+        const tableIndex = tablesInSurface(surface).indexOf(table);
+        if (tableIndex < 0) return null;
+        const block = markdownTableBlocks(value)[tableIndex];
+        if (!block || block.columnCount !== tableColumnCount(table)) return null;
+        return { tableIndex, block };
+      }
+
+      function refreshTableWidths() {
+        if (!editorReady) return;
+        const file = activeFile();
+        if (!file) return;
+        const blocks = markdownTableBlocks(file.text);
+        for (const metadata of editorElement.querySelectorAll(
+          '.vditor-ir [data-type="html-block"], .vditor-wysiwyg [data-type="html-block"]')) {
+          metadata.classList.toggle("LocalMarkdown-table-widths-metadata",
+            /^<!--\s*local-markdown:table-widths\s*=/i.test(metadata.textContent.trim()));
+        }
+        const surfaces = editorElement.querySelectorAll(".vditor-ir, .vditor-wysiwyg, .vditor-preview");
+        for (const surface of surfaces) {
+          const tables = tablesInSurface(surface);
+          tables.forEach((table, index) => {
+            if (tableResizeSession?.table === table) return;
+            const block = blocks[index];
+            if (!block?.widths || block.columnCount !== tableColumnCount(table)) clearTableWidths(table);
+            else applyTableWidths(table, block.widths, block.tableWidth);
+          });
+        }
+      }
+
+      function scheduleTableWidths() {
+        clearTimeout(tableWidthRefreshTimer);
+        tableWidthRefreshTimer = setTimeout(() => {
+          tableWidthRefreshTimer = null;
+          refreshTableWidths();
+        }, 0);
       }
 
       function tableCellFromNode(node) {
@@ -2373,6 +2638,46 @@
         tableHoverCell = null;
       }
 
+      function hideTableResizeHandle() {
+        if (tableResizeSession) return;
+        tableResizeHandle.hidden = true;
+        tableResizeHandle.dataset.active = "false";
+        tableResizeCell = null;
+      }
+
+      function positionTableResizeHandle(cell) {
+        const table = cell?.closest("table");
+        const surface = table?.closest(".vditor-ir")?.querySelector(":scope > .vditor-reset");
+        const columnIndex = cell?.cellIndex ?? -1;
+        const columnCount = tableColumnCount(table);
+        if (!table || !surface || columnIndex < 0 || columnIndex >= columnCount) {
+          hideTableResizeHandle();
+          return false;
+        }
+
+        const cellRect = cell.getBoundingClientRect();
+        const tableRect = table.getBoundingClientRect();
+        const surfaceRect = surface.getBoundingClientRect();
+        const top = Math.max(tableRect.top, surfaceRect.top, 2);
+        const bottom = Math.min(tableRect.bottom, surfaceRect.bottom, innerHeight - 2);
+        if (bottom <= top) {
+          hideTableResizeHandle();
+          return false;
+        }
+
+        tableResizeCell = cell;
+        tableResizeHandle.hidden = false;
+        const tableEdge = columnIndex === columnCount - 1;
+        tableResizeHandle.dataset.edge = tableEdge ? "table" : "column";
+        tableResizeHandle.setAttribute("aria-label",
+          tableEdge ? "Resize table width" : "Resize table columns");
+        tableResizeHandle.title = tableEdge ? "Resize table width" : "Resize columns";
+        tableResizeHandle.style.left = `${Math.round(cellRect.right)}px`;
+        tableResizeHandle.style.top = `${Math.round(top)}px`;
+        tableResizeHandle.style.height = `${Math.round(bottom - top)}px`;
+        return true;
+      }
+
       function showTableEdgeTools(axis, cell) {
         const surface = editorElement.querySelector(".vditor-ir > .vditor-reset");
         const table = cell.closest("table");
@@ -2382,6 +2687,7 @@
         }
 
         tableHoverCell = cell;
+        hideTableResizeHandle();
         const tools = axis === "row" ? tableRowTools : tableColumnTools;
         const otherTools = axis === "row" ? tableColumnTools : tableRowTools;
         otherTools.hidden = true;
@@ -2416,9 +2722,11 @@
       }
 
       function handleTableEdgePointerMove(event) {
-        if (tableEdgeTools.some(tools => tools.contains(event.target))) return;
+        if (tableResizeSession || tableResizeHandle.contains(event.target)
+          || tableEdgeTools.some(tools => tools.contains(event.target))) return;
         if (!editorReady || editor.getCurrentMode() !== "ir") {
           hideTableEdgeTools();
+          hideTableResizeHandle();
           return;
         }
 
@@ -2426,6 +2734,7 @@
         const table = cell?.closest("table");
         if (!cell || !table) {
           hideTableEdgeTools();
+          hideTableResizeHandle();
           return;
         }
 
@@ -2433,8 +2742,16 @@
         const cellRect = cell.getBoundingClientRect();
         const rowRect = cell.parentElement.getBoundingClientRect();
         const edgeSize = 14;
+        const resizeEdgeSize = 5;
         const rowDistance = Math.abs(event.clientX - tableRect.left);
         const columnDistance = Math.abs(event.clientY - tableRect.top);
+        const leftResizeDistance = Math.abs(event.clientX - cellRect.left);
+        const rightResizeDistance = Math.abs(event.clientX - cellRect.right);
+        const useLeftResizeEdge = cell.cellIndex > 0 && leftResizeDistance < rightResizeDistance;
+        const resizeCell = useLeftResizeEdge
+          ? cell.parentElement.cells[cell.cellIndex - 1]
+          : cell;
+        const resizeDistance = useLeftResizeEdge ? leftResizeDistance : rightResizeDistance;
         const onRowEdge = rowDistance <= edgeSize
           && event.clientY >= rowRect.top && event.clientY <= rowRect.bottom;
         const onColumnEdge = columnDistance <= edgeSize
@@ -2444,9 +2761,146 @@
           showTableEdgeTools("row", cell);
         } else if (onColumnEdge) {
           showTableEdgeTools("column", cell);
+        } else if (resizeDistance <= resizeEdgeSize) {
+          hideTableEdgeTools();
+          positionTableResizeHandle(resizeCell);
         } else {
           hideTableEdgeTools();
+          hideTableResizeHandle();
         }
+      }
+
+      function tableColumnWidthsFromLayout(table) {
+        const cells = Array.from(table.rows[0]?.cells || []);
+        const widths = cells.map(cell => cell.getBoundingClientRect().width);
+        return normalizedTableWidths(widths, cells.length);
+      }
+
+      function applyTableWidthTextUpdate(file, value, updated, message) {
+        if (!updated || updated === value) return false;
+        file.text = updated;
+        if (!file.builtin) {
+          file.dirty = true;
+          scheduleAutoSave(file);
+          scheduleSessionSave();
+        }
+        editor.setValue(updated, true);
+        renderFiles();
+        updateStatus(message);
+        scheduleAttachmentPreviews();
+        scheduleTableWidths();
+        return true;
+      }
+
+      function startTableResize(event) {
+        if (tableResizeSession || event.button !== 0
+          || !tableResizeCell?.isConnected || !editorReady) return;
+        const table = tableResizeCell.closest("table");
+        const file = activeFile();
+        if (!table || !file) return;
+        const value = canonicalEditorText(editor.getValue(), file);
+        const context = markdownTableContext(table, value);
+        const columnIndex = tableResizeCell.cellIndex;
+        const layoutWidths = tableColumnWidthsFromLayout(table);
+        const widths = context?.block.widths || layoutWidths;
+        const firstRow = table.rows[0];
+        const leftCell = firstRow?.cells[columnIndex];
+        const rightCell = firstRow?.cells[columnIndex + 1];
+        const tableEdge = columnIndex === tableColumnCount(table) - 1;
+        if (!context || !widths || (!tableEdge && (!leftCell || !rightCell))) return;
+
+        event.preventDefault();
+        hideTableEdgeTools();
+        applyTableWidths(table, widths, context.block.tableWidth);
+        const tablePixels = table.getBoundingClientRect().width;
+        const leftPixels = leftCell?.getBoundingClientRect().width || 0;
+        const rightPixels = rightCell?.getBoundingClientRect().width || 0;
+        tableResizeSession = {
+          table,
+          tableIndex: context.tableIndex,
+          columnIndex,
+          tableEdge,
+          initialWidths: [...widths],
+          widths: [...widths],
+          initialTableWidth: context.block.tableWidth,
+          tableWidth: context.block.tableWidth,
+          hadStoredWidths: Boolean(context.block.widths),
+          startX: event.clientX,
+          pairPixels: leftPixels + rightPixels,
+          pairPercentage: tableEdge ? 0 : widths[columnIndex] + widths[columnIndex + 1],
+          tablePixels,
+          widthBasisPixels: tablePixels / (context.block.tableWidth / 100),
+          changed: false
+        };
+        tableResizeHandle.dataset.active = "true";
+        tableResizeHandle.setPointerCapture(event.pointerId);
+      }
+
+      function continueTableResize(event) {
+        const resize = tableResizeSession;
+        if (!resize || !resize.tablePixels) return;
+        event.preventDefault();
+        const deltaPixels = event.clientX - resize.startX;
+        if (resize.tableEdge) {
+          const minimumPixels = Math.min(resize.widthBasisPixels,
+            minimumTableColumnWidth * resize.widths.length);
+          const nextPixels = Math.max(minimumPixels, Math.min(
+            resize.widthBasisPixels, resize.tablePixels + deltaPixels));
+          resize.tableWidth = normalizedTableWidth(
+            nextPixels / resize.widthBasisPixels * 100) || resize.initialTableWidth;
+          resize.changed = Math.abs(deltaPixels) >= 1;
+          applyTableWidths(resize.table, resize.widths, resize.tableWidth);
+          positionTableResizeHandle(resize.table.rows[0].cells[resize.columnIndex]);
+          return;
+        }
+        if (!resize.pairPixels) return;
+        const minimumPercentage = Math.min(
+          minimumTableColumnWidth / resize.tablePixels * 100,
+          Math.max(.5, resize.pairPercentage / 2 - .5)
+        );
+        const initialLeft = resize.initialWidths[resize.columnIndex];
+        const nextLeft = Math.max(minimumPercentage, Math.min(
+          resize.pairPercentage - minimumPercentage,
+          initialLeft + deltaPixels / resize.pairPixels * resize.pairPercentage
+        ));
+        resize.widths[resize.columnIndex] = nextLeft;
+        resize.widths[resize.columnIndex + 1] = resize.pairPercentage - nextLeft;
+        resize.widths = normalizedTableWidths(resize.widths, resize.widths.length);
+        resize.changed = Math.abs(deltaPixels) >= 1;
+        applyTableWidths(resize.table, resize.widths, resize.tableWidth);
+        positionTableResizeHandle(resize.table.rows[0].cells[resize.columnIndex]);
+      }
+
+      function commitTableResize(resize) {
+        const file = activeFile();
+        if (!file || !editorReady) return false;
+        const value = canonicalEditorText(editor.getValue(), file);
+        const table = markdownTableBlocks(value)[resize.tableIndex];
+        if (!table || table.columnCount !== resize.widths.length) return false;
+        const updated = replaceTableWidthsMetadata(
+          value, table, resize.widths, resize.tableWidth);
+        const message = resize.tableEdge ? "Table width updated" : "Column widths updated";
+        return applyTableWidthTextUpdate(file, value, updated, message);
+      }
+
+      function finishTableResize(event, commit = true) {
+        const resize = tableResizeSession;
+        if (!resize) return;
+        event?.preventDefault();
+        tableResizeSession = null;
+        tableResizeHandle.dataset.active = "false";
+        if (commit && resize.changed && commitTableResize(resize)) {
+          hideTableResizeHandle();
+          return;
+        }
+        if (resize.table.isConnected) {
+          if (resize.hadStoredWidths) {
+            applyTableWidths(resize.table, resize.initialWidths, resize.initialTableWidth);
+          }
+          else clearTableWidths(resize.table);
+        }
+        hideTableResizeHandle();
+        if (commit && resize.changed) updateStatus("Could not resize this table");
       }
 
       function selectHoveredTableCell() {
@@ -2462,6 +2916,44 @@
         return surface;
       }
 
+      function tableWidthColumnActionContext(action) {
+        if (!tableHoverCell || !["column-right", "delete-column"].includes(action)) return null;
+        const file = activeFile();
+        const table = tableHoverCell.closest("table");
+        if (!file || !table) return null;
+        const value = canonicalEditorText(editor.getValue(), file);
+        const context = markdownTableContext(table, value);
+        if (!context?.block.widths) return null;
+        return {
+          action,
+          file,
+          tableIndex: context.tableIndex,
+          columnIndex: tableHoverCell.cellIndex,
+          widths: [...context.block.widths],
+          tableWidth: context.block.tableWidth
+        };
+      }
+
+      function synchronizeTableWidthsAfterColumnAction(context, message) {
+        if (activeFile() !== context.file || !editorReady) return;
+        const value = canonicalEditorText(editor.getValue(), context.file);
+        const table = markdownTableBlocks(value)[context.tableIndex];
+        if (!table) return;
+        const widths = [...context.widths];
+        if (context.action === "column-right" && table.columnCount === widths.length + 1) {
+          const width = widths[context.columnIndex] / 2;
+          widths[context.columnIndex] = width;
+          widths.splice(context.columnIndex + 1, 0, width);
+        } else if (context.action === "delete-column" && table.columnCount === widths.length - 1) {
+          widths.splice(context.columnIndex, 1);
+        } else {
+          scheduleTableWidths();
+          return;
+        }
+        const updated = replaceTableWidthsMetadata(value, table, widths, context.tableWidth);
+        applyTableWidthTextUpdate(context.file, value, updated, message);
+      }
+
       function runTableAction(action) {
         const shortcuts = {
           "row-below": { key: "=", code: "Equal", shiftKey: false, status: "Row added below" },
@@ -2470,6 +2962,7 @@
           "delete-column": { key: "-", code: "Minus", shiftKey: true, status: "Column deleted" }
         };
         const shortcut = shortcuts[action];
+        const widthContext = tableWidthColumnActionContext(action);
         const surface = shortcut && selectHoveredTableCell();
         if (!surface) {
           hideTableEdgeTools();
@@ -2487,7 +2980,15 @@
           cancelable: true
         });
         surface.dispatchEvent(event);
-        if (event.defaultPrevented) updateStatus(shortcut.status);
+        if (event.defaultPrevented) {
+          updateStatus(shortcut.status);
+          if (widthContext) {
+            setTimeout(() => synchronizeTableWidthsAfterColumnAction(
+              widthContext, shortcut.status), 0);
+          } else {
+            scheduleTableWidths();
+          }
+        }
         hideTableEdgeTools();
       }
 
@@ -3105,6 +3606,7 @@
         if (attachmentPreviewObserver || typeof MutationObserver !== "function") return;
         attachmentPreviewObserver = new MutationObserver(() => {
           refreshAttachmentPreviews();
+          scheduleTableWidths();
         });
         attachmentPreviewObserver.observe(editorElement, {
           subtree: true,
@@ -4479,21 +4981,40 @@
         hideTableEdgeTools();
       });
       document.addEventListener("pointerdown", event => {
+        if (tableResizeHandle.contains(event.target)) return;
+        hideTableResizeHandle();
+      });
+      document.addEventListener("pointerdown", event => {
         if (imageResizer.contains(event.target) || editableImageFromNode(event.target)) return;
         hideImageResizer();
       });
       document.addEventListener("pointermove", handleTableEdgePointerMove);
+      document.addEventListener("pointermove", continueTableResize);
+      document.addEventListener("pointerup", event => finishTableResize(event));
+      document.addEventListener("pointercancel", event => finishTableResize(event, false));
       document.addEventListener("scroll", () => {
         hideTableEdgeTools();
+        hideTableResizeHandle();
         closeFileContextMenu();
         positionImageResizer();
       }, true);
       addEventListener("resize", () => {
         hideTableEdgeTools();
+        hideTableResizeHandle();
         closeFileContextMenu();
         positionImageResizer();
       });
       addEventListener("keydown", event => {
+        if (event.key === "Escape" && tableResizeSession) {
+          event.preventDefault();
+          finishTableResize(null, false);
+          return;
+        }
+        if (event.key === "Escape" && !tableResizeHandle.hidden) {
+          event.preventDefault();
+          hideTableResizeHandle();
+          return;
+        }
         if (event.key === "Escape" && imageResizeSession) {
           event.preventDefault();
           const resize = imageResizeSession;
@@ -4561,6 +5082,7 @@
       for (const button of tableToolButtons) {
         button.addEventListener("click", () => runTableAction(button.dataset.tableAction));
       }
+      tableResizeHandle.addEventListener("pointerdown", startTableResize);
       for (const button of imageAlignButtons) {
         button.addEventListener("pointerdown", event => event.preventDefault());
         button.addEventListener("click", () => {
@@ -4582,7 +5104,9 @@
       editorElement.addEventListener("input", () => {
         restoreIrScrollPosition();
         hideTableEdgeTools();
+        hideTableResizeHandle();
         hideImageResizer();
+        scheduleTableWidths();
       });
       editorElement.addEventListener("keydown", handleEditorViewShortcut, true);
       editorElement.addEventListener("keydown", handleEditorKeydown, true);
@@ -4777,6 +5301,7 @@
           renderFiles();
           updateStatus();
           scheduleAttachmentPreviews();
+          scheduleTableWidths();
         },
         after() {
           editorReady = true;
@@ -4787,12 +5312,14 @@
           editor.setValue(activeFile().text, true);
           updateStatus();
           scheduleAttachmentPreviews();
+          scheduleTableWidths();
         }
       });
 
       addEventListener("unload", () => {
         attachmentPreviewObserver?.disconnect();
         cancelAnimationFrame(irScrollRestoreFrame);
+        clearTimeout(tableWidthRefreshTimer);
         releaseAttachmentPreviews();
         imageWorker?.terminate();
         if (imageWorkerUrl) URL.revokeObjectURL(imageWorkerUrl);
