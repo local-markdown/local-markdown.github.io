@@ -395,11 +395,27 @@
       --ir-paren-color: #2aa198;
       height: 100% !important; border: 0; border-radius: 0;
     }
+    .LocalMarkdown-editor.vditor--fullscreen {
+      position: fixed; inset: 0; width: 100vw; height: 100vh !important;
+    }
     .LocalMarkdown-editor .vditor-toolbar {
       flex-shrink: 0; padding: 0 8px;
       border: 0; border-bottom: 1px solid var(--lm-border); background: var(--lm-surface);
     }
     .LocalMarkdown-editor .vditor-toolbar__item .vditor-tooltipped { width: 23px; padding: 7px 4px; }
+    .LocalMarkdown-editor svg.LocalMarkdown-toolbar-icon {
+      width: 18px; height: 18px; display: block; overflow: visible;
+      fill: none !important; stroke: var(--toolbar-icon-color, var(--lm-muted)) !important;
+      stroke-width: 1.75px !important; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .LocalMarkdown-editor svg.LocalMarkdown-toolbar-icon * {
+      fill: none !important; stroke: var(--toolbar-icon-color, var(--lm-muted)) !important;
+      stroke-width: 1.75px !important; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .LocalMarkdown-editor .vditor-tooltipped:is(:hover, :focus-visible)
+    svg.LocalMarkdown-toolbar-icon * {
+      stroke: var(--toolbar-icon-hover-color, var(--lm-accent)) !important;
+    }
     .LocalMarkdown-editor .vditor-toolbar__divider { margin-right: 5px; margin-left: 5px; }
     .LocalMarkdown-internal-edit-mode { display: none !important; }
     .LocalMarkdown-editor .vditor-counter,
@@ -5203,8 +5219,42 @@
       renderFiles();
       updateStatus();
 
+      const toolbarIconPaths = {
+        emoji: '<circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/>',
+        headings: '<path d="M6 4v16M18 4v16M6 12h12"/>',
+        bold: '<path d="M6 4h8a4 4 0 0 1 0 8H6zM6 12h9a4 4 0 0 1 0 8H6z"/>',
+        italic: '<path d="M19 4h-9M14 20H5M15 4 9 20"/>',
+        strike: '<path d="M16 4H9a3 3 0 0 0-2.83 4M14 12a4 4 0 0 1 0 8H6M4 12h16"/>',
+        link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+        list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+        "ordered-list": '<path d="M10 6h11M10 12h11M10 18h11M4 6h1v4M4 10h2M6 18H4c0-1 2-2 2-3s-.75-1.5-2-1.5"/>',
+        check: '<path d="M10 6h11M10 12h11M10 18h11M3 6l1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2"/>',
+        outdent: '<path d="M3 5h18M10 12h11M10 19h11M3 12l4-3v6Z"/>',
+        indent: '<path d="M3 5h18M10 12h11M10 19h11M7 12l-4-3v6Z"/>',
+        quote: '<path d="M3 21c3 0 7-1 7-8V5a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h3c0 3-1 4-4 4v4ZM14 21c3 0 7-1 7-8V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h3c0 3-1 4-4 4v4Z"/>',
+        line: '<path d="M5 12h14"/>',
+        code: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="m10 8-4 4 4 4M14 8l4 4-4 4"/>',
+        "inline-code": '<path d="m8 9-3 3 3 3M16 9l3 3-3 3M14 5l-4 14"/>',
+        "insert-before": '<path d="M5 4h14M12 20V8M7 13l5-5 5 5"/>',
+        "insert-after": '<path d="M5 20h14M12 4v12M7 11l5 5 5-5"/>',
+        upload: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21M16 3v6M13 6h6"/>',
+        table: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>',
+        draw: '<path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/>',
+        undo: '<path d="M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-2"/>',
+        redo: '<path d="m15 14 5-5-5-5M20 9H10a6 6 0 0 0 0 12h2"/>',
+        fullscreen: '<path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/>',
+        outline: '<path d="M3 5h18M3 12h12M3 19h8M17 16l4 3-4 3"/>',
+        export: '<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>'
+      };
+
+      function toolbarIcon(name) {
+        const paths = toolbarIconPaths[name];
+        if (!paths) return "";
+        return `<svg class="LocalMarkdown-toolbar-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${paths}</svg>`;
+      }
+
       function toolbarControl(name, tipPosition = "n") {
-        return { name, tipPosition };
+        return { name, tipPosition, icon: toolbarIcon(name) };
       }
 
       function drawingToolbarControl() {
@@ -5212,7 +5262,7 @@
           name: "draw",
           tip: "Draw with Excalidraw",
           tipPosition: "n",
-          icon: '<svg viewBox="0 0 24 24"><path d="M4 17.5V20h2.5L18.8 7.7l-2.5-2.5L4 17.5Zm13.1-13.1 2.5 2.5 1-1a1.1 1.1 0 0 0 0-1.6l-.9-.9a1.1 1.1 0 0 0-1.6 0l-1 1ZM4 4h7M4 8h5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+          icon: toolbarIcon("draw"),
           click() {
             void openDrawingDialog();
           }
