@@ -491,11 +491,16 @@
     .LocalMarkdown-sized-table {
       width: var(--lm-table-width, 100%) !important; table-layout: fixed;
     }
-    .LocalMarkdown-sized-table :is(td, th) {
-      width: var(--lm-table-column-width); overflow-wrap: anywhere;
+    .LocalMarkdown-editor .vditor-reset table.LocalMarkdown-sized-table :is(td, th) {
+      width: var(--lm-table-column-width); white-space: normal;
+      overflow-wrap: anywhere; word-break: break-word;
     }
     .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg)
     [data-type="html-block"].LocalMarkdown-table-widths-metadata { display: none; }
+    .LocalMarkdown-editor .vditor-reset table
+    [data-type="html-inline"].LocalMarkdown-table-line-break {
+      display: block !important; height: 0; line-height: 0; overflow: hidden;
+    }
 
     .LocalMarkdown-drawing-dialog {
       width: calc(100vw - 24px); height: calc(100vh - 24px);
@@ -2605,6 +2610,11 @@
           '.vditor-ir [data-type="html-block"], .vditor-wysiwyg [data-type="html-block"]')) {
           metadata.classList.toggle("LocalMarkdown-table-widths-metadata",
             /^<!--\s*local-markdown:table-widths\s*=/i.test(metadata.textContent.trim()));
+        }
+        for (const inlineHtml of editorElement.querySelectorAll(
+          '.vditor-ir table [data-type="html-inline"], .vditor-wysiwyg table [data-type="html-inline"]')) {
+          inlineHtml.classList.toggle("LocalMarkdown-table-line-break",
+            /^<br\s*\/?>$/i.test(inlineHtml.textContent.trim()));
         }
         const surfaces = editorElement.querySelectorAll(".vditor-ir, .vditor-wysiwyg, .vditor-preview");
         for (const surface of surfaces) {
