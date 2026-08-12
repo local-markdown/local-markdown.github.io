@@ -57,6 +57,7 @@
       --lm-text: #111;
       --lm-muted: #666;
       --lm-faint: #aaa;
+      --lm-secondary-text: #666;
       --lm-border: #e5e5e5;
       --lm-control-border: #d8d8d8;
       --lm-accent: #111;
@@ -79,6 +80,7 @@
       --lm-text: #586e75;
       --lm-muted: #657b83;
       --lm-faint: #93a1a1;
+      --lm-secondary-text: #52676d;
       --lm-border: #d8d1bd;
       --lm-control-border: #c9c2ae;
       --lm-accent: #268bd2;
@@ -101,6 +103,7 @@
       --lm-text: #93a1a1;
       --lm-muted: #839496;
       --lm-faint: #657b83;
+      --lm-secondary-text: #93a1a1;
       --lm-border: #164653;
       --lm-control-border: #315661;
       --lm-accent: #2aa198;
@@ -164,7 +167,7 @@
       min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
       font-size: var(--lm-type-metadata-size); font-weight: 500; line-height: var(--lm-line-tight);
     }
-    .LocalMarkdown-logo { width: 16px; height: 16px; flex: 0 0 16px; opacity: .82; }
+    .LocalMarkdown-logo { width: 18px; height: 18px; flex: 0 0 18px; opacity: .82; }
     .LocalMarkdown-logo rect { fill: var(--lm-background); stroke: var(--lm-muted); }
     .LocalMarkdown-logo path { stroke: var(--lm-muted); }
     .LocalMarkdown-new {
@@ -191,7 +194,7 @@
       color: var(--lm-text); background: var(--lm-surface);
       font-size: var(--lm-type-control-size); line-height: var(--lm-line-tight);
     }
-    .LocalMarkdown-search-input::placeholder { color: var(--lm-faint); }
+    .LocalMarkdown-search-input::placeholder { color: var(--lm-secondary-text); opacity: 1; }
     .LocalMarkdown-search-input::-webkit-search-cancel-button {
       display: none; -webkit-appearance: none;
     }
@@ -264,7 +267,7 @@
     .LocalMarkdown-file.LocalMarkdown-dragging { opacity: 0; }
     .LocalMarkdown-sidebar-section {
       padding: var(--lm-space-3) var(--lm-space-2) var(--lm-space-1);
-      color: var(--lm-faint); font-size: var(--lm-type-metadata-size);
+      color: var(--lm-secondary-text); font-size: var(--lm-type-metadata-size);
       font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
     }
     .LocalMarkdown-workspace { margin-bottom: var(--lm-space-1); }
@@ -299,7 +302,7 @@
     .LocalMarkdown-tree-remove:hover { color: var(--lm-text); }
     .LocalMarkdown-tree-empty {
       padding: var(--lm-space-1) var(--lm-space-2) var(--lm-space-2);
-      color: var(--lm-faint); font-size: var(--lm-type-metadata-size);
+      color: var(--lm-secondary-text); font-size: var(--lm-type-metadata-size);
     }
     .LocalMarkdown-search-summary,
     .LocalMarkdown-search-empty {
@@ -324,7 +327,7 @@
       min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
     .LocalMarkdown-search-count {
-      flex: 0 0 auto; color: var(--lm-faint);
+      flex: 0 0 auto; color: var(--lm-secondary-text);
       font-size: var(--lm-type-metadata-size); font-weight: 400;
     }
     .LocalMarkdown-search-hit {
@@ -332,7 +335,7 @@
       padding: var(--lm-space-2); border-top: 1px solid var(--lm-border);
       color: var(--lm-muted); font-size: var(--lm-type-metadata-size);
     }
-    .LocalMarkdown-search-line { color: var(--lm-faint); font-variant-numeric: tabular-nums; }
+    .LocalMarkdown-search-line { color: var(--lm-secondary-text); font-variant-numeric: tabular-nums; }
     .LocalMarkdown-search-snippet { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .LocalMarkdown-search-result mark {
       padding: 0; color: inherit; background: var(--lm-selection); border-radius: 2px;
@@ -368,7 +371,7 @@
     }
     .LocalMarkdown-status {
       min-width: 0; flex: 0 1 auto; overflow: hidden;
-      color: var(--lm-faint); font-size: var(--lm-type-metadata-size); line-height: var(--lm-line-tight);
+      color: var(--lm-secondary-text); font-size: var(--lm-type-metadata-size); line-height: var(--lm-line-tight);
       text-overflow: ellipsis; white-space: nowrap;
     }
     .LocalMarkdown-view-switcher {
@@ -438,7 +441,7 @@
     .LocalMarkdown-theme-option {
       width: 100%; min-height: var(--lm-control-height);
       padding: var(--lm-space-1) var(--lm-space-2); display: flex; align-items: center;
-      border: 0; border-radius: var(--lm-radius-control); color: var(--lm-faint); background: transparent;
+      border: 0; border-radius: var(--lm-radius-control); color: var(--lm-secondary-text); background: transparent;
       font-size: var(--lm-type-control-size); text-align: left; white-space: nowrap;
     }
     .LocalMarkdown-theme-option[aria-checked="true"] {
@@ -763,7 +766,12 @@
 
     @media (max-width: 900px) {
       .LocalMarkdown-toolbar { grid-template-columns: auto minmax(0, 1fr) auto; }
-      .LocalMarkdown-status { display: none; }
+      .LocalMarkdown-document-meta {
+        align-self: center; display: grid; grid-template-columns: minmax(0, 1fr); gap: 0;
+      }
+      .LocalMarkdown-status {
+        display: block; font-size: var(--lm-type-metadata-size); line-height: 1.1;
+      }
       .LocalMarkdown-view-switcher { justify-self: center; }
       .LocalMarkdown-actions { grid-column: 3; grid-row: 1; }
     }
@@ -858,7 +866,7 @@
         <input class="LocalMarkdown-search-input" id="LocalMarkdown-search-input" type="search" placeholder="Search" aria-label="Search files and content" autocomplete="off" spellcheck="false">
         <button class="LocalMarkdown-search-clear" id="LocalMarkdown-search-clear" type="button" aria-label="Clear search" title="Clear search" hidden>&times;</button>
       </div>
-      <nav class="LocalMarkdown-files" id="LocalMarkdown-files" aria-label="Documents"></nav>
+      <nav class="LocalMarkdown-files" id="LocalMarkdown-files" aria-label="Files and folders"></nav>
     </aside>
 
     <main class="LocalMarkdown-main">
@@ -911,7 +919,7 @@
               </button>
               <button class="LocalMarkdown-open-option" id="LocalMarkdown-open-folder" type="button" role="menuitem">
                 <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M2.75 5.25h5l1.5 2h8v8.5h-14.5z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"></path></svg>
-                Open Folder…
+                Add Folder…
               </button>
             </div>
           </div>
@@ -1872,7 +1880,7 @@
         else if (file.welcome) statusElement.textContent = "Open a file or view Examples";
         else if (file.builtin) statusElement.textContent = "Examples";
         else if (file.needsPermission) statusElement.textContent = "Reconnect or save a copy";
-        else statusElement.textContent = file.dirty ? "Not saved" : "Saved";
+        else statusElement.textContent = file.dirty ? "Not saved to disk" : "Saved";
       }
 
       function renderFiles() {
@@ -1884,7 +1892,7 @@
           for (const workspace of session.workspaces) startWorkspaceSearchIndex(workspace);
           return;
         }
-        filesElement.setAttribute("aria-label", "Documents");
+        filesElement.setAttribute("aria-label", "Files and folders");
         const favorites = favoriteTargets();
         if (favorites.length) {
           appendSidebarSection("Favorites");
@@ -4605,7 +4613,7 @@
           const saved = await saveFile(file);
           if (activeFile() === file) {
             updateStatus(saved
-              ? (file.dirty ? "Not saved" : "Saved automatically")
+              ? (file.dirty ? "Not saved to disk" : "Saved automatically")
               : "Could not autosave");
           }
           renderFiles();
@@ -4676,7 +4684,7 @@
         }
         renderFiles();
         updateStatus(saved
-          ? (file.dirty ? "Not saved" : "Saved")
+          ? (file.dirty ? "Not saved to disk" : "Saved")
           : "Could not save file");
         scheduleSessionSave();
         if (saved && file.dirty) scheduleAutoSave(file);
@@ -5542,8 +5550,19 @@
         return `<svg class="LocalMarkdown-toolbar-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${paths}</svg>`;
       }
 
+      const toolbarTips = {
+        "ordered-list": "Numbered list",
+        line: "Horizontal rule",
+        upload: "Insert image"
+      };
+
       function toolbarControl(name, tipPosition = "n") {
-        return { name, tipPosition, icon: toolbarIcon(name) };
+        return {
+          name,
+          tipPosition,
+          icon: toolbarIcon(name),
+          ...(toolbarTips[name] ? { tip: toolbarTips[name] } : {})
+        };
       }
 
       function drawingToolbarControl() {
