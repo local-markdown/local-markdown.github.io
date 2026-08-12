@@ -102,7 +102,7 @@
     .LocalMarkdown-app[data-sidebar="closed"] { --sidebar-width: 0px; }
     .LocalMarkdown-sidebar {
       min-width: 0; min-height: 0; overflow: hidden; border-right: 1px solid var(--lm-border);
-      background: var(--lm-background);
+      background: var(--lm-background); font-size: 13px;
       display: grid; grid-template-rows: 40px 45px minmax(0, 1fr);
       opacity: 1; visibility: visible;
       transition: opacity 100ms ease, visibility 0s;
@@ -405,6 +405,7 @@
     }
     .LocalMarkdown-editor .vditor-toolbar__item .vditor-tooltipped { width: 23px; padding: 7px 4px; }
     .LocalMarkdown-editor .vditor-toolbar__divider { margin-right: 5px; margin-left: 5px; }
+    .LocalMarkdown-editor .vditor-outline { font-size: 13px; }
     .LocalMarkdown-internal-edit-mode { display: none !important; }
     .LocalMarkdown-editor .vditor-counter,
     .LocalMarkdown-editor .vditor-resize { display: none !important; }
