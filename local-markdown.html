@@ -43,6 +43,11 @@
       --lm-border: #e5e5e5;
       --lm-control-border: #d8d8d8;
       --lm-accent: #111;
+      --lm-unsaved: #a15c00;
+      --lm-app-background: #f3f4f6;
+      --lm-document-background: #fff;
+      --lm-document-border: #dfe2e6;
+      --lm-document-shadow: rgba(17, 24, 39, 0.07);
       --lm-overlay: rgba(0, 0, 0, 0.18);
       --lm-sidebar-shadow: rgba(0, 0, 0, 0.12);
       --lm-menu-shadow: rgba(0, 0, 0, 0.16);
@@ -60,6 +65,11 @@
       --lm-border: #d8d1bd;
       --lm-control-border: #c9c2ae;
       --lm-accent: #268bd2;
+      --lm-unsaved: #9b6b00;
+      --lm-app-background: #eee8d5;
+      --lm-document-background: #fdf6e3;
+      --lm-document-border: #d4cdb9;
+      --lm-document-shadow: rgba(0, 43, 54, 0.12);
       --lm-overlay: rgba(0, 43, 54, 0.22);
       --lm-sidebar-shadow: rgba(0, 43, 54, 0.16);
       --lm-menu-shadow: rgba(0, 43, 54, 0.22);
@@ -77,6 +87,11 @@
       --lm-border: #164653;
       --lm-control-border: #315661;
       --lm-accent: #2aa198;
+      --lm-unsaved: #d6a700;
+      --lm-app-background: #001f27;
+      --lm-document-background: #073642;
+      --lm-document-border: #1b4c58;
+      --lm-document-shadow: rgba(0, 0, 0, 0.28);
       --lm-overlay: rgba(0, 0, 0, 0.42);
       --lm-sidebar-shadow: rgba(0, 0, 0, 0.34);
       --lm-menu-shadow: rgba(0, 0, 0, 0.42);
@@ -103,7 +118,7 @@
     .LocalMarkdown-sidebar {
       min-width: 0; min-height: 0; overflow: hidden; border-right: 1px solid var(--lm-border);
       background: var(--lm-background);
-      display: grid; grid-template-rows: 40px 45px minmax(0, 1fr);
+      display: grid; grid-template-rows: 36px 43px minmax(0, 1fr);
       opacity: 1; visibility: visible;
       transition: opacity 100ms ease, visibility 0s;
     }
@@ -114,17 +129,22 @@
     .LocalMarkdown-sidebar-backdrop { display: none; }
     .LocalMarkdown-sidebar-header,
     .LocalMarkdown-toolbar { height: 40px; padding: 0 10px; border-bottom: 1px solid var(--lm-border); }
-    .LocalMarkdown-sidebar-header { display: flex; align-items: center; gap: 8px; }
+    .LocalMarkdown-sidebar-header {
+      height: 36px; padding: 0 8px; display: flex; align-items: center; gap: 6px;
+      color: var(--lm-muted); background: var(--lm-surface);
+    }
     .LocalMarkdown-sidebar-header strong {
       min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      font-size: 12px; font-weight: 500;
     }
-    .LocalMarkdown-logo { width: 24px; height: 24px; flex: 0 0 24px; }
-    .LocalMarkdown-logo rect { fill: var(--lm-background); stroke: var(--lm-text); }
-    .LocalMarkdown-logo path { stroke: var(--lm-text); }
+    .LocalMarkdown-logo { width: 18px; height: 18px; flex: 0 0 18px; opacity: .82; }
+    .LocalMarkdown-logo rect { fill: var(--lm-background); stroke: var(--lm-muted); }
+    .LocalMarkdown-logo path { stroke: var(--lm-muted); }
     .LocalMarkdown-new {
-      width: 30px; height: 30px; padding: 0; border: 0; border-radius: 3px;
-      background: transparent; font-size: 20px; line-height: 1;
+      width: 26px; height: 26px; padding: 0; border: 0; border-radius: 4px;
+      color: var(--lm-muted); background: transparent; font-size: 18px; line-height: 1;
     }
+    .LocalMarkdown-new:hover { color: var(--lm-text); background: var(--lm-selected); }
     .LocalMarkdown-sidebar-dismiss {
       display: none; width: 30px; height: 30px; padding: 0;
       border: 0; border-radius: 3px; background: transparent;
@@ -160,18 +180,52 @@
     }
     .LocalMarkdown-files::-webkit-scrollbar { display: none; width: 0; height: 0; }
     .LocalMarkdown-file {
-      width: 100%; margin: 0 0 3px; padding: 8px 9px; overflow: hidden;
+      position: relative; width: 100%; min-height: 34px; margin: 0 0 2px; padding: 6px 8px; overflow: hidden;
       display: flex; align-items: center; gap: 6px;
-      border: 0; text-align: left; white-space: nowrap;
-      transition: opacity 80ms ease;
+      border: 0; border-radius: 5px; background: transparent; text-align: left; white-space: nowrap;
+      transition: background-color 100ms ease, color 100ms ease, opacity 80ms ease;
     }
     .LocalMarkdown-file-name { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; }
     .LocalMarkdown-favorite-marker {
-      flex: 0 0 auto; color: var(--lm-faint); font-size: 12px; line-height: 1;
+      width: 14px; height: 14px; flex: 0 0 14px; display: grid; place-items: center;
+      color: var(--lm-accent); opacity: .78;
+    }
+    .LocalMarkdown-favorite-marker svg { width: 12px; height: 12px; fill: currentColor; }
+    .LocalMarkdown-sidebar-item-icon {
+      width: 15px; height: 15px; flex: 0 0 15px; color: var(--lm-faint);
+    }
+    .LocalMarkdown-file:hover,
+    .LocalMarkdown-tree-item:hover,
+    .LocalMarkdown-search-file:hover,
+    .LocalMarkdown-search-hit:hover { background: var(--lm-subtle); }
+    .LocalMarkdown-file:focus-visible,
+    .LocalMarkdown-tree-item:focus-visible,
+    .LocalMarkdown-search-file:focus-visible,
+    .LocalMarkdown-search-hit:focus-visible {
+      outline: 0; box-shadow: inset 0 0 0 1px var(--lm-accent);
     }
     .LocalMarkdown-file[draggable="true"] { cursor: grab; }
     .LocalMarkdown-file[draggable="true"]:active { cursor: grabbing; }
-    .LocalMarkdown-file[aria-current="true"] { background: var(--lm-selected); font-weight: 600; }
+    .LocalMarkdown-file[aria-current="true"],
+    .LocalMarkdown-tree-item[aria-current="true"],
+    .LocalMarkdown-search-file[aria-current="true"] {
+      color: var(--lm-text); background: var(--lm-selected); font-weight: 600;
+    }
+    .LocalMarkdown-file[aria-current="true"]::before,
+    .LocalMarkdown-tree-item[aria-current="true"]::before,
+    .LocalMarkdown-search-file[aria-current="true"]::before {
+      content: ""; position: absolute; inset-block: 5px; inset-inline-start: 0;
+      width: 2px; border-radius: 2px; background: var(--lm-accent);
+    }
+    .LocalMarkdown-unsaved-mark {
+      flex: 0 0 auto; padding: 1px 4px; display: inline-flex; align-items: center; gap: 3px;
+      border: 1px solid color-mix(in srgb, var(--lm-unsaved) 35%, var(--lm-border)); border-radius: 4px;
+      color: var(--lm-unsaved); background: var(--lm-background);
+      font-size: 9px; font-weight: 500; line-height: 1.25;
+    }
+    .LocalMarkdown-unsaved-mark::before {
+      content: ""; width: 4px; height: 4px; border-radius: 50%; background: currentColor;
+    }
     .LocalMarkdown-file.LocalMarkdown-dragging { opacity: 0; }
     .LocalMarkdown-sidebar-section {
       padding: 9px 7px 4px; color: var(--lm-faint); font-size: 10px;
@@ -180,19 +234,21 @@
     .LocalMarkdown-workspace { margin-bottom: 5px; }
     .LocalMarkdown-tree-row {
       min-width: 0; display: flex; align-items: center; gap: 2px;
-      padding-left: calc(var(--tree-depth, 0) * 13px);
+      padding-left: calc(var(--tree-depth, 0) * 16px);
     }
     .LocalMarkdown-tree-item {
-      min-width: 0; height: 30px; flex: 1; padding: 4px 5px;
+      position: relative; min-width: 0; height: 30px; flex: 1; padding: 4px 5px;
       display: flex; align-items: center; gap: 5px;
       border: 0; border-radius: 4px; background: transparent; text-align: left;
     }
-    .LocalMarkdown-tree-item[aria-current="true"] { background: var(--lm-selected); font-weight: 600; }
     .LocalMarkdown-tree-item[data-root="true"] { font-weight: 600; }
     .LocalMarkdown-tree-chevron {
-      width: 12px; flex: 0 0 12px; color: var(--lm-faint); font-size: 11px; text-align: center;
+      width: 14px; flex: 0 0 14px; color: var(--lm-faint); font-size: 10px; text-align: center;
     }
-    .LocalMarkdown-tree-icon { width: 15px; height: 15px; flex: 0 0 15px; color: var(--lm-muted); }
+    .LocalMarkdown-tree-icon { width: 15px; height: 15px; flex: 0 0 15px; color: var(--lm-faint); }
+    .LocalMarkdown-tree-icon[data-icon-kind="directory"] { color: var(--lm-muted); }
+    :is(.LocalMarkdown-file, .LocalMarkdown-tree-item, .LocalMarkdown-search-file)[aria-current="true"]
+    :is(.LocalMarkdown-sidebar-item-icon, .LocalMarkdown-tree-icon) { color: var(--lm-accent); }
     .LocalMarkdown-tree-name {
       min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
@@ -219,7 +275,7 @@
       width: 100%; border: 0; border-radius: 0; background: transparent; text-align: left;
     }
     .LocalMarkdown-search-file {
-      display: flex; align-items: center; gap: 6px; padding: 7px 8px;
+      position: relative; display: flex; align-items: center; gap: 6px; padding: 7px 8px;
       font-size: 13px; font-weight: 600;
     }
     .LocalMarkdown-search-file[aria-current="true"] { background: var(--lm-selected); }
@@ -252,19 +308,36 @@
     }
     .LocalMarkdown-sidebar-toggle svg,
     .LocalMarkdown-sidebar-dismiss svg { width: 18px; height: 18px; }
+    .LocalMarkdown-document-meta {
+      min-width: 0; margin-left: 4px; display: flex; align-items: baseline; gap: 8px;
+    }
+    .LocalMarkdown-filename {
+      min-width: 0; margin: 0; overflow: hidden;
+      color: var(--lm-text); font-size: 14px; font-weight: 600; line-height: 1.2;
+      text-overflow: ellipsis; white-space: nowrap;
+    }
     .LocalMarkdown-status {
-      min-width: 0; margin-left: 4px; padding-left: 8px; overflow: hidden;
-      border-left: 1px solid var(--lm-border); color: var(--lm-muted); font-size: 12px;
+      min-width: 0; flex: 0 1 auto; overflow: hidden;
+      color: var(--lm-faint); font-size: 11px;
       text-overflow: ellipsis; white-space: nowrap;
     }
     .LocalMarkdown-view-switcher {
-      display: inline-flex; justify-self: center; gap: 2px;
+      display: inline-flex; justify-self: center; gap: 1px; padding: 2px;
+      border: 1px solid var(--lm-border); border-radius: 6px;
+      background: var(--lm-selected);
     }
     .LocalMarkdown-view {
-      padding: 4px 8px; border: 0; border-radius: 3px;
-      color: var(--lm-faint); background: transparent; font-size: 13px; white-space: nowrap;
+      padding: 3px 8px; border: 0; border-radius: 4px;
+      color: var(--lm-text); background: transparent; font-size: 13px; white-space: nowrap;
+      opacity: .72;
     }
-    .LocalMarkdown-view[aria-pressed="true"] { color: var(--lm-text); font-weight: 400; }
+    .LocalMarkdown-view:hover:not(:disabled) { opacity: .9; }
+    .LocalMarkdown-view:disabled { opacity: .48; }
+    .LocalMarkdown-view[aria-pressed="true"] {
+      color: var(--lm-text); background: var(--lm-background); font-weight: 500;
+      opacity: 1;
+      box-shadow: 0 1px 2px var(--lm-menu-shadow), inset 0 0 0 1px var(--lm-control-border);
+    }
     .LocalMarkdown-actions { display: flex; align-items: center; justify-self: end; gap: 2px; }
     .LocalMarkdown-action {
       padding: 4px 7px; border: 0; border-radius: 3px; background: transparent; font-size: 13px;
@@ -369,6 +442,9 @@
     }
 
     .LocalMarkdown-editor.vditor {
+      --lm-document-max-width: 900px;
+      --lm-document-padding-block: clamp(30px, 5%, 48px);
+      --lm-document-padding-inline: clamp(28px, 6%, 64px);
       --toolbar-height: 30px;
       --toolbar-divider-margin-top: 7px;
       --border-color: var(--lm-border);
@@ -378,7 +454,7 @@
       --toolbar-background-color: var(--lm-surface);
       --toolbar-icon-color: var(--lm-muted);
       --toolbar-icon-hover-color: var(--lm-accent);
-      --textarea-background-color: var(--lm-background);
+      --textarea-background-color: var(--lm-document-background);
       --textarea-text-color: var(--lm-text);
       --resize-icon-color: var(--lm-muted);
       --resize-background-color: var(--lm-surface);
@@ -420,9 +496,37 @@
     .LocalMarkdown-internal-edit-mode { display: none !important; }
     .LocalMarkdown-editor .vditor-counter,
     .LocalMarkdown-editor .vditor-resize { display: none !important; }
-    .LocalMarkdown-editor .vditor-content { flex: 1; min-height: 0; height: auto !important; }
+    .LocalMarkdown-editor .vditor-content {
+      flex: 1; min-height: 0; height: auto !important; padding: 16px; gap: 12px;
+      background: var(--lm-app-background);
+    }
     .LocalMarkdown-editor .vditor-ir,
-    .LocalMarkdown-editor .vditor-wysiwyg { width: 100%; margin: 0; padding: 0 !important; background: var(--lm-background); }
+    .LocalMarkdown-editor .vditor-wysiwyg {
+      width: 100%; margin: 0; padding: 0 !important; background: transparent;
+    }
+    .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg) > .vditor-reset {
+      width: min(100%, var(--lm-document-max-width)); height: 100%; margin: 0 auto;
+      padding: var(--lm-document-padding-block) var(--lm-document-padding-inline) !important;
+      border: 1px solid var(--lm-document-border); border-radius: 3px;
+      background: var(--lm-document-background);
+      box-shadow: 0 1px 3px var(--lm-document-shadow);
+    }
+    .LocalMarkdown-editor .vditor-sv {
+      padding: 30px 32px !important;
+      border: 1px solid var(--lm-document-border); border-radius: 3px;
+      background: var(--lm-document-background);
+      box-shadow: 0 1px 3px var(--lm-document-shadow);
+    }
+    .LocalMarkdown-editor .vditor-preview { background: transparent; }
+    .LocalMarkdown-editor .vditor-preview[style*="display: block"] {
+      display: grid !important; grid-template-rows: auto minmax(0, 1fr); overflow: hidden;
+    }
+    .LocalMarkdown-editor .vditor-preview > .vditor-reset {
+      min-height: 0; height: auto; padding: 30px 28px !important;
+      border: 1px solid var(--lm-document-border); border-radius: 3px;
+      background: var(--lm-document-background);
+      box-shadow: 0 1px 3px var(--lm-document-shadow);
+    }
     .LocalMarkdown-editor .vditor-reset { color: var(--lm-text); font-family: inherit; }
     .LocalMarkdown-editor .vditor-reset :is(h1, h2, h3, h4, h5, h6) {
       color: var(--lm-text); border-bottom-color: var(--lm-border);
@@ -594,6 +698,11 @@
       .LocalMarkdown-open-option { font-size: 12px; }
       .LocalMarkdown-theme-option { font-size: 12px; }
       .LocalMarkdown-editor .vditor-toolbar { padding: 0 6px; }
+      .LocalMarkdown-editor .vditor-content { padding: 8px; gap: 8px; }
+      .LocalMarkdown-editor.vditor {
+        --lm-document-padding-block: 26px;
+        --lm-document-padding-inline: 22px;
+      }
       .LocalMarkdown-drawing-dialog {
         width: 100vw; height: 100vh; max-width: none; max-height: none;
         border: 0; border-radius: 0;
@@ -646,7 +755,7 @@
     </aside>
 
     <main class="LocalMarkdown-main">
-      <div class="LocalMarkdown-toolbar">
+      <header class="LocalMarkdown-toolbar">
         <div class="LocalMarkdown-toolbar-left">
           <button class="LocalMarkdown-sidebar-toggle" id="LocalMarkdown-sidebar-toggle" type="button" aria-controls="LocalMarkdown-sidebar" aria-expanded="true" aria-label="Hide sidebar" title="Hide sidebar">
             <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
@@ -673,7 +782,10 @@
               </button>
             </div>
           </div>
-          <span class="LocalMarkdown-status" id="LocalMarkdown-status" role="status">Loading editor…</span>
+          <div class="LocalMarkdown-document-meta">
+            <h1 class="LocalMarkdown-filename" id="LocalMarkdown-filename">Local Markdown</h1>
+            <span class="LocalMarkdown-status" id="LocalMarkdown-status" role="status">Loading…</span>
+          </div>
         </div>
         <div class="LocalMarkdown-view-switcher" role="group" aria-label="Editor view">
           <button class="LocalMarkdown-view" type="button" data-mode="wysiwyg" aria-pressed="false" title="Edit the rendered document" disabled>Visual</button>
@@ -699,7 +811,7 @@
           <button class="LocalMarkdown-action" id="LocalMarkdown-save-file" type="button">Save</button>
           <button class="LocalMarkdown-action" id="LocalMarkdown-close-file" type="button">Close</button>
         </div>
-      </div>
+      </header>
       <div class="LocalMarkdown-editor" id="LocalMarkdown-editor"></div>
     </main>
   </div>
@@ -788,6 +900,7 @@
       const openFileButton = document.querySelector("#LocalMarkdown-open-file");
       const openFolderButton = document.querySelector("#LocalMarkdown-open-folder");
       const mainElement = document.querySelector(".LocalMarkdown-main");
+      const filenameElement = document.querySelector("#LocalMarkdown-filename");
       const statusElement = document.querySelector("#LocalMarkdown-status");
       const closeButton = document.querySelector("#LocalMarkdown-close-file");
       const saveButton = document.querySelector("#LocalMarkdown-save-file");
@@ -1637,6 +1750,9 @@
 
       function updateStatus(message = null) {
         const file = activeFile();
+        const filename = file.name || (file.welcome ? "Local Markdown" : "Untitled.md");
+        filenameElement.textContent = filename;
+        filenameElement.title = filename;
         closeButton.disabled = Boolean(file.builtin || file.welcome);
         saveButton.textContent = file.handle && file.needsPermission ? "Reconnect" : "Save";
         saveButton.hidden = Boolean(file.builtin || file.welcome
@@ -1692,8 +1808,9 @@
         name.className = "LocalMarkdown-file-name";
         name.textContent = file === example
           ? "Examples"
-          : `${file.name}${file.dirty ? " •" : ""}`;
-        button.append(name);
+          : file.name;
+        button.append(sidebarItemIcon("file"), name);
+        appendUnsavedMark(button, !file.builtin && file.dirty);
         if (targetIsFavorite({ file })) appendFavoriteMarker(button);
         button.title = "Drag to reorder";
         button.setAttribute("aria-current", String(file.id === session.activeId));
@@ -1706,10 +1823,27 @@
       }
 
       function appendFavoriteMarker(element) {
+        element.dataset.favorite = "true";
         const marker = document.createElement("span");
         marker.className = "LocalMarkdown-favorite-marker";
-        marker.setAttribute("aria-hidden", "true");
-        marker.textContent = "★";
+        marker.title = "Favorite";
+        marker.setAttribute("aria-label", "Favorite");
+        const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        icon.setAttribute("viewBox", "0 0 20 20");
+        icon.setAttribute("aria-hidden", "true");
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", "m10 2.75 2.1 4.35 4.8.65-3.5 3.35.85 4.75L10 13.55 5.75 15.8l.85-4.7-3.5-3.35 4.8-.65z");
+        icon.append(path);
+        marker.append(icon);
+        element.append(marker);
+      }
+
+      function appendUnsavedMark(element, dirty) {
+        if (!dirty) return;
+        const marker = document.createElement("span");
+        marker.className = "LocalMarkdown-unsaved-mark";
+        marker.title = "Unsaved changes";
+        marker.textContent = "Unsaved";
         element.append(marker);
       }
 
@@ -1725,8 +1859,9 @@
         button.setAttribute("aria-current", String(file?.id === session.activeId));
         const name = document.createElement("span");
         name.className = "LocalMarkdown-file-name";
-        name.textContent = `${targetName(target)}${file?.dirty ? " •" : ""}`;
-        button.append(name);
+        name.textContent = targetName(target);
+        button.append(sidebarItemIcon("file"), name);
+        appendUnsavedMark(button, file?.dirty);
         appendFavoriteMarker(button);
         button.addEventListener("click", () => {
           if (location) void openWorkspaceFile(location.workspace, location.node);
@@ -1736,9 +1871,10 @@
         filesElement.append(button);
       }
 
-      function workspaceTreeIcon(kind) {
+      function sidebarItemIcon(kind, className = "LocalMarkdown-sidebar-item-icon") {
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.classList.add("LocalMarkdown-tree-icon");
+        svg.classList.add(className);
+        svg.dataset.iconKind = kind;
         svg.setAttribute("viewBox", "0 0 20 20");
         svg.setAttribute("aria-hidden", "true");
         svg.setAttribute("focusable", "false");
@@ -1792,7 +1928,7 @@
         name.textContent = workspace.needsPermission && isRoot
           ? `${directory.name} (Reconnect)`
           : directory.name;
-        button.append(chevron, workspaceTreeIcon("directory"), name);
+        button.append(chevron, sidebarItemIcon("directory", "LocalMarkdown-tree-icon"), name);
         button.addEventListener("click", () => {
           if (workspace.needsPermission && isRoot) void reconnectWorkspace(workspace);
           else void toggleWorkspaceDirectory(workspace, directory);
@@ -1857,8 +1993,9 @@
         spacer.className = "LocalMarkdown-tree-chevron";
         const name = document.createElement("span");
         name.className = "LocalMarkdown-tree-name";
-        name.textContent = `${node.name}${openFile?.dirty ? " •" : ""}`;
-        button.append(spacer, workspaceTreeIcon("file"), name);
+        name.textContent = node.name;
+        button.append(spacer, sidebarItemIcon("file", "LocalMarkdown-tree-icon"), name);
+        appendUnsavedMark(button, openFile?.dirty);
         if (targetIsFavorite({ workspace, node, file: openFile })) appendFavoriteMarker(button);
         button.addEventListener("click", () => void openWorkspaceFile(workspace, node));
         attachFileContextMenu(button, { workspace, node, file: openFile });
@@ -2166,10 +2303,11 @@
           fileButton.setAttribute("aria-current", String(candidate.file?.id === session.activeId));
           const name = document.createElement("span");
           name.className = "LocalMarkdown-search-file-name";
-          const displayName = `${candidate.name}${candidate.file?.dirty ? " •" : ""}`;
+          const displayName = candidate.name;
           if (nameScore !== null) appendHighlightedText(name, displayName, query);
           else name.textContent = displayName;
-          fileButton.append(name);
+          fileButton.append(sidebarItemIcon("file"), name);
+          appendUnsavedMark(fileButton, candidate.file?.dirty);
           if (targetIsFavorite(contextTarget)) appendFavoriteMarker(fileButton);
           if (matches.length) {
             const count = document.createElement("span");
