@@ -910,6 +910,8 @@
             </div>
           </div>
           <button class="LocalMarkdown-action" id="LocalMarkdown-save-file" type="button">Save</button>
+          <button class="LocalMarkdown-action" id="LocalMarkdown-save-copy" type="button"
+            title="Save the cached document as a new local file" hidden>Save a Copy…</button>
           <button class="LocalMarkdown-action" id="LocalMarkdown-close-file" type="button">Close</button>
         </div>
       </header>
@@ -1005,6 +1007,7 @@
       const statusElement = document.querySelector("#LocalMarkdown-status");
       const closeButton = document.querySelector("#LocalMarkdown-close-file");
       const saveButton = document.querySelector("#LocalMarkdown-save-file");
+      const saveCopyButton = document.querySelector("#LocalMarkdown-save-copy");
       const editorElement = document.querySelector("#LocalMarkdown-editor");
       const tableRowTools = document.querySelector("#LocalMarkdown-table-row-tools");
       const tableColumnTools = document.querySelector("#LocalMarkdown-table-column-tools");
@@ -1858,10 +1861,11 @@
         saveButton.textContent = file.handle && file.needsPermission ? "Reconnect" : "Save";
         saveButton.hidden = Boolean(file.builtin || file.welcome
           || (file.handle && !file.needsPermission));
+        saveCopyButton.hidden = Boolean(file.builtin || file.welcome || !file.needsPermission);
         if (message) statusElement.textContent = message;
         else if (file.welcome) statusElement.textContent = "Open a file or view Examples";
         else if (file.builtin) statusElement.textContent = "Examples";
-        else if (file.needsPermission) statusElement.textContent = "Reconnect to resume disk access";
+        else if (file.needsPermission) statusElement.textContent = "Reconnect or save a copy";
         else statusElement.textContent = file.dirty ? "Not saved" : "Saved";
       }
 
@@ -4529,16 +4533,18 @@
         };
       }
 
-      async function pickMarkdownFile(file) {
+      async function pickMarkdownFile(file, { reuseLastLocation = true } = {}) {
         if (typeof window.showSaveFilePicker !== "function") {
           updateStatus("Saving local files requires Chrome");
           return null;
         }
         try {
-          return await window.showSaveFilePicker(markdownPickerOptions({
+          const options = markdownPickerOptions({
             suggestedName: suggestedFileName(file),
             excludeAcceptAllOption: true
-          }));
+          });
+          if (!reuseLastLocation) delete options.startIn;
+          return await window.showSaveFilePicker(options);
         } catch (error) {
           if (error?.name === "AbortError") updateStatus();
           else updateStatus("Could not choose file name");
@@ -4668,6 +4674,43 @@
           : "Could not save file");
         scheduleSessionSave();
         if (saved && file.dirty) scheduleAutoSave(file);
+      }
+
+      async function saveActiveFileCopy() {
+        captureEditorValue();
+        const file = activeFile();
+        if (file.builtin || file.welcome) return;
+
+        updateStatus("Choose where to save a copy…");
+        const handle = await pickMarkdownFile(file, { reuseLastLocation: false });
+        if (!handle || activeFile() !== file) return;
+        if (!await waitForFileAttachments(file)) {
+          updateStatus("Could not prepare a copy");
+          return;
+        }
+
+        const savedText = file.text;
+        try {
+          await writeText(handle, serializeFile(file));
+        } catch {
+          updateStatus("Could not save a copy");
+          return;
+        }
+
+        cancelAutoSave(file);
+        file.handle = handle;
+        file.name = handle.name;
+        file.needsPermission = false;
+        if (file.text === savedText) file.dirty = false;
+        session.lastOpenHandle = handle;
+        const workspaceLocation = await workspaceLocationForHandle(handle);
+        file.workspaceId = workspaceLocation?.workspace.id || null;
+        file.workspacePath = workspaceLocation?.node.path || null;
+        syncWorkspaceSearchText(file);
+        renderFiles();
+        updateStatus(file.dirty ? "Copy saved; newer changes not saved" : `Saved a copy as ${file.name}`);
+        scheduleSessionSave();
+        if (file.dirty) scheduleAutoSave(file);
       }
 
       async function openLocalFile() {
@@ -5332,6 +5375,7 @@
         void openLocalFolder();
       });
       document.querySelector("#LocalMarkdown-save-file").addEventListener("click", saveActiveFile);
+      saveCopyButton.addEventListener("click", saveActiveFileCopy);
       for (const button of viewButtons) {
         button.addEventListener("click", () => switchEditorMode(button.dataset.mode));
       }
