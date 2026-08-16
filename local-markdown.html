@@ -592,7 +592,7 @@
     .LocalMarkdown-editor .vditor-resize { display: none !important; }
     .LocalMarkdown-editor .vditor-content {
       flex: 1; min-height: 0; height: auto !important;
-      padding: var(--lm-space-4); gap: var(--lm-space-3);
+      padding: 0 var(--lm-space-4); gap: var(--lm-space-3);
       background: var(--lm-app-background);
     }
     .LocalMarkdown-editor .vditor-ir,
@@ -745,9 +745,8 @@
     }
 
     .LocalMarkdown-drawing-dialog {
-      width: calc(100vw - var(--lm-space-6)); height: calc(100vh - var(--lm-space-6));
-      max-width: 1440px; max-height: 960px; padding: 0;
-      border: 1px solid var(--lm-control-border); border-radius: var(--lm-radius-surface);
+      width: 100vw; height: 100dvh; max-width: none; max-height: none;
+      margin: 0; padding: 0; border: 0; border-radius: 0;
       color: var(--lm-text); background: var(--lm-background);
       box-shadow: 0 18px 60px var(--lm-menu-shadow);
     }
@@ -829,7 +828,7 @@
       .LocalMarkdown-action { padding: 0 var(--lm-space-1); }
       .LocalMarkdown-editor .vditor-toolbar { padding: 0 var(--lm-space-1); }
       .LocalMarkdown-editor .vditor-content {
-        padding: var(--lm-space-2); gap: var(--lm-space-2);
+        padding: 0 var(--lm-space-2); gap: var(--lm-space-2);
       }
       .LocalMarkdown-editor.vditor {
         --lm-document-padding-block: var(--lm-space-6);
@@ -837,10 +836,6 @@
       }
       .LocalMarkdown-editor .vditor-sv,
       .LocalMarkdown-editor .vditor-preview > .vditor-reset { padding: var(--lm-space-6) !important; }
-      .LocalMarkdown-drawing-dialog {
-        width: 100vw; height: 100vh; max-width: none; max-height: none;
-        border: 0; border-radius: 0;
-      }
       .LocalMarkdown-drawing-header { padding-left: var(--lm-space-2); }
       .LocalMarkdown-drawing-status { display: none; }
     }
