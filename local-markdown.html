@@ -2617,7 +2617,7 @@
         if (!session.files.includes(file)) session.files.push(file);
         session.activeId = file.id;
         if (file.handle) session.lastOpenHandle = file.handle;
-        if (editorReady) editor.setValue(file.text, true);
+        if (editorReady) setEditorValue(file);
         renderFiles();
         updateStatus(message);
         scheduleAttachmentPreviews();
@@ -2766,7 +2766,7 @@
 
       function normalizedTableWidth(width = 100) {
         const value = Number(width);
-        if (!Number.isFinite(value) || value <= 0 || value > 100) return null;
+        if (!Number.isFinite(value) || value <= 0) return null;
         return Math.round(value * 100) / 100;
       }
 
@@ -2835,7 +2835,7 @@
         const normalizedWidth = normalizedTableWidth(tableWidth) || 100;
         if (!normalized) return null;
         const indent = table.metadataStart === null ? table.indent : table.metadataIndent;
-        const widthSetting = normalizedWidth < 100
+        const widthSetting = normalizedWidth !== 100
           ? `;table-width=${formattedTableWidth(normalizedWidth)}`
           : "";
         const comment = `${indent}<!-- ${tableWidthsCommentName}=${normalized.map(formattedTableWidth).join(",")}${widthSetting} -->${table.newline}`;
@@ -2866,11 +2866,9 @@
         }
         table.classList.add("LocalMarkdown-sized-table");
         table.style.setProperty("--lm-table-width", `${normalizedWidth}%`);
-        for (const row of table.rows) {
-          for (const cell of row.cells) {
-            const width = normalized[cell.cellIndex];
-            if (width) cell.style.setProperty("--lm-table-column-width", `${width}%`);
-          }
+        for (const cell of table.rows[0]?.cells || []) {
+          const width = normalized[cell.cellIndex];
+          if (width) cell.style.setProperty("--lm-table-column-width", `${width}%`);
         }
         return true;
       }
@@ -3078,7 +3076,9 @@
         return normalizedTableWidths(widths, cells.length);
       }
 
-      function applyTableWidthTextUpdate(file, value, updated, message) {
+      function applyTableWidthTextUpdate(
+        file, value, updated, message, { rerender = true } = {}
+      ) {
         if (!updated || updated === value) return false;
         file.text = updated;
         if (!file.builtin) {
@@ -3086,7 +3086,8 @@
           scheduleAutoSave(file);
           scheduleSessionSave();
         }
-        editor.setValue(updated, true);
+        if (rerender) setEditorValue(file, updated);
+        else file.tableWidthsOutOfSync = true;
         renderFiles();
         updateStatus(message);
         scheduleAttachmentPreviews();
@@ -3117,6 +3118,7 @@
         const tablePixels = table.getBoundingClientRect().width;
         const leftPixels = leftCell?.getBoundingClientRect().width || 0;
         const rightPixels = rightCell?.getBoundingClientRect().width || 0;
+        const handleLeft = Number.parseFloat(tableResizeHandle.style.left);
         tableResizeSession = {
           table,
           tableIndex: context.tableIndex,
@@ -3132,27 +3134,29 @@
           pairPercentage: tableEdge ? 0 : widths[columnIndex] + widths[columnIndex + 1],
           tablePixels,
           widthBasisPixels: tablePixels / (context.block.tableWidth / 100),
+          handleLeft: Number.isFinite(handleLeft) ? handleLeft : event.clientX,
+          pointerX: event.clientX,
+          renderedX: event.clientX,
+          frameId: null,
           changed: false
         };
         tableResizeHandle.dataset.active = "true";
         tableResizeHandle.setPointerCapture(event.pointerId);
       }
 
-      function continueTableResize(event) {
-        const resize = tableResizeSession;
-        if (!resize || !resize.tablePixels) return;
-        event.preventDefault();
-        const deltaPixels = event.clientX - resize.startX;
+      function renderTableResize(resize, clientX) {
+        const deltaPixels = clientX - resize.startX;
+        resize.renderedX = clientX;
         if (resize.tableEdge) {
           const minimumPixels = Math.min(resize.widthBasisPixels,
             minimumTableColumnWidth * resize.widths.length);
-          const nextPixels = Math.max(minimumPixels, Math.min(
-            resize.widthBasisPixels, resize.tablePixels + deltaPixels));
+          const nextPixels = Math.max(minimumPixels, resize.tablePixels + deltaPixels);
           resize.tableWidth = normalizedTableWidth(
             nextPixels / resize.widthBasisPixels * 100) || resize.initialTableWidth;
-          resize.changed = Math.abs(deltaPixels) >= 1;
-          applyTableWidths(resize.table, resize.widths, resize.tableWidth);
-          positionTableResizeHandle(resize.table.rows[0].cells[resize.columnIndex]);
+          const appliedDelta = nextPixels - resize.tablePixels;
+          resize.changed = Math.abs(appliedDelta) >= 1;
+          resize.table.style.setProperty("--lm-table-width", `${resize.tableWidth}%`);
+          tableResizeHandle.style.left = `${Math.round(resize.handleLeft + appliedDelta)}px`;
           return;
         }
         if (!resize.pairPixels) return;
@@ -3167,28 +3171,54 @@
         ));
         resize.widths[resize.columnIndex] = nextLeft;
         resize.widths[resize.columnIndex + 1] = resize.pairPercentage - nextLeft;
-        resize.widths = normalizedTableWidths(resize.widths, resize.widths.length);
-        resize.changed = Math.abs(deltaPixels) >= 1;
-        applyTableWidths(resize.table, resize.widths, resize.tableWidth);
-        positionTableResizeHandle(resize.table.rows[0].cells[resize.columnIndex]);
+        const firstRow = resize.table.rows[0];
+        for (const columnIndex of [resize.columnIndex, resize.columnIndex + 1]) {
+          firstRow.cells[columnIndex].style.setProperty(
+            "--lm-table-column-width", `${resize.widths[columnIndex]}%`);
+        }
+        const appliedDelta = (nextLeft - initialLeft)
+          / resize.pairPercentage * resize.pairPixels;
+        resize.changed = Math.abs(appliedDelta) >= 1;
+        tableResizeHandle.style.left = `${Math.round(resize.handleLeft + appliedDelta)}px`;
+      }
+
+      function continueTableResize(event) {
+        const resize = tableResizeSession;
+        if (!resize || !resize.tablePixels) return;
+        event.preventDefault();
+        resize.pointerX = event.clientX;
+        if (resize.frameId !== null) return;
+        resize.frameId = requestAnimationFrame(() => {
+          resize.frameId = null;
+          if (tableResizeSession === resize) renderTableResize(resize, resize.pointerX);
+        });
       }
 
       function commitTableResize(resize) {
         const file = activeFile();
         if (!file || !editorReady) return false;
-        const value = canonicalEditorText(editor.getValue(), file);
+        const value = file.text;
         const table = markdownTableBlocks(value)[resize.tableIndex];
         if (!table || table.columnCount !== resize.widths.length) return false;
         const updated = replaceTableWidthsMetadata(
           value, table, resize.widths, resize.tableWidth);
         const message = resize.tableEdge ? "Table width updated" : "Column widths updated";
-        return applyTableWidthTextUpdate(file, value, updated, message);
+        return applyTableWidthTextUpdate(
+          file, value, updated, message, { rerender: false });
       }
 
       function finishTableResize(event, commit = true) {
         const resize = tableResizeSession;
         if (!resize) return;
         event?.preventDefault();
+        if (resize.frameId !== null) {
+          cancelAnimationFrame(resize.frameId);
+          resize.frameId = null;
+        }
+        if (commit && Number.isFinite(event?.clientX)) resize.pointerX = event.clientX;
+        if (commit && resize.pointerX !== resize.renderedX) {
+          renderTableResize(resize, resize.pointerX);
+        }
         tableResizeSession = null;
         tableResizeHandle.dataset.active = "false";
         if (commit && resize.changed && commitTableResize(resize)) {
@@ -3592,7 +3622,7 @@
         }
         imageResizeSession = null;
         hideImageResizer();
-        editor.setValue(updated, true);
+        setEditorValue(file, updated);
         renderFiles();
         updateStatus(message);
         scheduleAttachmentPreviews();
@@ -3817,6 +3847,21 @@
         }
       }
 
+      function preserveStoredTableWidths(value, storedValue) {
+        const storedTables = markdownTableBlocks(storedValue);
+        const tables = markdownTableBlocks(value);
+        let updated = value;
+        for (let index = Math.min(storedTables.length, tables.length) - 1;
+          index >= 0; index -= 1) {
+          const stored = storedTables[index];
+          const table = tables[index];
+          if (!stored.widths || stored.columnCount !== table.columnCount) continue;
+          updated = replaceTableWidthsMetadata(
+            updated, table, stored.widths, stored.tableWidth);
+        }
+        return updated;
+      }
+
       function canonicalEditorText(value, file) {
         let canonical = value;
         for (const [key, url] of attachmentPreviewUrls) {
@@ -3824,7 +3869,21 @@
           const id = key.slice(file.id.length + 1);
           canonical = canonical.split(url).join(attachmentPath(id));
         }
+        if (file.tableWidthsOutOfSync) {
+          if (editor?.getCurrentMode() === "sv") {
+            file.tableWidthsOutOfSync = false;
+          } else {
+            const merged = preserveStoredTableWidths(canonical, file.text);
+            if (merged === canonical) file.tableWidthsOutOfSync = false;
+            canonical = merged;
+          }
+        }
         return canonical;
+      }
+
+      function setEditorValue(file, value = file.text) {
+        editor.setValue(value, true);
+        file.tableWidthsOutOfSync = false;
       }
 
       function pruneUnusedAttachments(file) {
@@ -4701,7 +4760,7 @@
               message = saved ? "Saved" : "Could not save file";
             } else {
               message = await loadFileFromHandle(file) || message;
-              if (editorReady && activeFile() === file) editor.setValue(file.text, true);
+              if (editorReady && activeFile() === file) setEditorValue(file);
               scheduleAttachmentPreviews();
             }
             renderFiles();
@@ -5767,7 +5826,7 @@
           for (const button of viewButtons) button.disabled = false;
           updateViewButtons(editor.getCurrentMode());
           observeAttachmentPreviews();
-          editor.setValue(activeFile().text, true);
+          setEditorValue(activeFile());
           updateStatus();
           scheduleAttachmentPreviews();
           scheduleTableWidths();
