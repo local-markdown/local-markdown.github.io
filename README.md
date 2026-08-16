@@ -38,7 +38,7 @@ Open Local Markdown in desktop Chrome or Edge, choose a Markdown file or folder,
 
 Pasted images are stored inside the Markdown file with Local Markdown's attachment format. Other editors can read the text but may not display those images. Use standard image URLs when compatibility matters.
 
-Select an image to reveal four resize handles and left, centre, and right alignment controls. Image layout is stored as a standard HTML `<img>` element because Markdown image syntax does not include dimensions or alignment.
+Hover over an image to reveal its left, centre, and right alignment controls along the image's top edge and its resize handle in the bottom-right corner. Image layout is stored as a standard HTML `<img>` element because Markdown image syntax does not include dimensions or alignment.
 
 Pasting a URL by itself creates a Markdown link. Local Markdown uses a copied link label when available, the filename for document and media URLs, supported sites' oEmbed titles, or a directly accessible HTML page title. If metadata is unavailable, it falls back to a readable name from the URL.
 

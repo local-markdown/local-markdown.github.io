@@ -644,22 +644,39 @@
     .LocalMarkdown-editor .vditor-reset a { color: var(--lm-accent); }
     .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg)
     .vditor-reset > :is(h1, h2, h3, h4, h5, h6)::before { content: none !important; }
-    .LocalMarkdown-editor img.LocalMarkdown-excalidraw-image { cursor: zoom-in; }
+    .LocalMarkdown-editor .vditor-reset img { cursor: zoom-in; }
+
+    .LocalMarkdown-image-preview {
+      width: 100vw; height: 100dvh; max-width: none; max-height: none;
+      margin: 0; padding: clamp(24px, 5vw, 72px); border: 0;
+      color: white; background: rgba(0, 0, 0, .9); box-sizing: border-box;
+    }
+    .LocalMarkdown-image-preview::backdrop { background: rgba(0, 0, 0, .72); }
+    .LocalMarkdown-image-preview figure {
+      width: 100%; height: 100%; margin: 0; display: grid; place-items: center;
+    }
+    .LocalMarkdown-image-preview img {
+      max-width: 100%; max-height: 100%; object-fit: contain;
+      border-radius: var(--lm-radius-control); box-shadow: 0 8px 32px rgba(0, 0, 0, .45);
+    }
+    .LocalMarkdown-image-preview-close {
+      position: fixed; top: var(--lm-space-4); right: var(--lm-space-4);
+      width: 40px; height: 40px; display: grid; place-items: center;
+      padding: 0; border: 1px solid rgba(255, 255, 255, .35);
+      border-radius: 999px; color: white; background: rgba(0, 0, 0, .55);
+      font-size: 26px; line-height: 1;
+    }
 
     .LocalMarkdown-image-resizer {
       position: fixed; z-index: 26; pointer-events: none;
-      border: 1px solid var(--lm-accent);
     }
     .LocalMarkdown-image-resizer[hidden] { display: none; }
     .LocalMarkdown-image-alignment {
-      position: absolute; top: -40px; left: 50%; display: flex; gap: var(--lm-space-1);
+      position: absolute; top: var(--lm-space-2); left: 50%; display: flex; gap: var(--lm-space-1);
       padding: var(--lm-space-1); border: 1px solid var(--lm-control-border);
       border-radius: var(--lm-radius-surface);
       background: var(--lm-background); box-shadow: 0 3px 10px var(--lm-menu-shadow);
       pointer-events: auto; transform: translateX(-50%);
-    }
-    .LocalMarkdown-image-resizer[data-toolbar-position="bottom"] .LocalMarkdown-image-alignment {
-      top: calc(100% + var(--lm-space-2));
     }
     .LocalMarkdown-image-align {
       width: var(--lm-control-height-compact); height: var(--lm-control-height-compact);
@@ -672,16 +689,18 @@
     }
     .LocalMarkdown-image-align svg { width: 16px; height: 16px; }
     .LocalMarkdown-image-resize-handle {
-      position: absolute; width: 12px; height: 12px; padding: 0;
-      border: 2px solid var(--lm-background); border-radius: var(--lm-radius-control);
-      background: var(--lm-accent); box-shadow: 0 1px 4px var(--lm-menu-shadow);
-      pointer-events: auto; touch-action: none;
-      transform: translate(-50%, -50%);
+      position: absolute; right: 2px; bottom: 2px; width: 28px; height: 28px; padding: 0;
+      border: 0; border-radius: var(--lm-radius-control); background: transparent;
+      color: var(--lm-muted); cursor: nwse-resize; pointer-events: auto; touch-action: none;
     }
-    .LocalMarkdown-image-resize-handle[data-corner="nw"] { top: 0; left: 0; cursor: nwse-resize; }
-    .LocalMarkdown-image-resize-handle[data-corner="ne"] { top: 0; left: 100%; cursor: nesw-resize; }
-    .LocalMarkdown-image-resize-handle[data-corner="sw"] { top: 100%; left: 0; cursor: nesw-resize; }
-    .LocalMarkdown-image-resize-handle[data-corner="se"] { top: 100%; left: 100%; cursor: nwse-resize; }
+    .LocalMarkdown-image-resize-handle::before {
+      content: ""; position: absolute; right: 3px; bottom: 3px; width: 15px; height: 15px;
+      border-right: 3px solid currentColor; border-bottom: 3px solid currentColor;
+      border-radius: 0 0 2px; box-sizing: border-box;
+      filter: drop-shadow(0 0 1px var(--lm-background));
+    }
+    .LocalMarkdown-image-resize-handle:hover,
+    .LocalMarkdown-image-resize-handle:active { color: var(--lm-accent); }
 
     .LocalMarkdown-table-edge-tools {
       position: fixed; z-index: 24; display: flex; padding: var(--lm-space-1);
@@ -978,11 +997,12 @@
         <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M15.5 3v12M3.5 5.5h9v7h-9z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"></path></svg>
       </button>
     </div>
-    <button class="LocalMarkdown-image-resize-handle" type="button" data-corner="nw" tabindex="-1" aria-label="Resize image from top left"></button>
-    <button class="LocalMarkdown-image-resize-handle" type="button" data-corner="ne" tabindex="-1" aria-label="Resize image from top right"></button>
-    <button class="LocalMarkdown-image-resize-handle" type="button" data-corner="sw" tabindex="-1" aria-label="Resize image from bottom left"></button>
     <button class="LocalMarkdown-image-resize-handle" type="button" data-corner="se" tabindex="-1" aria-label="Resize image from bottom right"></button>
   </div>
+  <dialog class="LocalMarkdown-image-preview" id="LocalMarkdown-image-preview" aria-label="Full-screen image preview">
+    <button class="LocalMarkdown-image-preview-close" id="LocalMarkdown-image-preview-close" type="button" aria-label="Close full-screen image preview" title="Close">×</button>
+    <figure><img id="LocalMarkdown-image-preview-content" alt=""></figure>
+  </dialog>
   <dialog class="LocalMarkdown-drawing-dialog" id="LocalMarkdown-drawing-dialog" aria-labelledby="LocalMarkdown-drawing-title">
     <div class="LocalMarkdown-drawing-shell">
       <header class="LocalMarkdown-drawing-header">
@@ -1035,6 +1055,9 @@
         imageResizer.querySelectorAll(".LocalMarkdown-image-resize-handle"));
       const imageAlignButtons = Array.from(
         imageResizer.querySelectorAll(".LocalMarkdown-image-align"));
+      const imagePreviewDialog = document.querySelector("#LocalMarkdown-image-preview");
+      const imagePreviewContent = document.querySelector("#LocalMarkdown-image-preview-content");
+      const imagePreviewClose = document.querySelector("#LocalMarkdown-image-preview-close");
       const viewButtons = document.querySelectorAll(".LocalMarkdown-view");
       const themeToggle = document.querySelector("#LocalMarkdown-theme-toggle");
       const themeMenu = document.querySelector("#LocalMarkdown-theme-menu");
@@ -1065,6 +1088,7 @@
       let tableWidthRefreshTimer = null;
       let selectedImage = null;
       let imageResizeSession = null;
+      let imagePreviewTimer = null;
       let attachmentPreviewTimer = null;
       let attachmentPreviewObserver = null;
       let imageWorker = null;
@@ -3306,7 +3330,6 @@
         imageResizer.style.top = `${rect.top}px`;
         imageResizer.style.width = `${rect.width}px`;
         imageResizer.style.height = `${rect.height}px`;
-        imageResizer.dataset.toolbarPosition = rect.top < 44 ? "bottom" : "top";
       }
 
       function imageAlignment(image) {
@@ -3320,12 +3343,13 @@
         return null;
       }
 
-      function showImageResizer(image) {
+      function showImageResizer(image, selected = false) {
         selectedImage = image;
         const alignment = imageAlignment(image);
         for (const button of imageAlignButtons) {
           button.setAttribute("aria-pressed", String(button.dataset.imageAlign === alignment));
         }
+        imageResizer.toggleAttribute("data-selected", selected);
         imageResizer.hidden = false;
         positionImageResizer();
       }
@@ -3333,7 +3357,33 @@
       function hideImageResizer() {
         if (imageResizeSession) return;
         selectedImage = null;
+        imageResizer.removeAttribute("data-selected");
         imageResizer.hidden = true;
+      }
+
+      function hideImageResizerAfterHover() {
+        requestAnimationFrame(() => {
+          if (imageResizeSession || imageResizer.hasAttribute("data-selected")
+            || selectedImage?.matches(":hover")
+            || imageResizer.matches(":hover")) return;
+          hideImageResizer();
+        });
+      }
+
+      function openImagePreview(image) {
+        if (!image?.isConnected) return;
+        clearTimeout(imagePreviewTimer);
+        imagePreviewTimer = null;
+        imagePreviewContent.src = image.currentSrc || image.src;
+        imagePreviewContent.alt = image.getAttribute("alt") || "Full-screen image";
+        if (!imagePreviewDialog.open) imagePreviewDialog.showModal();
+      }
+
+      function closeImagePreview() {
+        clearTimeout(imagePreviewTimer);
+        imagePreviewTimer = null;
+        if (imagePreviewDialog.open) imagePreviewDialog.close();
+        imagePreviewContent.removeAttribute("src");
       }
 
       function escapeHtmlAttribute(value) {
@@ -5335,6 +5385,11 @@
         positionImageResizer();
       });
       addEventListener("keydown", event => {
+        if (event.key === "Escape" && imagePreviewDialog.open) {
+          event.preventDefault();
+          closeImagePreview();
+          return;
+        }
         if (event.key === "Escape" && tableResizeSession) {
           event.preventDefault();
           finishTableResize(null, false);
@@ -5442,15 +5497,37 @@
       editorElement.addEventListener("keydown", handleEditorViewShortcut, true);
       editorElement.addEventListener("keydown", handleEditorKeydown, true);
       editorElement.addEventListener("paste", event => void pasteFormattedLink(event), true);
+      editorElement.addEventListener("pointerover", event => {
+        const image = editableImageFromNode(event.target);
+        if (image && image !== selectedImage && !imageResizeSession) showImageResizer(image);
+      }, true);
+      editorElement.addEventListener("pointerout", event => {
+        const image = editableImageFromNode(event.target);
+        if (!image || image !== selectedImage) return;
+        if (imageResizer.contains(event.relatedTarget)) return;
+        hideImageResizerAfterHover();
+      }, true);
+      imageResizer.addEventListener("pointerleave", hideImageResizerAfterHover);
       editorElement.addEventListener("pointerdown", event => {
         if (event.button !== 0) return;
         const image = editableImageFromNode(event.target);
-        if (image) showImageResizer(image);
+        if (image) showImageResizer(image, true);
       }, true);
       editorElement.addEventListener("click", event => {
         const image = editableImageFromNode(event.target);
         if (!image?.closest("a") || event.metaKey || event.ctrlKey || event.shiftKey) return;
         event.preventDefault();
+      }, true);
+      editorElement.addEventListener("click", event => {
+        const image = editableImageFromNode(event.target);
+        if (!image || event.metaKey || event.ctrlKey || event.shiftKey) return;
+        event.preventDefault();
+        if (image.classList.contains("LocalMarkdown-excalidraw-image")) {
+          clearTimeout(imagePreviewTimer);
+          imagePreviewTimer = setTimeout(() => openImagePreview(image), 220);
+          return;
+        }
+        openImagePreview(image);
       }, true);
       editorElement.addEventListener("click", event => {
         if (!excalidrawAttachmentFromEvent(event)) return;
@@ -5460,6 +5537,8 @@
       editorElement.addEventListener("dblclick", event => {
         const attachment = excalidrawAttachmentFromEvent(event);
         if (!attachment) return;
+        clearTimeout(imagePreviewTimer);
+        imagePreviewTimer = null;
         event.preventDefault();
         event.stopImmediatePropagation();
         void openDrawingDialog(attachment.id);
@@ -5469,6 +5548,14 @@
       drawingDialog.addEventListener("cancel", event => {
         event.preventDefault();
         closeDrawingDialog();
+      });
+      imagePreviewClose.addEventListener("click", closeImagePreview);
+      imagePreviewDialog.addEventListener("click", event => {
+        if (event.target === imagePreviewDialog) closeImagePreview();
+      });
+      imagePreviewDialog.addEventListener("cancel", event => {
+        event.preventDefault();
+        closeImagePreview();
       });
 
       closeButton.addEventListener("click", async () => {
