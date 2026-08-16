@@ -3253,17 +3253,25 @@
         }
 
         const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.platform);
-        const event = new KeyboardEvent("keydown", {
-          key: shortcut.key,
-          code: shortcut.code,
-          metaKey: isMac,
-          ctrlKey: !isMac,
-          shiftKey: shortcut.shiftKey,
-          bubbles: true,
-          cancelable: true
+        // Vditor matches shifted punctuation differently on macOS and other platforms.
+        const shiftedKey = shortcut.key === "=" ? "+" : "_";
+        const keyVariants = shortcut.shiftKey
+          ? [shiftedKey, shortcut.key]
+          : [shortcut.key];
+        const handled = keyVariants.some(key => {
+          const event = new KeyboardEvent("keydown", {
+            key,
+            code: shortcut.code,
+            metaKey: isMac,
+            ctrlKey: !isMac,
+            shiftKey: shortcut.shiftKey,
+            bubbles: true,
+            cancelable: true
+          });
+          surface.dispatchEvent(event);
+          return event.defaultPrevented;
         });
-        surface.dispatchEvent(event);
-        if (event.defaultPrevented) {
+        if (handled) {
           updateStatus(shortcut.status);
           if (widthContext) {
             setTimeout(() => synchronizeTableWidthsAfterColumnAction(
