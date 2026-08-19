@@ -5144,6 +5144,60 @@
         editor.vditor.undo.redo(editor.vditor);
       }
 
+      function taskItemCheckbox(item) {
+        return Array.from(item.children).find(child =>
+          child.matches('input[type="checkbox"]')) || null;
+      }
+
+      function reorderTaskSiblings(checkbox) {
+        const item = checkbox.closest("li.vditor-task");
+        const list = item?.parentElement;
+        if (!item || !list || !["UL", "OL"].includes(list.tagName)) return false;
+
+        const siblings = Array.from(list.children);
+        const itemIndex = siblings.indexOf(item);
+        let start = itemIndex;
+        let end = itemIndex + 1;
+        while (start > 0 && siblings[start - 1].matches("li.vditor-task")) start -= 1;
+        while (end < siblings.length && siblings[end].matches("li.vditor-task")) end += 1;
+
+        const tasks = siblings.slice(start, end);
+        const incomplete = tasks.filter(task =>
+          task !== item && !taskItemCheckbox(task)?.checked);
+        const complete = tasks.filter(task =>
+          task !== item && taskItemCheckbox(task)?.checked);
+        const ordered = checkbox.checked
+          ? [...incomplete, ...complete, item]
+          : [...incomplete, item, ...complete];
+        if (ordered.every((task, index) => task === tasks[index])) return false;
+
+        const nextSibling = siblings[end] || null;
+        for (const task of ordered) list.insertBefore(task, nextSibling);
+        return true;
+      }
+
+      function handleTaskCheckboxClick(event) {
+        const checkbox = event.target;
+        const surface = checkbox instanceof Element
+          ? checkbox.closest(".vditor-ir, .vditor-wysiwyg")
+          : null;
+        if (!(checkbox instanceof HTMLInputElement) || checkbox.type !== "checkbox"
+          || !checkbox.closest("li.vditor-task") || !surface) return;
+        const taskIndex = Array.from(surface.querySelectorAll(
+          'li.vditor-task > input[type="checkbox"]')).indexOf(checkbox);
+        if (taskIndex < 0) return;
+
+        setTimeout(() => {
+          if (!editorReady || !surface.isConnected) return;
+          const updatedCheckbox = surface.querySelectorAll(
+            'li.vditor-task > input[type="checkbox"]')[taskIndex];
+          if (!updatedCheckbox || !reorderTaskSiblings(updatedCheckbox)) return;
+          captureEditorValue();
+          renderFiles();
+          updateStatus();
+        });
+      }
+
       function handleEditorViewShortcut(event) {
         const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.platform);
         const commandKey = isMac ? event.metaKey : event.ctrlKey;
@@ -6150,6 +6204,7 @@
       });
       editorElement.addEventListener("keydown", handleEditorViewShortcut, true);
       editorElement.addEventListener("keydown", handleEditorKeydown, true);
+      editorElement.addEventListener("click", handleTaskCheckboxClick, true);
       editorElement.addEventListener("paste", event => void pasteFormattedLink(event), true);
       editorElement.addEventListener("pointerover", event => {
         const image = editableImageFromNode(event.target);
