@@ -170,12 +170,29 @@
     .LocalMarkdown-logo { width: 18px; height: 18px; flex: 0 0 18px; opacity: .82; }
     .LocalMarkdown-logo rect { fill: var(--lm-background); stroke: var(--lm-muted); }
     .LocalMarkdown-logo path { stroke: var(--lm-muted); }
+    .LocalMarkdown-new-picker { position: relative; }
     .LocalMarkdown-new {
       width: var(--lm-control-height); height: var(--lm-control-height); padding: 0;
       border: 0; border-radius: var(--lm-radius-control);
       color: var(--lm-muted); background: transparent; font-size: 18px; line-height: 1;
     }
     .LocalMarkdown-new:hover { color: var(--lm-text); background: var(--lm-selected); }
+    .LocalMarkdown-new-menu {
+      position: absolute; z-index: 20; top: calc(100% + var(--lm-space-2)); right: 0;
+      width: max-content; min-width: 152px; padding: var(--lm-space-1);
+      border: 1px solid var(--lm-control-border); border-radius: var(--lm-radius-surface);
+      background: var(--lm-background); box-shadow: 0 5px 18px var(--lm-menu-shadow);
+    }
+    .LocalMarkdown-new-menu[hidden] { display: none; }
+    .LocalMarkdown-new-option {
+      width: 100%; min-height: var(--lm-control-height);
+      padding: var(--lm-space-1) var(--lm-space-2); display: flex; align-items: center;
+      border: 0; border-radius: var(--lm-radius-control); color: var(--lm-text); background: transparent;
+      font-size: var(--lm-type-control-size); text-align: left; white-space: nowrap;
+    }
+    .LocalMarkdown-new-option:focus-visible {
+      outline: 0; box-shadow: inset 0 0 0 1px var(--lm-accent);
+    }
     .LocalMarkdown-sidebar-dismiss {
       display: none; width: var(--lm-control-height); height: var(--lm-control-height); padding: 0;
       border: 0; border-radius: var(--lm-radius-control); background: transparent;
@@ -216,7 +233,7 @@
     .LocalMarkdown-file {
       position: relative; width: 100%; min-height: var(--lm-control-height);
       margin: 0 0 var(--lm-space-1); padding: var(--lm-space-1) var(--lm-space-2); overflow: hidden;
-      display: flex; align-items: center; gap: var(--lm-space-2);
+      display: flex; align-items: center; gap: var(--lm-space-1);
       border: 0; border-radius: var(--lm-radius-control); background: transparent;
       text-align: left; white-space: nowrap;
       transition: background-color 100ms ease, color 100ms ease, opacity 80ms ease;
@@ -265,11 +282,48 @@
       content: ""; width: 4px; height: 4px; border-radius: 50%; background: currentColor;
     }
     .LocalMarkdown-file.LocalMarkdown-dragging { opacity: 0; }
-    .LocalMarkdown-sidebar-section {
-      padding: var(--lm-space-3) var(--lm-space-2) var(--lm-space-1);
-      color: var(--lm-secondary-text); font-size: var(--lm-type-metadata-size);
-      font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    .LocalMarkdown-topic-section {
+      margin-bottom: var(--lm-space-1); border-radius: var(--lm-radius-control);
+      transition: opacity 80ms ease, box-shadow 100ms ease;
     }
+    .LocalMarkdown-topic-section.LocalMarkdown-dragging { opacity: .35; }
+    .LocalMarkdown-topic-header {
+      min-width: 0; display: flex; align-items: center; gap: var(--lm-space-1);
+      border-radius: var(--lm-radius-control); background: var(--lm-surface); cursor: grab;
+    }
+    .LocalMarkdown-topic-header:active { cursor: grabbing; }
+    .LocalMarkdown-pinned-header,
+    .LocalMarkdown-workspace-header { cursor: default; }
+    .LocalMarkdown-pinned-header:active,
+    .LocalMarkdown-workspace-header:active { cursor: default; }
+    .LocalMarkdown-topic-toggle {
+      min-width: 0; min-height: var(--lm-control-height); flex: 1;
+      padding: var(--lm-space-1) var(--lm-space-2); display: flex; align-items: center;
+      gap: var(--lm-space-1); border: 0; border-radius: var(--lm-radius-control);
+      color: var(--lm-secondary-text); background: transparent; text-align: left;
+    }
+    .LocalMarkdown-group-icon {
+      width: 16px; height: 16px; flex: 0 0 16px; display: grid; place-items: center;
+      color: var(--lm-muted); font-size: 13px; font-weight: 500; line-height: 1;
+    }
+    .LocalMarkdown-pinned-icon { color: var(--lm-accent); font-size: 11px; }
+    .LocalMarkdown-topic-name {
+      min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      color: var(--lm-text); font-size: var(--lm-type-control-size); font-weight: 600;
+    }
+    .LocalMarkdown-topic-count {
+      flex: 0 0 auto; color: var(--lm-faint); font-size: var(--lm-type-metadata-size);
+    }
+    .LocalMarkdown-topic-menu-button {
+      width: var(--lm-control-height-compact); height: var(--lm-control-height-compact);
+      flex: 0 0 var(--lm-control-height-compact); padding: 0;
+      border: 0; border-radius: var(--lm-radius-control); color: var(--lm-faint); background: transparent;
+      font-size: 16px; line-height: 1;
+    }
+    .LocalMarkdown-topic-menu-button:hover { color: var(--lm-text); }
+    .LocalMarkdown-topic-files { padding-left: var(--lm-space-4); }
+    .LocalMarkdown-loose-files { margin-bottom: var(--lm-space-1); }
+    .LocalMarkdown-drop-target { box-shadow: inset 0 0 0 1px var(--lm-accent); }
     .LocalMarkdown-workspace { margin-bottom: var(--lm-space-1); }
     .LocalMarkdown-tree-row {
       min-width: 0; display: flex; align-items: center; gap: var(--lm-space-1);
@@ -278,13 +332,11 @@
     .LocalMarkdown-tree-item {
       position: relative; min-width: 0; height: var(--lm-control-height); flex: 1;
       padding: var(--lm-space-1) var(--lm-space-2);
-      display: flex; align-items: center; gap: var(--lm-space-2);
+      display: flex; align-items: center; gap: var(--lm-space-1);
       border: 0; border-radius: var(--lm-radius-control); background: transparent; text-align: left;
     }
+    .LocalMarkdown-tree-item[data-kind="directory"] { background: var(--lm-surface); }
     .LocalMarkdown-tree-item[data-root="true"] { font-weight: 600; }
-    .LocalMarkdown-tree-chevron {
-      width: 14px; flex: 0 0 14px; color: var(--lm-faint); font-size: 10px; text-align: center;
-    }
     .LocalMarkdown-tree-icon { width: 16px; height: 16px; flex: 0 0 16px; color: var(--lm-faint); }
     .LocalMarkdown-tree-icon[data-icon-kind="directory"] { color: var(--lm-muted); }
     :is(.LocalMarkdown-file, .LocalMarkdown-tree-item, .LocalMarkdown-search-file)[aria-current="true"]
@@ -319,7 +371,7 @@
     }
     .LocalMarkdown-search-file {
       position: relative; min-height: var(--lm-control-height); display: flex; align-items: center;
-      gap: var(--lm-space-2); padding: var(--lm-space-1) var(--lm-space-2);
+      gap: var(--lm-space-1); padding: var(--lm-space-1) var(--lm-space-2);
       font-size: var(--lm-type-control-size); font-weight: 600;
     }
     .LocalMarkdown-search-file[aria-current="true"] { background: var(--lm-selected); }
@@ -401,27 +453,6 @@
       border: 0; border-radius: var(--lm-radius-control); background: transparent;
       font-size: var(--lm-type-control-size);
     }
-    .LocalMarkdown-open-picker { position: relative; }
-    .LocalMarkdown-open-toggle { display: inline-flex; align-items: center; gap: var(--lm-space-1); }
-    .LocalMarkdown-open-chevron { color: var(--lm-faint); font-size: 10px; }
-    .LocalMarkdown-open-menu {
-      position: absolute; z-index: 20; top: calc(100% + var(--lm-space-2)); right: 0;
-      width: max-content; min-width: 164px; padding: var(--lm-space-1);
-      border: 1px solid var(--lm-control-border); border-radius: var(--lm-radius-surface);
-      background: var(--lm-background); box-shadow: 0 5px 18px var(--lm-menu-shadow);
-    }
-    .LocalMarkdown-open-menu[hidden] { display: none; }
-    .LocalMarkdown-open-option {
-      width: 100%; min-height: var(--lm-control-height);
-      padding: var(--lm-space-1) var(--lm-space-2); display: flex;
-      align-items: center; gap: var(--lm-space-2);
-      border: 0; border-radius: var(--lm-radius-control); color: var(--lm-text); background: transparent;
-      font-size: var(--lm-type-control-size); text-align: left; white-space: nowrap;
-    }
-    .LocalMarkdown-open-option svg { width: 16px; height: 16px; color: var(--lm-muted); }
-    .LocalMarkdown-open-option:focus-visible {
-      outline: 0; box-shadow: inset 0 0 0 1px var(--lm-accent);
-    }
     .LocalMarkdown-theme-picker {
       position: relative;
     }
@@ -452,6 +483,7 @@
     }
     .LocalMarkdown-file-context-menu {
       position: fixed; z-index: 50; width: max-content; min-width: 176px;
+      max-height: calc(100vh - 12px); overflow: auto;
       padding: var(--lm-space-1);
       border: 1px solid var(--lm-control-border); border-radius: var(--lm-radius-surface);
       background: var(--lm-background); box-shadow: 0 5px 18px var(--lm-menu-shadow);
@@ -471,6 +503,11 @@
       outline: 0; box-shadow: inset 0 0 0 1px var(--lm-accent);
     }
     .LocalMarkdown-file-context-item:disabled { color: var(--lm-faint); }
+    .LocalMarkdown-file-context-label {
+      padding: var(--lm-space-2) var(--lm-space-2) var(--lm-space-1);
+      border-top: 1px solid var(--lm-border); color: var(--lm-faint);
+      font-size: var(--lm-type-metadata-size); font-weight: 600;
+    }
     .LocalMarkdown-file-context-item[data-action="delete"] {
       margin-top: var(--lm-space-1); border-top: 1px solid var(--lm-border);
       border-radius: 0 0 var(--lm-radius-control) var(--lm-radius-control);
@@ -870,7 +907,14 @@
             <path d="M7 3.5v13M12 7l-3 3 3 3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
           </svg>
         </button>
-        <button class="LocalMarkdown-new" id="LocalMarkdown-new" type="button" aria-label="New file">+</button>
+        <div class="LocalMarkdown-new-picker">
+          <button class="LocalMarkdown-new" id="LocalMarkdown-new" type="button" aria-label="Create new" aria-haspopup="menu" aria-expanded="false" aria-controls="LocalMarkdown-new-menu">+</button>
+          <div class="LocalMarkdown-new-menu" id="LocalMarkdown-new-menu" role="menu" aria-label="Create new" hidden>
+            <button class="LocalMarkdown-new-option" id="LocalMarkdown-new-file" type="button" role="menuitem">New File</button>
+            <button class="LocalMarkdown-new-option" id="LocalMarkdown-new-section" type="button" role="menuitem">New Section</button>
+            <button class="LocalMarkdown-new-option" id="LocalMarkdown-new-folder" type="button" role="menuitem">Add Folder…</button>
+          </div>
+        </div>
       </div>
       <div class="LocalMarkdown-search" role="search">
         <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
@@ -922,21 +966,7 @@
           <button class="LocalMarkdown-view" type="button" data-mode="sv" aria-pressed="false" title="Edit source beside a live preview" disabled>Split</button>
         </div>
         <div class="LocalMarkdown-actions">
-          <div class="LocalMarkdown-open-picker">
-            <button class="LocalMarkdown-action LocalMarkdown-open-toggle" id="LocalMarkdown-open-toggle" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="LocalMarkdown-open-menu">
-              Open <span class="LocalMarkdown-open-chevron" aria-hidden="true">▾</span>
-            </button>
-            <div class="LocalMarkdown-open-menu" id="LocalMarkdown-open-menu" role="menu" aria-label="Open" hidden>
-              <button class="LocalMarkdown-open-option" id="LocalMarkdown-open-file" type="button" role="menuitem">
-                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 2.75h7l4 4v10.5H4zM11 2.75v4h4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"></path></svg>
-                Open File…
-              </button>
-              <button class="LocalMarkdown-open-option" id="LocalMarkdown-open-folder" type="button" role="menuitem">
-                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M2.75 5.25h5l1.5 2h8v8.5h-14.5z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"></path></svg>
-                Add Folder…
-              </button>
-            </div>
-          </div>
+          <button class="LocalMarkdown-action" id="LocalMarkdown-open-file" type="button">Open File…</button>
           <button class="LocalMarkdown-action" id="LocalMarkdown-save-file" type="button">Save</button>
           <button class="LocalMarkdown-action" id="LocalMarkdown-save-copy" type="button"
             title="Save the cached document as a new local file" hidden>Save a Copy…</button>
@@ -953,11 +983,24 @@
     </button>
     <button class="LocalMarkdown-file-context-item" type="button" role="menuitem" data-action="favorite">
       <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m10 2.75 2.1 4.35 4.8.65-3.5 3.35.85 4.75L10 13.55 5.75 15.8l.85-4.7-3.5-3.35 4.8-.65z" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"></path></svg>
-      <span>Favorite</span>
+      <span>Pin</span>
     </button>
+    <div id="LocalMarkdown-file-move-options"></div>
     <button class="LocalMarkdown-file-context-item" type="button" role="menuitem" data-action="delete">
       <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 5.25h13M7 5.25V3h6v2.25m2 0-.7 11H5.7l-.7-11M8 8v5.5m4-5.5v5.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
       Delete
+    </button>
+  </div>
+  <div class="LocalMarkdown-file-context-menu" id="LocalMarkdown-section-context-menu" role="menu" aria-label="Section actions" hidden>
+    <button class="LocalMarkdown-file-context-item" type="button" role="menuitem" data-action="rename">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m4 14.75.65-3.15 8.7-8.7 3 3-8.7 8.7-3.15.65Zm7.9-10.4 3 3" fill="none" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      Rename
+    </button>
+    <button class="LocalMarkdown-file-context-item" type="button" role="menuitem" data-action="move-up">Move Up</button>
+    <button class="LocalMarkdown-file-context-item" type="button" role="menuitem" data-action="move-down">Move Down</button>
+    <button class="LocalMarkdown-file-context-item" type="button" role="menuitem" data-action="delete">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 5.25h13M7 5.25V3h6v2.25m2 0-.7 11H5.7l-.7-11M8 8v5.5m4-5.5v5.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      Delete Section
     </button>
   </div>
   <dialog class="LocalMarkdown-file-dialog" id="LocalMarkdown-file-dialog" aria-labelledby="LocalMarkdown-file-dialog-title" aria-describedby="LocalMarkdown-file-dialog-message">
@@ -1026,11 +1069,13 @@
       const sidebarDismiss = document.querySelector("#LocalMarkdown-sidebar-dismiss");
       const searchInput = document.querySelector("#LocalMarkdown-search-input");
       const searchClear = document.querySelector("#LocalMarkdown-search-clear");
-      const openToggle = document.querySelector("#LocalMarkdown-open-toggle");
-      const openMenu = document.querySelector("#LocalMarkdown-open-menu");
-      const openOptions = Array.from(document.querySelectorAll(".LocalMarkdown-open-option"));
+      const newToggle = document.querySelector("#LocalMarkdown-new");
+      const newMenu = document.querySelector("#LocalMarkdown-new-menu");
+      const newOptions = Array.from(document.querySelectorAll(".LocalMarkdown-new-option"));
+      const newFileButton = document.querySelector("#LocalMarkdown-new-file");
+      const newSectionButton = document.querySelector("#LocalMarkdown-new-section");
+      const newFolderButton = document.querySelector("#LocalMarkdown-new-folder");
       const openFileButton = document.querySelector("#LocalMarkdown-open-file");
-      const openFolderButton = document.querySelector("#LocalMarkdown-open-folder");
       const mainElement = document.querySelector(".LocalMarkdown-main");
       const filenameElement = document.querySelector("#LocalMarkdown-filename");
       const statusElement = document.querySelector("#LocalMarkdown-status");
@@ -1058,8 +1103,12 @@
       const themeMenu = document.querySelector("#LocalMarkdown-theme-menu");
       const themeOptions = Array.from(document.querySelectorAll(".LocalMarkdown-theme-option"));
       const fileContextMenu = document.querySelector("#LocalMarkdown-file-context-menu");
-      const fileContextItems = Array.from(fileContextMenu.querySelectorAll(".LocalMarkdown-file-context-item"));
+      let fileContextItems = Array.from(fileContextMenu.querySelectorAll(".LocalMarkdown-file-context-item"));
       const favoriteContextLabel = fileContextMenu.querySelector('[data-action="favorite"] span');
+      const fileMoveOptions = document.querySelector("#LocalMarkdown-file-move-options");
+      const sectionContextMenu = document.querySelector("#LocalMarkdown-section-context-menu");
+      const sectionContextItems = Array.from(
+        sectionContextMenu.querySelectorAll(".LocalMarkdown-file-context-item"));
       const fileDialog = document.querySelector("#LocalMarkdown-file-dialog");
       const fileDialogForm = document.querySelector("#LocalMarkdown-file-dialog-form");
       const fileDialogTitle = document.querySelector("#LocalMarkdown-file-dialog-title");
@@ -1094,7 +1143,7 @@
       let sessionWritePromise = Promise.resolve();
       let sessionNeedsSave = false;
       let sessionRestored = false;
-      let draggedFileId = null;
+      let draggedSidebarItem = null;
       let workspaceSearchRenderPending = false;
       let excalidrawStylesPromise = null;
       let excalidrawModulesPromise = null;
@@ -1102,7 +1151,10 @@
       let drawingSession = null;
       let fileContextTarget = null;
       let fileContextTrigger = null;
+      let sectionContextTarget = null;
+      let sectionContextTrigger = null;
       let fileDialogMode = null;
+      let fileDialogSectionId = null;
       let fileDialogResolve = null;
       const autoSaveTimers = new Map();
       const activeSaves = new Map();
@@ -1192,16 +1244,60 @@
           || themeOptions[0]).focus();
       }
 
-      function setOpenMenuOpen(open, { focus = false } = {}) {
-        openMenu.hidden = !open;
-        openToggle.setAttribute("aria-expanded", String(open));
-        if (open && focus) openOptions[0]?.focus();
+      function setNewMenuOpen(open, { focus = false } = {}) {
+        newMenu.hidden = !open;
+        newToggle.setAttribute("aria-expanded", String(open));
+        if (open && focus) newOptions[0]?.focus();
       }
 
-      function fileContextActionAvailable(action, target) {
+      function sectionIdForFile(fileId) {
+        return session.sidebar.sections.find(section => section.fileIds.includes(fileId))?.id || null;
+      }
+
+      function populateFileMoveOptions(target) {
+        fileMoveOptions.replaceChildren();
+        const file = target?.file;
+        if (!isStandaloneSidebarFile(file)) {
+          fileContextItems = Array.from(
+            fileContextMenu.querySelectorAll(".LocalMarkdown-file-context-item"));
+          return;
+        }
+        const currentSectionId = sectionIdForFile(file.id);
+        const destinations = session.sidebar.sections.filter(section => section.id !== currentSectionId);
+        if (!currentSectionId && !destinations.length) {
+          fileContextItems = Array.from(
+            fileContextMenu.querySelectorAll(".LocalMarkdown-file-context-item"));
+          return;
+        }
+        const label = document.createElement("div");
+        label.className = "LocalMarkdown-file-context-label";
+        label.textContent = "Move to";
+        fileMoveOptions.append(label);
+        const choices = currentSectionId
+          ? [{ id: "", name: "Files" }, ...destinations]
+          : destinations;
+        for (const destination of choices) {
+          const item = document.createElement("button");
+          item.type = "button";
+          item.className = "LocalMarkdown-file-context-item";
+          item.setAttribute("role", "menuitem");
+          item.dataset.action = "move-section";
+          item.dataset.sectionId = destination.id;
+          item.textContent = destination.name;
+          fileMoveOptions.append(item);
+        }
+        fileContextItems = Array.from(
+          fileContextMenu.querySelectorAll(".LocalMarkdown-file-context-item"));
+      }
+
+      function fileContextActionAvailable(action, target, sectionId = null) {
         const location = workspaceLocationForTarget(target);
         const file = target?.file;
         if (action === "favorite") return Boolean(favoriteKeyForTarget(target));
+        if (action === "move-section") {
+          return Boolean(isStandaloneSidebarFile(file)
+            && (!sectionId || sectionForId(sectionId)));
+        }
         if (action === "rename") {
           return Boolean(location || (file && (!file.handle || typeof file.handle.move === "function")));
         }
@@ -1219,14 +1315,25 @@
         fileContextTrigger = null;
       }
 
+      function closeSectionContextMenu({ restoreFocus = false } = {}) {
+        if (sectionContextMenu.hidden) return;
+        sectionContextMenu.hidden = true;
+        if (restoreFocus && sectionContextTrigger?.isConnected) sectionContextTrigger.focus();
+        sectionContextTarget = null;
+        sectionContextTrigger = null;
+      }
+
       function openFileContextMenu(event, target, trigger) {
-        setOpenMenuOpen(false);
+        setNewMenuOpen(false);
         setThemeMenuOpen(false);
+        closeSectionContextMenu();
         fileContextTarget = target;
         fileContextTrigger = trigger;
-        favoriteContextLabel.textContent = targetIsFavorite(target) ? "Remove from Favorites" : "Favorite";
+        populateFileMoveOptions(target);
+        favoriteContextLabel.textContent = targetIsFavorite(target) ? "Remove from Pinned" : "Pin";
         for (const item of fileContextItems) {
-          item.disabled = !fileContextActionAvailable(item.dataset.action, target);
+          item.disabled = !fileContextActionAvailable(
+            item.dataset.action, target, item.dataset.sectionId || null);
           item.title = item.disabled ? "Open the containing folder to use this action" : "";
         }
         fileContextMenu.setAttribute("aria-label", `Actions for ${targetName(target)}`);
@@ -1238,6 +1345,34 @@
         fileContextMenu.style.left = `${Math.max(6, Math.min(requestedLeft, innerWidth - menuBounds.width - 6))}px`;
         fileContextMenu.style.top = `${Math.max(6, Math.min(requestedTop, innerHeight - menuBounds.height - 6))}px`;
         fileContextItems.find(item => !item.disabled)?.focus();
+      }
+
+      function openSectionContextMenu(event, section, trigger) {
+        setNewMenuOpen(false);
+        setThemeMenuOpen(false);
+        closeFileContextMenu();
+        sectionContextTarget = section;
+        sectionContextTrigger = trigger;
+        const index = session.sidebar.sections.indexOf(section);
+        for (const item of sectionContextItems) {
+          const action = item.dataset.action;
+          item.disabled = action === "delete" ? section.fileIds.length > 0
+            : action === "move-up" ? index <= 0
+            : action === "move-down" ? index === session.sidebar.sections.length - 1
+            : false;
+          item.title = action === "delete" && item.disabled
+            ? "Move or close all files first"
+            : "";
+        }
+        sectionContextMenu.setAttribute("aria-label", `Actions for section ${section.name}`);
+        sectionContextMenu.hidden = false;
+        const triggerBounds = trigger.getBoundingClientRect();
+        const menuBounds = sectionContextMenu.getBoundingClientRect();
+        const requestedLeft = event.clientX || triggerBounds.left + 12;
+        const requestedTop = event.clientY || triggerBounds.top + triggerBounds.height;
+        sectionContextMenu.style.left = `${Math.max(6, Math.min(requestedLeft, innerWidth - menuBounds.width - 6))}px`;
+        sectionContextMenu.style.top = `${Math.max(6, Math.min(requestedTop, innerHeight - menuBounds.height - 6))}px`;
+        sectionContextItems.find(item => !item.disabled)?.focus();
       }
 
       function attachFileContextMenu(element, target) {
@@ -1252,39 +1387,62 @@
         });
       }
 
-      async function runFileContextAction(action, target) {
+      async function runFileContextAction(action, target, sectionId = null) {
         if (action === "favorite") toggleFavorite(target);
         else if (action === "rename") await renameFileTarget(target);
         else if (action === "delete") await deleteFileTarget(target);
+        else if (action === "move-section" && target.file) {
+          moveFileToSection(target.file.id, sectionId);
+        }
+      }
+
+      async function runSectionContextAction(action, section) {
+        if (action === "rename") await renameSection(section);
+        else if (action === "move-up") moveSectionByOffset(section.id, -1);
+        else if (action === "move-down") moveSectionByOffset(section.id, 1);
+        else if (action === "delete") deleteSection(section.id);
       }
 
       function settleFileDialog(value) {
         const resolve = fileDialogResolve;
         fileDialogResolve = null;
         fileDialogMode = null;
+        fileDialogSectionId = null;
         if (fileDialog.open) fileDialog.close();
         resolve?.(value);
       }
 
-      function requestFileDialog(mode, name, { dirty = false } = {}) {
+      function requestFileDialog(mode, name, { dirty = false, sectionId = null } = {}) {
         if (fileDialogResolve) settleFileDialog(null);
         fileDialogMode = mode;
-        const renaming = mode === "rename";
-        fileDialogTitle.textContent = renaming ? "Rename file" : "Delete file?";
-        fileDialogMessage.textContent = renaming
-          ? "Enter a new Markdown file name."
+        fileDialogSectionId = sectionId;
+        const fileRenaming = mode === "rename";
+        const sectionNaming = mode === "create-section" || mode === "rename-section";
+        const naming = fileRenaming || sectionNaming;
+        fileDialogTitle.textContent = fileRenaming ? "Rename file"
+          : mode === "create-section" ? "New section"
+          : mode === "rename-section" ? "Rename section"
+          : "Delete file?";
+        fileDialogMessage.textContent = fileRenaming ? "Enter a new Markdown file name."
+          : sectionNaming ? "Sections group open files without moving them on disk."
           : `“${name}” will be permanently deleted.${dirty ? " Unsaved changes will also be lost." : ""}`;
-        fileDialogInput.hidden = !renaming;
-        fileDialogInput.required = renaming;
-        fileDialogInput.value = renaming ? name : "";
-        fileDialogSubmit.textContent = renaming ? "Rename" : "Delete";
-        fileDialogSubmit.dataset.destructive = String(!renaming);
+        fileDialogInput.hidden = !naming;
+        fileDialogInput.required = naming;
+        fileDialogInput.value = naming ? name : "";
+        if (sectionNaming) fileDialogInput.maxLength = 80;
+        else fileDialogInput.removeAttribute("maxlength");
+        fileDialogSubmit.textContent = mode === "create-section" ? "Create"
+          : naming ? "Rename" : "Delete";
+        fileDialogSubmit.dataset.destructive = String(!naming);
         fileDialog.showModal();
         requestAnimationFrame(() => {
-          if (renaming) {
+          if (naming) {
             fileDialogInput.focus();
-            const extensionIndex = name.search(/\.(?:md|markdown)$/i);
-            fileDialogInput.setSelectionRange(0, extensionIndex > 0 ? extensionIndex : name.length);
+            const selectionEnd = fileRenaming
+              ? (name.search(/\.(?:md|markdown)$/i) > 0
+                ? name.search(/\.(?:md|markdown)$/i) : name.length)
+              : name.length;
+            fileDialogInput.setSelectionRange(0, selectionEnd);
           } else {
             fileDialogCancel.focus();
           }
@@ -1437,11 +1595,200 @@
         files: [example],
         workspaces: [],
         favoriteKeys: new Set(),
+        sidebar: { pinnedCollapsed: false, sections: [], ungroupedFileIds: [] },
         lastOpenHandle: null
       };
 
       function activeFile() {
         return session.files.find(file => file.id === session.activeId);
+      }
+
+      function isStandaloneSidebarFile(file) {
+        if (!file || file.builtin || file.welcome) return false;
+        if (!file.workspaceId) return true;
+        const workspace = workspaceForId(file.workspaceId);
+        return !workspace?.nodesByPath.has(file.workspacePath);
+      }
+
+      function sectionForId(sectionId) {
+        return session.sidebar.sections.find(section => section.id === sectionId) || null;
+      }
+
+      function sectionNameExists(name, exceptId = null) {
+        const normalized = name.trim().toLocaleLowerCase();
+        return session.sidebar.sections.some(section => section.id !== exceptId
+          && section.name.toLocaleLowerCase() === normalized);
+      }
+
+      function removeFileFromSidebarLayout(fileId) {
+        let changed = false;
+        const nextUngrouped = session.sidebar.ungroupedFileIds.filter(id => id !== fileId);
+        if (nextUngrouped.length !== session.sidebar.ungroupedFileIds.length) {
+          session.sidebar.ungroupedFileIds = nextUngrouped;
+          changed = true;
+        }
+        for (const section of session.sidebar.sections) {
+          const nextFileIds = section.fileIds.filter(id => id !== fileId);
+          if (nextFileIds.length === section.fileIds.length) continue;
+          section.fileIds = nextFileIds;
+          changed = true;
+        }
+        return changed;
+      }
+
+      function syncSidebarFileAvailability(file) {
+        const assigned = session.sidebar.ungroupedFileIds.includes(file.id)
+          || session.sidebar.sections.some(section => section.fileIds.includes(file.id));
+        if (!isStandaloneSidebarFile(file)) return removeFileFromSidebarLayout(file.id);
+        if (assigned) return false;
+        session.sidebar.ungroupedFileIds.push(file.id);
+        return true;
+      }
+
+      function normalizeSidebarLayout() {
+        let changed = false;
+        if (!session.sidebar || typeof session.sidebar !== "object") {
+          session.sidebar = { pinnedCollapsed: false, sections: [], ungroupedFileIds: [] };
+          changed = true;
+        }
+        if (!Array.isArray(session.sidebar.sections)) {
+          session.sidebar.sections = [];
+          changed = true;
+        }
+        if (!Array.isArray(session.sidebar.ungroupedFileIds)) {
+          session.sidebar.ungroupedFileIds = [];
+          changed = true;
+        }
+
+        const eligibleIds = new Set(session.files.filter(isStandaloneSidebarFile).map(file => file.id));
+        const seenSectionIds = new Set();
+        const seenFileIds = new Set();
+        const sections = [];
+        for (const candidate of session.sidebar.sections) {
+          if (!candidate || typeof candidate.id !== "string" || seenSectionIds.has(candidate.id)
+              || typeof candidate.name !== "string" || !candidate.name.trim()) {
+            changed = true;
+            continue;
+          }
+          seenSectionIds.add(candidate.id);
+          const fileIds = [];
+          for (const fileId of Array.isArray(candidate.fileIds) ? candidate.fileIds : []) {
+            if (!eligibleIds.has(fileId) || seenFileIds.has(fileId)) {
+              changed = true;
+              continue;
+            }
+            seenFileIds.add(fileId);
+            fileIds.push(fileId);
+          }
+          const section = {
+            id: candidate.id,
+            name: candidate.name.trim(),
+            collapsed: Boolean(candidate.collapsed),
+            fileIds
+          };
+          if (section.name !== candidate.name || !Array.isArray(candidate.fileIds)) changed = true;
+          sections.push(section);
+        }
+
+        const ungroupedFileIds = [];
+        for (const fileId of session.sidebar.ungroupedFileIds) {
+          if (!eligibleIds.has(fileId) || seenFileIds.has(fileId)) {
+            changed = true;
+            continue;
+          }
+          seenFileIds.add(fileId);
+          ungroupedFileIds.push(fileId);
+        }
+        for (const file of session.files) {
+          if (!eligibleIds.has(file.id) || seenFileIds.has(file.id)) continue;
+          seenFileIds.add(file.id);
+          ungroupedFileIds.push(file.id);
+          changed = true;
+        }
+        session.sidebar = {
+          pinnedCollapsed: Boolean(session.sidebar.pinnedCollapsed),
+          sections,
+          ungroupedFileIds
+        };
+        return changed;
+      }
+
+      function sidebarFiles(fileIds) {
+        const filesById = new Map(session.files.map(file => [file.id, file]));
+        return fileIds.map(id => filesById.get(id)).filter(Boolean);
+      }
+
+      async function createSection() {
+        const name = await requestFileDialog("create-section", "");
+        if (name === null) return;
+        const section = { id: createId(), name: name.trim(), collapsed: false, fileIds: [] };
+        session.sidebar.sections.push(section);
+        renderFiles();
+        updateStatus(`Created section ${section.name}`);
+        scheduleSessionSave();
+      }
+
+      async function renameSection(section) {
+        if (!sectionForId(section.id)) return;
+        const name = await requestFileDialog("rename-section", section.name, { sectionId: section.id });
+        const current = sectionForId(section.id);
+        if (!current) return;
+        if (name === null || name.trim() === current.name) return;
+        current.name = name.trim();
+        renderFiles();
+        updateStatus(`Renamed section to ${current.name}`);
+        scheduleSessionSave();
+      }
+
+      function deleteSection(sectionId) {
+        const section = sectionForId(sectionId);
+        if (!section) return false;
+        if (section.fileIds.length) {
+          updateStatus("Move or close all files before deleting this section");
+          return false;
+        }
+        session.sidebar.sections = session.sidebar.sections.filter(item => item !== section);
+        renderFiles();
+        updateStatus(`Deleted section ${section.name}`);
+        scheduleSessionSave();
+        return true;
+      }
+
+      function moveSectionByOffset(sectionId, offset) {
+        const sections = session.sidebar.sections;
+        const index = sections.findIndex(section => section.id === sectionId);
+        const nextIndex = index + offset;
+        if (index < 0 || nextIndex < 0 || nextIndex >= sections.length) return;
+        const [section] = sections.splice(index, 1);
+        sections.splice(nextIndex, 0, section);
+        renderFiles();
+        scheduleSessionSave();
+      }
+
+      function moveSectionRelative(sectionId, targetId, placeAfter) {
+        if (sectionId === targetId) return;
+        const sections = session.sidebar.sections;
+        const index = sections.findIndex(section => section.id === sectionId);
+        if (index < 0) return;
+        const [section] = sections.splice(index, 1);
+        const targetIndex = sections.findIndex(candidate => candidate.id === targetId);
+        if (targetIndex < 0) sections.push(section);
+        else sections.splice(targetIndex + (placeAfter ? 1 : 0), 0, section);
+        renderFiles();
+        scheduleSessionSave();
+      }
+
+      function moveFileToSection(fileId, sectionId, targetFileId = null, placeAfter = true) {
+        const file = session.files.find(candidate => candidate.id === fileId);
+        const section = sectionId ? sectionForId(sectionId) : null;
+        if (!isStandaloneSidebarFile(file) || (sectionId && !section)) return;
+        removeFileFromSidebarLayout(fileId);
+        const fileIds = section ? section.fileIds : session.sidebar.ungroupedFileIds;
+        const targetIndex = targetFileId ? fileIds.indexOf(targetFileId) : -1;
+        if (targetIndex < 0) fileIds.push(fileId);
+        else fileIds.splice(targetIndex + (placeAfter ? 1 : 0), 0, fileId);
+        renderFiles();
+        scheduleSessionSave();
       }
 
       function createDirectoryNode(handle, name, path = "") {
@@ -1531,6 +1878,22 @@
         return Array.from(session.favoriteKeys, favoriteTarget).filter(Boolean);
       }
 
+      async function hydrateFavoriteWorkspaceNodes() {
+        const tasks = [];
+        for (const key of session.favoriteKeys) {
+          if (!key.startsWith("workspace:")) continue;
+          for (const workspace of session.workspaces) {
+            const prefix = `workspace:${workspace.id}:`;
+            if (!key.startsWith(prefix) || workspace.needsPermission) continue;
+            const path = key.slice(prefix.length);
+            if (!path || workspace.nodesByPath.has(path)) break;
+            tasks.push(workspaceNodeAtPath(workspace, path.split("/")).catch(() => null));
+            break;
+          }
+        }
+        await Promise.all(tasks);
+      }
+
       function syncWorkspaceSearchText(file, { invalidate = false } = {}) {
         if (!file?.workspaceId || typeof file.workspacePath !== "string") return;
         const node = workspaceForId(file.workspaceId)?.nodesByPath.get(file.workspacePath);
@@ -1601,10 +1964,20 @@
 
       function sessionSnapshot() {
         return {
-          version: 1,
+          version: 2,
           activeId: session.activeId,
           lastOpenHandle: session.lastOpenHandle,
           favoriteKeys: Array.from(session.favoriteKeys),
+          sidebar: {
+            pinnedCollapsed: session.sidebar.pinnedCollapsed,
+            sections: session.sidebar.sections.map(section => ({
+              id: section.id,
+              name: section.name,
+              collapsed: section.collapsed,
+              fileIds: [...section.fileIds]
+            })),
+            ungroupedFileIds: [...session.sidebar.ungroupedFileIds]
+          },
           fileOrder: session.files
             .filter(file => !file.welcome)
             .map(file => file.id),
@@ -1811,7 +2184,7 @@
           console.warn("Local Markdown could not use browser session storage.");
         }
 
-        if (storedSession?.version === 1 && Array.isArray(storedSession.files)) {
+        if ([1, 2].includes(storedSession?.version) && Array.isArray(storedSession.files)) {
           const restoredFiles = storedSession.files
             .filter(file => file && typeof file.id === "string"
               && typeof file.name === "string" && typeof file.text === "string")
@@ -1841,6 +2214,7 @@
             Promise.all(restoredFiles.map(refreshRestoredFile)),
             Promise.all(restoredWorkspaces.map(refreshRestoredWorkspace))
           ]);
+          await hydrateFavoriteWorkspaceNodes();
           for (const file of restoredFiles) syncWorkspaceSearchText(file);
           const availableFiles = [example, ...restoredFiles];
           const filesById = new Map(availableFiles.map(file => [file.id, file]));
@@ -1852,6 +2226,25 @@
             filesById.delete(id);
           }
           session.files = [...orderedFiles, ...filesById.values()];
+          if (storedSession.version === 2 && storedSession.sidebar
+              && typeof storedSession.sidebar === "object") {
+            session.sidebar = {
+              pinnedCollapsed: Boolean(storedSession.sidebar.pinnedCollapsed),
+              sections: Array.isArray(storedSession.sidebar.sections)
+                ? storedSession.sidebar.sections : [],
+              ungroupedFileIds: Array.isArray(storedSession.sidebar.ungroupedFileIds)
+                ? storedSession.sidebar.ungroupedFileIds : []
+            };
+          } else {
+            session.sidebar = {
+              pinnedCollapsed: false,
+              sections: [],
+              ungroupedFileIds: Array.isArray(storedSession.fileOrder)
+                ? [...storedSession.fileOrder] : []
+            };
+            sessionNeedsSave = true;
+          }
+          if (normalizeSidebarLayout()) sessionNeedsSave = true;
           session.activeId = session.files.some(file => file.id === storedSession.activeId)
             ? storedSession.activeId
             : (restoredFiles[0]?.id || example.id);
@@ -1912,35 +2305,125 @@
           return;
         }
         filesElement.setAttribute("aria-label", "Files and folders");
+        if (normalizeSidebarLayout()) scheduleSessionSave();
         const favorites = favoriteTargets();
-        if (favorites.length) {
-          appendSidebarSection("Favorites");
-          for (const target of favorites) appendFavoriteButton(target);
-        }
-        const openFiles = session.files.filter(file => !file.welcome
-          && !session.favoriteKeys.has(`file:${file.id}`)
-          && (!file.workspaceId || !workspaceForId(file.workspaceId)?.nodesByPath.has(file.workspacePath)));
-        if (session.workspaces.length || favorites.length) appendSidebarSection("Files");
-        for (const file of openFiles) appendOpenFileButton(file);
-        if (session.workspaces.length) {
-          appendSidebarSection("Folders");
-          for (const workspace of session.workspaces) renderWorkspace(workspace);
-        }
+        if (favorites.length) renderPinnedGroup(favorites);
+        const ungroupedFiles = sidebarFiles(session.sidebar.ungroupedFileIds);
+        const exampleFile = session.files.find(file => file === example);
+        const looseFiles = document.createElement("div");
+        looseFiles.className = "LocalMarkdown-loose-files";
+        attachFileSectionDropZone(looseFiles, null);
+        if (exampleFile) appendOpenFileButton(exampleFile, null, looseFiles);
+        for (const file of ungroupedFiles) appendOpenFileButton(file, null, looseFiles);
+        if (looseFiles.childElementCount) filesElement.append(looseFiles);
+        for (const section of session.sidebar.sections) renderTopicSection(section);
+        for (const workspace of session.workspaces) renderWorkspace(workspace);
       }
 
-      function appendSidebarSection(label) {
-        const heading = document.createElement("div");
-        heading.className = "LocalMarkdown-sidebar-section";
-        heading.textContent = label;
-        filesElement.append(heading);
+      function renderPinnedGroup(targets) {
+        const container = document.createElement("div");
+        container.className = "LocalMarkdown-topic-section LocalMarkdown-pinned-section";
+        const header = document.createElement("div");
+        header.className = "LocalMarkdown-topic-header LocalMarkdown-pinned-header";
+        const toggle = document.createElement("button");
+        toggle.type = "button";
+        toggle.className = "LocalMarkdown-topic-toggle";
+        toggle.setAttribute("aria-expanded", String(!session.sidebar.pinnedCollapsed));
+        const filesId = "LocalMarkdown-pinned-files";
+        toggle.setAttribute("aria-controls", filesId);
+        toggle.title = `${session.sidebar.pinnedCollapsed ? "Expand" : "Collapse"} Pinned`;
+        const icon = document.createElement("span");
+        icon.className = "LocalMarkdown-group-icon LocalMarkdown-pinned-icon";
+        icon.setAttribute("aria-hidden", "true");
+        icon.textContent = "★";
+        const name = document.createElement("span");
+        name.className = "LocalMarkdown-topic-name";
+        name.textContent = "Pinned";
+        const count = document.createElement("span");
+        count.className = "LocalMarkdown-topic-count";
+        count.textContent = String(targets.length);
+        toggle.append(icon, name, count);
+        toggle.addEventListener("click", () => {
+          session.sidebar.pinnedCollapsed = !session.sidebar.pinnedCollapsed;
+          renderFiles();
+          scheduleSessionSave();
+        });
+        header.append(toggle);
+        container.append(header);
+
+        const pinnedFiles = document.createElement("div");
+        pinnedFiles.className = "LocalMarkdown-topic-files";
+        pinnedFiles.id = filesId;
+        pinnedFiles.hidden = session.sidebar.pinnedCollapsed;
+        if (!session.sidebar.pinnedCollapsed) {
+          for (const target of targets) appendFavoriteButton(target, pinnedFiles);
+        }
+        container.append(pinnedFiles);
+        filesElement.append(container);
       }
 
-      function appendOpenFileButton(file) {
+      function renderTopicSection(section) {
+        const container = document.createElement("div");
+        container.className = "LocalMarkdown-topic-section";
+        container.dataset.sectionId = section.id;
+
+        const header = document.createElement("div");
+        header.className = "LocalMarkdown-topic-header";
+        header.draggable = true;
+        const toggle = document.createElement("button");
+        toggle.type = "button";
+        toggle.className = "LocalMarkdown-topic-toggle";
+        toggle.setAttribute("aria-expanded", String(!section.collapsed));
+        const filesId = `LocalMarkdown-section-files-${section.id}`;
+        toggle.setAttribute("aria-controls", filesId);
+        toggle.title = `${section.collapsed ? "Expand" : "Collapse"} ${section.name}`;
+        const name = document.createElement("span");
+        name.className = "LocalMarkdown-topic-name";
+        name.textContent = section.name;
+        const count = document.createElement("span");
+        count.className = "LocalMarkdown-topic-count";
+        count.textContent = String(section.fileIds.length);
+        toggle.append(name, count);
+        toggle.addEventListener("click", () => {
+          section.collapsed = !section.collapsed;
+          renderFiles();
+          scheduleSessionSave();
+        });
+
+        const menu = document.createElement("button");
+        menu.type = "button";
+        menu.className = "LocalMarkdown-topic-menu-button";
+        menu.setAttribute("aria-label", `Actions for section ${section.name}`);
+        menu.title = "Section actions";
+        menu.textContent = "⋯";
+        menu.addEventListener("click", event => openSectionContextMenu(event, section, menu));
+        header.addEventListener("contextmenu", event => {
+          event.preventDefault();
+          openSectionContextMenu(event, section, header);
+        });
+        header.append(toggle, menu);
+        container.append(header);
+
+        const sectionFiles = document.createElement("div");
+        sectionFiles.className = "LocalMarkdown-topic-files";
+        sectionFiles.id = filesId;
+        sectionFiles.hidden = section.collapsed;
+        if (!section.collapsed) {
+          for (const file of sidebarFiles(section.fileIds)) {
+            appendOpenFileButton(file, section.id, sectionFiles);
+          }
+        }
+        container.append(sectionFiles);
+        enableSectionReordering(header, container, section);
+        attachFileSectionDropZone(container, section.id);
+        filesElement.append(container);
+      }
+
+      function appendOpenFileButton(file, sectionId = null, container = filesElement) {
         const button = document.createElement("button");
         button.type = "button";
         button.className = "LocalMarkdown-file";
         if (file === example) button.id = "LocalMarkdown-examples";
-        button.draggable = true;
         button.dataset.fileId = file.id;
         const name = document.createElement("span");
         name.className = "LocalMarkdown-file-name";
@@ -1950,22 +2433,22 @@
         button.append(sidebarItemIcon("file"), name);
         appendUnsavedMark(button, !file.builtin && file.dirty);
         if (targetIsFavorite({ file })) appendFavoriteMarker(button);
-        button.title = "Drag to reorder";
+        button.title = file.builtin ? "Examples" : "Drag to reorder or move to a section";
         button.setAttribute("aria-current", String(file.id === session.activeId));
         button.addEventListener("click", file === example
           ? showExamples
           : () => selectFile(file.id));
         if (!file.builtin) attachFileContextMenu(button, { file });
-        enableFileReordering(button, file.id);
-        filesElement.append(button);
+        if (!file.builtin) enableFileReordering(button, file.id, sectionId);
+        container.append(button);
       }
 
       function appendFavoriteMarker(element) {
         element.dataset.favorite = "true";
         const marker = document.createElement("span");
         marker.className = "LocalMarkdown-favorite-marker";
-        marker.title = "Favorite";
-        marker.setAttribute("aria-label", "Favorite");
+        marker.title = "Pinned";
+        marker.setAttribute("aria-label", "Pinned");
         const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         icon.setAttribute("viewBox", "0 0 20 20");
         icon.setAttribute("aria-hidden", "true");
@@ -1985,7 +2468,7 @@
         element.append(marker);
       }
 
-      function appendFavoriteButton(target) {
+      function appendFavoriteButton(target, container = filesElement) {
         const location = workspaceLocationForTarget(target);
         const file = location
           ? (target.file || openFileForWorkspaceNode(location.workspace, location.node))
@@ -2000,13 +2483,12 @@
         name.textContent = targetName(target);
         button.append(sidebarItemIcon("file"), name);
         appendUnsavedMark(button, file?.dirty);
-        appendFavoriteMarker(button);
         button.addEventListener("click", () => {
           if (location) void openWorkspaceFile(location.workspace, location.node);
           else selectFile(file.id);
         });
         attachFileContextMenu(button, { ...target, file });
-        filesElement.append(button);
+        container.append(button);
       }
 
       function sidebarItemIcon(kind, className = "LocalMarkdown-sidebar-item-icon") {
@@ -2035,7 +2517,7 @@
 
       function renderWorkspace(workspace) {
         const container = document.createElement("div");
-        container.className = "LocalMarkdown-workspace";
+        container.className = "LocalMarkdown-workspace LocalMarkdown-topic-section";
         container.dataset.workspaceId = workspace.id;
         renderWorkspaceDirectory(workspace, workspace.root, 0, container, true);
         filesElement.append(container);
@@ -2043,12 +2525,16 @@
 
       function renderWorkspaceDirectory(workspace, directory, depth, container, isRoot = false) {
         const row = document.createElement("div");
-        row.className = "LocalMarkdown-tree-row";
+        row.className = isRoot
+          ? "LocalMarkdown-tree-row LocalMarkdown-topic-header LocalMarkdown-workspace-header"
+          : "LocalMarkdown-tree-row";
         row.style.setProperty("--tree-depth", String(depth));
 
         const button = document.createElement("button");
         button.type = "button";
-        button.className = "LocalMarkdown-tree-item";
+        button.className = isRoot
+          ? "LocalMarkdown-tree-item LocalMarkdown-topic-toggle"
+          : "LocalMarkdown-tree-item";
         button.dataset.kind = "directory";
         button.dataset.root = String(isRoot);
         button.dataset.workspacePath = directory.path;
@@ -2058,15 +2544,17 @@
           ? `Reconnect ${workspace.name}`
           : `${expanded ? "Collapse" : "Expand"} ${directory.name}`;
 
-        const chevron = document.createElement("span");
-        chevron.className = "LocalMarkdown-tree-chevron";
-        chevron.textContent = directory.loading ? "…" : (expanded ? "▾" : "▸");
         const name = document.createElement("span");
-        name.className = "LocalMarkdown-tree-name";
+        name.className = isRoot
+          ? "LocalMarkdown-tree-name LocalMarkdown-topic-name"
+          : "LocalMarkdown-tree-name";
         name.textContent = workspace.needsPermission && isRoot
           ? `${directory.name} (Reconnect)`
           : directory.name;
-        button.append(chevron, sidebarItemIcon("directory", "LocalMarkdown-tree-icon"), name);
+        const icon = sidebarItemIcon("directory", "LocalMarkdown-tree-icon");
+        if (isRoot) icon.classList.add("LocalMarkdown-group-icon");
+        button.setAttribute("aria-busy", String(directory.loading));
+        button.append(icon, name);
         button.addEventListener("click", () => {
           if (workspace.needsPermission && isRoot) void reconnectWorkspace(workspace);
           else void toggleWorkspaceDirectory(workspace, directory);
@@ -2076,7 +2564,7 @@
         if (isRoot) {
           const remove = document.createElement("button");
           remove.type = "button";
-          remove.className = "LocalMarkdown-tree-remove";
+          remove.className = "LocalMarkdown-tree-remove LocalMarkdown-topic-menu-button";
           remove.setAttribute("aria-label", `Remove folder ${workspace.name}`);
           remove.title = "Remove folder from sidebar";
           remove.textContent = "×";
@@ -2127,12 +2615,10 @@
         button.dataset.workspacePath = node.path;
         button.title = node.path;
         button.setAttribute("aria-current", String(openFile?.id === session.activeId));
-        const spacer = document.createElement("span");
-        spacer.className = "LocalMarkdown-tree-chevron";
         const name = document.createElement("span");
         name.className = "LocalMarkdown-tree-name";
         name.textContent = node.name;
-        button.append(spacer, sidebarItemIcon("file", "LocalMarkdown-tree-icon"), name);
+        button.append(sidebarItemIcon("file", "LocalMarkdown-tree-icon"), name);
         appendUnsavedMark(button, openFile?.dirty);
         if (targetIsFavorite({ workspace, node, file: openFile })) appendFavoriteMarker(button);
         button.addEventListener("click", () => void openWorkspaceFile(workspace, node));
@@ -2190,6 +2676,7 @@
           if (file.workspaceId !== workspace.id) continue;
           file.workspaceId = null;
           file.workspacePath = null;
+          syncSidebarFileAvailability(file);
         }
         const favoritePrefix = `workspace:${workspace.id}:`;
         for (const key of session.favoriteKeys) {
@@ -2549,32 +3036,21 @@
         return event.clientY >= bounds.top + bounds.height / 2;
       }
 
-      function previewFileOrder(target, placeAfter) {
-        const buttons = Array.from(filesElement.querySelectorAll("[data-file-id]"));
-        const draggedButton = buttons.find(button => button.dataset.fileId === draggedFileId);
-        if (!draggedButton || draggedButton === target) return;
-
-        for (const button of buttons) {
-          for (const animation of button.getAnimations?.() || []) animation.cancel();
-        }
-        const previousTops = new Map(buttons.map(button => [button, button.getBoundingClientRect().top]));
-        const reference = placeAfter ? target.nextElementSibling : target;
-        filesElement.insertBefore(draggedButton, reference);
-
-        for (const button of buttons) {
-          if (button === draggedButton) continue;
-          const offset = previousTops.get(button) - button.getBoundingClientRect().top;
-          if (Math.abs(offset) < 1 || typeof button.animate !== "function") continue;
-          button.animate(
-            [{ transform: `translateY(${offset}px)` }, { transform: "translateY(0)" }],
-            { duration: 150, easing: "cubic-bezier(.2, .8, .2, 1)" }
-          );
+      function clearSidebarDropTargets() {
+        for (const element of filesElement.querySelectorAll(".LocalMarkdown-drop-target")) {
+          element.classList.remove("LocalMarkdown-drop-target");
         }
       }
 
-      function enableFileReordering(button, fileId) {
+      function markSidebarDropTarget(element) {
+        clearSidebarDropTargets();
+        element.classList.add("LocalMarkdown-drop-target");
+      }
+
+      function enableFileReordering(button, fileId, sectionId) {
+        button.draggable = true;
         button.addEventListener("dragstart", event => {
-          draggedFileId = fileId;
+          draggedSidebarItem = { kind: "file", fileId, sectionId };
           button.classList.add("LocalMarkdown-dragging");
           if (event.dataTransfer) {
             event.dataTransfer.effectAllowed = "move";
@@ -2582,29 +3058,67 @@
           }
         });
         button.addEventListener("dragover", event => {
-          if (!draggedFileId || draggedFileId === fileId) return;
+          if (draggedSidebarItem?.kind !== "file" || draggedSidebarItem.fileId === fileId) return;
           event.preventDefault();
+          event.stopPropagation();
           if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
-          previewFileOrder(button, dropAfter(button, event));
+          markSidebarDropTarget(button);
+        });
+        button.addEventListener("drop", event => {
+          if (draggedSidebarItem?.kind !== "file" || draggedSidebarItem.fileId === fileId) return;
+          event.preventDefault();
+          event.stopPropagation();
+          const draggedFileId = draggedSidebarItem.fileId;
+          draggedSidebarItem = null;
+          clearSidebarDropTargets();
+          moveFileToSection(draggedFileId, sectionId, fileId, dropAfter(button, event));
         });
         button.addEventListener("dragend", () => {
-          const cancelled = draggedFileId === fileId;
-          draggedFileId = null;
-          if (cancelled) renderFiles();
+          draggedSidebarItem = null;
+          clearSidebarDropTargets();
+          button.classList.remove("LocalMarkdown-dragging");
         });
       }
 
-      function commitPreviewedFileOrder() {
-        const filesById = new Map(session.files.map(file => [file.id, file]));
-        const orderedFiles = Array.from(filesElement.querySelectorAll("[data-file-id]"))
-          .map(button => filesById.get(button.dataset.fileId)).filter(Boolean);
-        const reorderableIds = new Set(orderedFiles.map(file => file.id));
-        session.files = session.files.map(file => reorderableIds.has(file.id)
-          ? orderedFiles.shift()
-          : file);
-        draggedFileId = null;
-        renderFiles();
-        scheduleSessionSave();
+      function attachFileSectionDropZone(element, sectionId) {
+        element.addEventListener("dragover", event => {
+          if (!draggedSidebarItem) return;
+          if (draggedSidebarItem.kind === "file"
+              && event.target.closest('[data-file-id][draggable="true"]')) return;
+          if (draggedSidebarItem.kind === "section" && draggedSidebarItem.sectionId === sectionId) return;
+          event.preventDefault();
+          if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+          markSidebarDropTarget(element);
+        });
+        element.addEventListener("drop", event => {
+          if (!draggedSidebarItem) return;
+          if (draggedSidebarItem.kind === "file"
+              && event.target.closest('[data-file-id][draggable="true"]')) return;
+          event.preventDefault();
+          event.stopPropagation();
+          const dragged = draggedSidebarItem;
+          draggedSidebarItem = null;
+          clearSidebarDropTargets();
+          if (dragged.kind === "file") moveFileToSection(dragged.fileId, sectionId);
+          else if (sectionId) moveSectionRelative(
+            dragged.sectionId, sectionId, dropAfter(element.querySelector(".LocalMarkdown-topic-header"), event));
+        });
+      }
+
+      function enableSectionReordering(header, container, section) {
+        header.addEventListener("dragstart", event => {
+          draggedSidebarItem = { kind: "section", sectionId: section.id };
+          container.classList.add("LocalMarkdown-dragging");
+          if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = "move";
+            event.dataTransfer.setData("text/plain", section.id);
+          }
+        });
+        header.addEventListener("dragend", () => {
+          draggedSidebarItem = null;
+          clearSidebarDropTargets();
+          container.classList.remove("LocalMarkdown-dragging");
+        });
       }
 
       function activateFile(file, message = null) {
@@ -2614,10 +3128,13 @@
         else hideTableResizeHandle();
         hideImageResizer();
         if (!(file.attachments instanceof Map)) file.attachments = new Map();
-        if (!session.files.includes(file)) session.files.push(file);
+        if (!session.files.includes(file)) {
+          session.files.push(file);
+          syncSidebarFileAvailability(file);
+        }
         session.activeId = file.id;
         if (file.handle) session.lastOpenHandle = file.handle;
-        if (editorReady) editor.setValue(file.text, true);
+        if (editorReady) setEditorValue(file);
         renderFiles();
         updateStatus(message);
         scheduleAttachmentPreviews();
@@ -2766,7 +3283,7 @@
 
       function normalizedTableWidth(width = 100) {
         const value = Number(width);
-        if (!Number.isFinite(value) || value <= 0 || value > 100) return null;
+        if (!Number.isFinite(value) || value <= 0) return null;
         return Math.round(value * 100) / 100;
       }
 
@@ -2835,7 +3352,7 @@
         const normalizedWidth = normalizedTableWidth(tableWidth) || 100;
         if (!normalized) return null;
         const indent = table.metadataStart === null ? table.indent : table.metadataIndent;
-        const widthSetting = normalizedWidth < 100
+        const widthSetting = normalizedWidth !== 100
           ? `;table-width=${formattedTableWidth(normalizedWidth)}`
           : "";
         const comment = `${indent}<!-- ${tableWidthsCommentName}=${normalized.map(formattedTableWidth).join(",")}${widthSetting} -->${table.newline}`;
@@ -2866,11 +3383,9 @@
         }
         table.classList.add("LocalMarkdown-sized-table");
         table.style.setProperty("--lm-table-width", `${normalizedWidth}%`);
-        for (const row of table.rows) {
-          for (const cell of row.cells) {
-            const width = normalized[cell.cellIndex];
-            if (width) cell.style.setProperty("--lm-table-column-width", `${width}%`);
-          }
+        for (const cell of table.rows[0]?.cells || []) {
+          const width = normalized[cell.cellIndex];
+          if (width) cell.style.setProperty("--lm-table-column-width", `${width}%`);
         }
         return true;
       }
@@ -3078,7 +3593,9 @@
         return normalizedTableWidths(widths, cells.length);
       }
 
-      function applyTableWidthTextUpdate(file, value, updated, message) {
+      function applyTableWidthTextUpdate(
+        file, value, updated, message, { rerender = true } = {}
+      ) {
         if (!updated || updated === value) return false;
         file.text = updated;
         if (!file.builtin) {
@@ -3086,7 +3603,8 @@
           scheduleAutoSave(file);
           scheduleSessionSave();
         }
-        editor.setValue(updated, true);
+        if (rerender) setEditorValue(file, updated);
+        else file.tableWidthsOutOfSync = true;
         renderFiles();
         updateStatus(message);
         scheduleAttachmentPreviews();
@@ -3117,6 +3635,7 @@
         const tablePixels = table.getBoundingClientRect().width;
         const leftPixels = leftCell?.getBoundingClientRect().width || 0;
         const rightPixels = rightCell?.getBoundingClientRect().width || 0;
+        const handleLeft = Number.parseFloat(tableResizeHandle.style.left);
         tableResizeSession = {
           table,
           tableIndex: context.tableIndex,
@@ -3132,27 +3651,29 @@
           pairPercentage: tableEdge ? 0 : widths[columnIndex] + widths[columnIndex + 1],
           tablePixels,
           widthBasisPixels: tablePixels / (context.block.tableWidth / 100),
+          handleLeft: Number.isFinite(handleLeft) ? handleLeft : event.clientX,
+          pointerX: event.clientX,
+          renderedX: event.clientX,
+          frameId: null,
           changed: false
         };
         tableResizeHandle.dataset.active = "true";
         tableResizeHandle.setPointerCapture(event.pointerId);
       }
 
-      function continueTableResize(event) {
-        const resize = tableResizeSession;
-        if (!resize || !resize.tablePixels) return;
-        event.preventDefault();
-        const deltaPixels = event.clientX - resize.startX;
+      function renderTableResize(resize, clientX) {
+        const deltaPixels = clientX - resize.startX;
+        resize.renderedX = clientX;
         if (resize.tableEdge) {
           const minimumPixels = Math.min(resize.widthBasisPixels,
             minimumTableColumnWidth * resize.widths.length);
-          const nextPixels = Math.max(minimumPixels, Math.min(
-            resize.widthBasisPixels, resize.tablePixels + deltaPixels));
+          const nextPixels = Math.max(minimumPixels, resize.tablePixels + deltaPixels);
           resize.tableWidth = normalizedTableWidth(
             nextPixels / resize.widthBasisPixels * 100) || resize.initialTableWidth;
-          resize.changed = Math.abs(deltaPixels) >= 1;
-          applyTableWidths(resize.table, resize.widths, resize.tableWidth);
-          positionTableResizeHandle(resize.table.rows[0].cells[resize.columnIndex]);
+          const appliedDelta = nextPixels - resize.tablePixels;
+          resize.changed = Math.abs(appliedDelta) >= 1;
+          resize.table.style.setProperty("--lm-table-width", `${resize.tableWidth}%`);
+          tableResizeHandle.style.left = `${Math.round(resize.handleLeft + appliedDelta)}px`;
           return;
         }
         if (!resize.pairPixels) return;
@@ -3167,28 +3688,54 @@
         ));
         resize.widths[resize.columnIndex] = nextLeft;
         resize.widths[resize.columnIndex + 1] = resize.pairPercentage - nextLeft;
-        resize.widths = normalizedTableWidths(resize.widths, resize.widths.length);
-        resize.changed = Math.abs(deltaPixels) >= 1;
-        applyTableWidths(resize.table, resize.widths, resize.tableWidth);
-        positionTableResizeHandle(resize.table.rows[0].cells[resize.columnIndex]);
+        const firstRow = resize.table.rows[0];
+        for (const columnIndex of [resize.columnIndex, resize.columnIndex + 1]) {
+          firstRow.cells[columnIndex].style.setProperty(
+            "--lm-table-column-width", `${resize.widths[columnIndex]}%`);
+        }
+        const appliedDelta = (nextLeft - initialLeft)
+          / resize.pairPercentage * resize.pairPixels;
+        resize.changed = Math.abs(appliedDelta) >= 1;
+        tableResizeHandle.style.left = `${Math.round(resize.handleLeft + appliedDelta)}px`;
+      }
+
+      function continueTableResize(event) {
+        const resize = tableResizeSession;
+        if (!resize || !resize.tablePixels) return;
+        event.preventDefault();
+        resize.pointerX = event.clientX;
+        if (resize.frameId !== null) return;
+        resize.frameId = requestAnimationFrame(() => {
+          resize.frameId = null;
+          if (tableResizeSession === resize) renderTableResize(resize, resize.pointerX);
+        });
       }
 
       function commitTableResize(resize) {
         const file = activeFile();
         if (!file || !editorReady) return false;
-        const value = canonicalEditorText(editor.getValue(), file);
+        const value = file.text;
         const table = markdownTableBlocks(value)[resize.tableIndex];
         if (!table || table.columnCount !== resize.widths.length) return false;
         const updated = replaceTableWidthsMetadata(
           value, table, resize.widths, resize.tableWidth);
         const message = resize.tableEdge ? "Table width updated" : "Column widths updated";
-        return applyTableWidthTextUpdate(file, value, updated, message);
+        return applyTableWidthTextUpdate(
+          file, value, updated, message, { rerender: false });
       }
 
       function finishTableResize(event, commit = true) {
         const resize = tableResizeSession;
         if (!resize) return;
         event?.preventDefault();
+        if (resize.frameId !== null) {
+          cancelAnimationFrame(resize.frameId);
+          resize.frameId = null;
+        }
+        if (commit && Number.isFinite(event?.clientX)) resize.pointerX = event.clientX;
+        if (commit && resize.pointerX !== resize.renderedX) {
+          renderTableResize(resize, resize.pointerX);
+        }
         tableResizeSession = null;
         tableResizeHandle.dataset.active = "false";
         if (commit && resize.changed && commitTableResize(resize)) {
@@ -3592,7 +4139,7 @@
         }
         imageResizeSession = null;
         hideImageResizer();
-        editor.setValue(updated, true);
+        setEditorValue(file, updated);
         renderFiles();
         updateStatus(message);
         scheduleAttachmentPreviews();
@@ -3817,6 +4364,21 @@
         }
       }
 
+      function preserveStoredTableWidths(value, storedValue) {
+        const storedTables = markdownTableBlocks(storedValue);
+        const tables = markdownTableBlocks(value);
+        let updated = value;
+        for (let index = Math.min(storedTables.length, tables.length) - 1;
+          index >= 0; index -= 1) {
+          const stored = storedTables[index];
+          const table = tables[index];
+          if (!stored.widths || stored.columnCount !== table.columnCount) continue;
+          updated = replaceTableWidthsMetadata(
+            updated, table, stored.widths, stored.tableWidth);
+        }
+        return updated;
+      }
+
       function canonicalEditorText(value, file) {
         let canonical = value;
         for (const [key, url] of attachmentPreviewUrls) {
@@ -3824,7 +4386,21 @@
           const id = key.slice(file.id.length + 1);
           canonical = canonical.split(url).join(attachmentPath(id));
         }
+        if (file.tableWidthsOutOfSync) {
+          if (editor?.getCurrentMode() === "sv") {
+            file.tableWidthsOutOfSync = false;
+          } else {
+            const merged = preserveStoredTableWidths(canonical, file.text);
+            if (merged === canonical) file.tableWidthsOutOfSync = false;
+            canonical = merged;
+          }
+        }
         return canonical;
+      }
+
+      function setEditorValue(file, value = file.text) {
+        editor.setValue(value, true);
+        file.tableWidthsOutOfSync = false;
       }
 
       function pruneUnusedAttachments(file) {
@@ -4701,7 +5277,7 @@
               message = saved ? "Saved" : "Could not save file";
             } else {
               message = await loadFileFromHandle(file) || message;
-              if (editorReady && activeFile() === file) editor.setValue(file.text, true);
+              if (editorReady && activeFile() === file) setEditorValue(file);
               scheduleAttachmentPreviews();
             }
             renderFiles();
@@ -4733,6 +5309,7 @@
           const workspaceLocation = await workspaceLocationForHandle(handle);
           file.workspaceId = workspaceLocation?.workspace.id || null;
           file.workspacePath = workspaceLocation?.node.path || null;
+          syncSidebarFileAvailability(file);
           syncWorkspaceSearchText(file);
         }
         renderFiles();
@@ -4773,6 +5350,7 @@
         const workspaceLocation = await workspaceLocationForHandle(handle);
         file.workspaceId = workspaceLocation?.workspace.id || null;
         file.workspacePath = workspaceLocation?.node.path || null;
+        syncSidebarFileAvailability(file);
         syncWorkspaceSearchText(file);
         renderFiles();
         updateStatus(file.dirty ? "Copy saved; newer changes not saved" : `Saved a copy as ${file.name}`);
@@ -4863,6 +5441,7 @@
                 file = candidate;
                 file.workspaceId = workspace.id;
                 file.workspacePath = node.path;
+                syncSidebarFileAvailability(file);
                 break;
               }
             } catch {}
@@ -4920,8 +5499,8 @@
         else session.favoriteKeys.delete(key);
         renderFiles();
         updateStatus(adding
-          ? `Added ${targetName(target)} to Favorites`
-          : `Removed ${targetName(target)} from Favorites`);
+          ? `Pinned ${targetName(target)}`
+          : `Removed ${targetName(target)} from Pinned`);
         scheduleSessionSave();
       }
 
@@ -5087,6 +5666,7 @@
         const wasActive = file.id === session.activeId;
         cancelAutoSave(file);
         releaseAttachmentPreviews(file.id);
+        removeFileFromSidebarLayout(file.id);
         session.files = session.files.filter(candidate => candidate !== file && !candidate.welcome);
         session.favoriteKeys.delete(`file:${file.id}`);
         if (!wasActive) return;
@@ -5227,34 +5807,48 @@
         renderFiles();
         searchInput.focus();
       });
-      openToggle.addEventListener("click", () => {
+      newToggle.addEventListener("click", () => {
         closeFileContextMenu();
+        closeSectionContextMenu();
         setThemeMenuOpen(false);
-        setOpenMenuOpen(openToggle.getAttribute("aria-expanded") !== "true", { focus: true });
+        setNewMenuOpen(newToggle.getAttribute("aria-expanded") !== "true", { focus: true });
       });
-      openMenu.addEventListener("keydown", event => {
+      newFileButton.addEventListener("click", () => {
+        setNewMenuOpen(false);
+        createNewFile();
+      });
+      newSectionButton.addEventListener("click", () => {
+        setNewMenuOpen(false);
+        void createSection();
+      });
+      newFolderButton.addEventListener("click", () => {
+        setNewMenuOpen(false);
+        void openLocalFolder();
+      });
+      newMenu.addEventListener("keydown", event => {
         if (event.key === "Escape") {
           event.preventDefault();
-          setOpenMenuOpen(false);
-          openToggle.focus();
+          setNewMenuOpen(false);
+          newToggle.focus();
           return;
         }
         if (event.key === "Tab") {
-          setOpenMenuOpen(false);
+          setNewMenuOpen(false);
           return;
         }
         if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
         event.preventDefault();
-        const currentIndex = Math.max(0, openOptions.indexOf(document.activeElement));
+        const currentIndex = Math.max(0, newOptions.indexOf(document.activeElement));
         const nextIndex = event.key === "Home" ? 0
-          : event.key === "End" ? openOptions.length - 1
-          : (currentIndex + (event.key === "ArrowDown" ? 1 : -1) + openOptions.length)
-            % openOptions.length;
-        openOptions[nextIndex].focus();
+          : event.key === "End" ? newOptions.length - 1
+          : (currentIndex + (event.key === "ArrowDown" ? 1 : -1) + newOptions.length)
+            % newOptions.length;
+        newOptions[nextIndex].focus();
       });
       themeToggle.addEventListener("click", () => {
         closeFileContextMenu();
-        setOpenMenuOpen(false);
+        closeSectionContextMenu();
+        setNewMenuOpen(false);
         setThemeMenuOpen(themeToggle.getAttribute("aria-expanded") !== "true", { focus: true });
       });
       for (const option of themeOptions) {
@@ -5289,8 +5883,9 @@
         if (!item || item.disabled || !fileContextTarget) return;
         const target = fileContextTarget;
         const action = item.dataset.action;
+        const sectionId = item.dataset.sectionId || null;
         closeFileContextMenu();
-        void runFileContextAction(action, target);
+        void runFileContextAction(action, target, sectionId);
       });
       fileContextMenu.addEventListener("keydown", event => {
         if (event.key === "Escape") {
@@ -5305,6 +5900,34 @@
         if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
         event.preventDefault();
         const enabledItems = fileContextItems.filter(item => !item.disabled);
+        const currentIndex = Math.max(0, enabledItems.indexOf(document.activeElement));
+        const nextIndex = event.key === "Home" ? 0
+          : event.key === "End" ? enabledItems.length - 1
+          : (currentIndex + (event.key === "ArrowDown" ? 1 : -1) + enabledItems.length)
+            % enabledItems.length;
+        enabledItems[nextIndex]?.focus();
+      });
+      sectionContextMenu.addEventListener("click", event => {
+        const item = event.target.closest("[data-action]");
+        if (!item || item.disabled || !sectionContextTarget) return;
+        const section = sectionContextTarget;
+        const action = item.dataset.action;
+        closeSectionContextMenu();
+        void runSectionContextAction(action, section);
+      });
+      sectionContextMenu.addEventListener("keydown", event => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          closeSectionContextMenu({ restoreFocus: true });
+          return;
+        }
+        if (event.key === "Tab") {
+          closeSectionContextMenu();
+          return;
+        }
+        if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+        event.preventDefault();
+        const enabledItems = sectionContextItems.filter(item => !item.disabled);
         const currentIndex = Math.max(0, enabledItems.indexOf(document.activeElement));
         const nextIndex = event.key === "Home" ? 0
           : event.key === "End" ? enabledItems.length - 1
@@ -5331,6 +5954,21 @@
           settleFileDialog(name);
           return;
         }
+        if (fileDialogMode === "create-section" || fileDialogMode === "rename-section") {
+          const name = fileDialogInput.value.trim();
+          let error = "";
+          if (!name) error = "Enter a section name.";
+          else if (sectionNameExists(name, fileDialogSectionId)) {
+            error = "Use a unique section name.";
+          }
+          fileDialogInput.setCustomValidity(error);
+          if (error) {
+            fileDialogInput.reportValidity();
+            return;
+          }
+          settleFileDialog(name);
+          return;
+        }
         settleFileDialog(true);
       });
       fileDialogInput.addEventListener("input", () => fileDialogInput.setCustomValidity(""));
@@ -5340,16 +5978,20 @@
         settleFileDialog(null);
       });
       document.addEventListener("pointerdown", event => {
+        if (newMenu.hidden || newMenu.parentElement.contains(event.target)) return;
+        setNewMenuOpen(false);
+      });
+      document.addEventListener("pointerdown", event => {
         if (themeMenu.hidden || themeMenu.parentElement.contains(event.target)) return;
         setThemeMenuOpen(false);
       });
       document.addEventListener("pointerdown", event => {
-        if (openMenu.hidden || openMenu.parentElement.contains(event.target)) return;
-        setOpenMenuOpen(false);
-      });
-      document.addEventListener("pointerdown", event => {
         if (fileContextMenu.hidden || fileContextMenu.contains(event.target)) return;
         closeFileContextMenu();
+      });
+      document.addEventListener("pointerdown", event => {
+        if (sectionContextMenu.hidden || sectionContextMenu.contains(event.target)) return;
+        closeSectionContextMenu();
       });
       document.addEventListener("pointerdown", event => {
         if (tableEdgeTools.some(tools => tools.contains(event.target))) return;
@@ -5371,12 +6013,14 @@
         hideTableEdgeTools();
         hideTableResizeHandle();
         closeFileContextMenu();
+        closeSectionContextMenu();
         positionImageResizer();
       }, true);
       addEventListener("resize", () => {
         hideTableEdgeTools();
         hideTableResizeHandle();
         closeFileContextMenu();
+        closeSectionContextMenu();
         positionImageResizer();
       });
       addEventListener("keydown", event => {
@@ -5414,6 +6058,11 @@
           closeFileContextMenu({ restoreFocus: true });
           return;
         }
+        if (event.key === "Escape" && !sectionContextMenu.hidden) {
+          event.preventDefault();
+          closeSectionContextMenu({ restoreFocus: true });
+          return;
+        }
         const sidebarShortcut = event.key.toLowerCase() === "b" && event.altKey
           && (event.metaKey || event.ctrlKey) && !event.shiftKey;
         if (sidebarShortcut) {
@@ -5426,25 +6075,35 @@
         }
       }, true);
 
-      document.querySelector("#LocalMarkdown-new").addEventListener("click", createNewFile);
-
       filesElement.addEventListener("dragover", event => {
-        if (!draggedFileId) return;
+        if (!draggedSidebarItem || event.target !== filesElement) return;
         event.preventDefault();
         if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+        markSidebarDropTarget(filesElement);
       });
       filesElement.addEventListener("drop", event => {
-        if (!draggedFileId) return;
+        if (!draggedSidebarItem || event.target !== filesElement) return;
         event.preventDefault();
-        commitPreviewedFileOrder();
+        const dragged = draggedSidebarItem;
+        draggedSidebarItem = null;
+        clearSidebarDropTargets();
+        if (dragged.kind === "file") {
+          moveFileToSection(dragged.fileId, null);
+          return;
+        }
+        const section = sectionForId(dragged.sectionId);
+        if (!section) return;
+        session.sidebar.sections = session.sidebar.sections.filter(item => item !== section);
+        session.sidebar.sections.push(section);
+        renderFiles();
+        scheduleSessionSave();
       });
       openFileButton.addEventListener("click", () => {
-        setOpenMenuOpen(false);
+        closeFileContextMenu();
+        closeSectionContextMenu();
+        setNewMenuOpen(false);
+        setThemeMenuOpen(false);
         void openLocalFile();
-      });
-      openFolderButton.addEventListener("click", () => {
-        setOpenMenuOpen(false);
-        void openLocalFolder();
       });
       document.querySelector("#LocalMarkdown-save-file").addEventListener("click", saveActiveFile);
       saveCopyButton.addEventListener("click", saveActiveFileCopy);
@@ -5573,6 +6232,7 @@
         cancelAutoSave(file);
         releaseAttachmentPreviews(file.id);
         syncWorkspaceSearchText(file, { invalidate: file.dirty });
+        removeFileFromSidebarLayout(file.id);
         session.files = session.files.filter(item => item !== file && !item.welcome);
         session.favoriteKeys.delete(`file:${file.id}`);
         let next = session.files.find(item => !item.builtin) || session.files[0];
@@ -5767,7 +6427,7 @@
           for (const button of viewButtons) button.disabled = false;
           updateViewButtons(editor.getCurrentMode());
           observeAttachmentPreviews();
-          editor.setValue(activeFile().text, true);
+          setEditorValue(activeFile());
           updateStatus();
           scheduleAttachmentPreviews();
           scheduleTableWidths();

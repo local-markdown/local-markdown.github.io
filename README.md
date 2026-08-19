@@ -24,7 +24,8 @@ Open Local Markdown in desktop Chrome or Edge, choose a Markdown file or folder,
 - Visual, Markdown, and Split editing views
 - White, Solarized Light, and Solarized Dark color themes
 - Multiple open files in a collapsible, responsive sidebar
-- File context actions for rename, confirmed deletion, and persistent favorites
+- Persistent topic sections for grouping, collapsing, renaming, and reordering open files
+- File context actions for rename, confirmed deletion, and persistent pinning
 - Recursive folder workspaces with expandable nested folders
 - Filename and content search across open files and folder workspaces
 - Workspace and unsaved edit recovery after refresh
