@@ -10,12 +10,12 @@
   <a href="https://local-markdown.github.io/"><strong>Open Local Markdown</strong></a>
 </p>
 
-Open Local Markdown in desktop Chrome or Edge, choose a Markdown file or folder, and start writing. You do not need to download an app or create an account. Local Markdown saves changes directly to files on your computer.
+Open Local Markdown in desktop Chrome or Edge, choose a Markdown file, and start writing. You do not need to download an app or create an account. Local Markdown saves changes directly to files on your computer.
 
 ## Get started
 
 1. Open the [online editor](https://local-markdown.github.io/) in desktop Chrome or Edge.
-2. Select **Open → Open File** for one `.md` file, **Open → Open Folder** for a folder tree, or select **+** to create a file.
+2. Select **Open File** for an existing `.md` file, or select **+** to create a file.
 3. Grant access to the file when your browser asks.
 4. Select **Save** once for a new file. After that, changes save automatically.
 
@@ -25,10 +25,9 @@ Open Local Markdown in desktop Chrome or Edge, choose a Markdown file or folder,
 - White, Solarized Light, and Solarized Dark color themes
 - Multiple open files in a collapsible, responsive sidebar
 - Persistent topic sections for grouping, collapsing, renaming, and reordering open files
-- File context actions for rename, confirmed deletion, and persistent pinning
-- Recursive folder workspaces with expandable nested folders
-- Filename and content search across open files and folder workspaces
-- Workspace and unsaved edit recovery after refresh
+- File context actions for rename, moving between sections, and confirmed deletion
+- Filename and content search across open files
+- Open-file and unsaved edit recovery after refresh
 - Screenshot and copied image pasting
 - Proportional image resizing and left, centre, or right alignment
 - Completed tasks move below open sibling tasks while keeping nested subtasks together
@@ -52,7 +51,7 @@ Double-click an embedded drawing to reopen it, then select **Update** to replace
 
 ## Privacy and browser support
 
-The editor is delivered by GitHub Pages, but your documents are not uploaded to GitHub or another server. Your browser grants access only to the files you choose. Local Markdown also keeps a browser-local copy so it can restore your workspace after a refresh.
+The editor is delivered by GitHub Pages, but your documents are not uploaded to GitHub or another server. Your browser grants access only to the files you choose. Local Markdown also keeps a browser-local copy so it can restore your session after a refresh.
 
 The File System Access API works best in desktop Chrome or Chromium-based Edge. The browser may ask you to restore file access after a restart.
 

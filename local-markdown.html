@@ -239,20 +239,13 @@
       transition: background-color 100ms ease, color 100ms ease, opacity 80ms ease;
     }
     .LocalMarkdown-file-name { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; }
-    .LocalMarkdown-favorite-marker {
-      width: 16px; height: 16px; flex: 0 0 16px; display: grid; place-items: center;
-      color: var(--lm-accent); opacity: .78;
-    }
-    .LocalMarkdown-favorite-marker svg { width: 12px; height: 12px; fill: currentColor; }
     .LocalMarkdown-sidebar-item-icon {
       width: 16px; height: 16px; flex: 0 0 16px; color: var(--lm-faint);
     }
     .LocalMarkdown-file:hover,
-    .LocalMarkdown-tree-item:hover,
     .LocalMarkdown-search-file:hover,
     .LocalMarkdown-search-hit:hover { background: var(--lm-subtle); }
     .LocalMarkdown-file:focus-visible,
-    .LocalMarkdown-tree-item:focus-visible,
     .LocalMarkdown-search-file:focus-visible,
     .LocalMarkdown-search-hit:focus-visible {
       outline: 0; box-shadow: inset 0 0 0 1px var(--lm-accent);
@@ -260,12 +253,10 @@
     .LocalMarkdown-file[draggable="true"] { cursor: grab; }
     .LocalMarkdown-file[draggable="true"]:active { cursor: grabbing; }
     .LocalMarkdown-file[aria-current="true"],
-    .LocalMarkdown-tree-item[aria-current="true"],
     .LocalMarkdown-search-file[aria-current="true"] {
       color: var(--lm-text); background: var(--lm-selected); font-weight: 600;
     }
     .LocalMarkdown-file[aria-current="true"]::before,
-    .LocalMarkdown-tree-item[aria-current="true"]::before,
     .LocalMarkdown-search-file[aria-current="true"]::before {
       content: ""; position: absolute; inset-block: var(--lm-space-1); inset-inline-start: 0;
       width: 2px; border-radius: var(--lm-radius-control); background: var(--lm-accent);
@@ -283,36 +274,33 @@
     }
     .LocalMarkdown-file.LocalMarkdown-dragging { opacity: 0; }
     .LocalMarkdown-topic-section {
-      margin-bottom: var(--lm-space-1); border-radius: var(--lm-radius-control);
+      margin: var(--lm-space-2) 0 var(--lm-space-1); border-radius: var(--lm-radius-control);
       transition: opacity 80ms ease, box-shadow 100ms ease;
     }
     .LocalMarkdown-topic-section.LocalMarkdown-dragging { opacity: .35; }
     .LocalMarkdown-topic-header {
       min-width: 0; display: flex; align-items: center; gap: var(--lm-space-1);
-      border-radius: var(--lm-radius-control); background: var(--lm-surface); cursor: grab;
+      border-top: 1px solid var(--lm-border); border-radius: 0; background: transparent; cursor: grab;
     }
     .LocalMarkdown-topic-header:active { cursor: grabbing; }
-    .LocalMarkdown-pinned-header,
-    .LocalMarkdown-workspace-header { cursor: default; }
-    .LocalMarkdown-pinned-header:active,
-    .LocalMarkdown-workspace-header:active { cursor: default; }
     .LocalMarkdown-topic-toggle {
       min-width: 0; min-height: var(--lm-control-height); flex: 1;
       padding: var(--lm-space-1) var(--lm-space-2); display: flex; align-items: center;
-      gap: var(--lm-space-1); border: 0; border-radius: var(--lm-radius-control);
+      gap: var(--lm-space-2); border: 0; border-radius: 0;
       color: var(--lm-secondary-text); background: transparent; text-align: left;
     }
-    .LocalMarkdown-group-icon {
-      width: 16px; height: 16px; flex: 0 0 16px; display: grid; place-items: center;
-      color: var(--lm-muted); font-size: 13px; font-weight: 500; line-height: 1;
+    .LocalMarkdown-topic-toggle::before {
+      content: ""; width: 6px; height: 6px; flex: 0 0 6px;
+      border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
+      transform: translateY(-2px) rotate(45deg); transition: transform 100ms ease;
     }
-    .LocalMarkdown-pinned-icon { color: var(--lm-accent); font-size: 11px; }
+    .LocalMarkdown-topic-toggle[aria-expanded="false"]::before {
+      transform: translateX(-1px) rotate(-45deg);
+    }
     .LocalMarkdown-topic-name {
       min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      color: var(--lm-text); font-size: var(--lm-type-control-size); font-weight: 600;
-    }
-    .LocalMarkdown-topic-count {
-      flex: 0 0 auto; color: var(--lm-faint); font-size: var(--lm-type-metadata-size);
+      color: var(--lm-muted); font-size: var(--lm-type-metadata-size); font-weight: 500;
+      letter-spacing: .04em; text-transform: uppercase;
     }
     .LocalMarkdown-topic-menu-button {
       width: var(--lm-control-height-compact); height: var(--lm-control-height-compact);
@@ -321,41 +309,11 @@
       font-size: 16px; line-height: 1;
     }
     .LocalMarkdown-topic-menu-button:hover { color: var(--lm-text); }
-    .LocalMarkdown-topic-files { padding-left: var(--lm-space-4); }
+    .LocalMarkdown-topic-files { padding-left: 0; }
     .LocalMarkdown-loose-files { margin-bottom: var(--lm-space-1); }
     .LocalMarkdown-drop-target { box-shadow: inset 0 0 0 1px var(--lm-accent); }
-    .LocalMarkdown-workspace { margin-bottom: var(--lm-space-1); }
-    .LocalMarkdown-tree-row {
-      min-width: 0; display: flex; align-items: center; gap: var(--lm-space-1);
-      padding-left: calc(var(--tree-depth, 0) * 16px);
-    }
-    .LocalMarkdown-tree-item {
-      position: relative; min-width: 0; height: var(--lm-control-height); flex: 1;
-      padding: var(--lm-space-1) var(--lm-space-2);
-      display: flex; align-items: center; gap: var(--lm-space-1);
-      border: 0; border-radius: var(--lm-radius-control); background: transparent; text-align: left;
-    }
-    .LocalMarkdown-tree-item[data-kind="directory"] { background: var(--lm-surface); }
-    .LocalMarkdown-tree-item[data-root="true"] { font-weight: 600; }
-    .LocalMarkdown-tree-icon { width: 16px; height: 16px; flex: 0 0 16px; color: var(--lm-faint); }
-    .LocalMarkdown-tree-icon[data-icon-kind="directory"] { color: var(--lm-muted); }
-    :is(.LocalMarkdown-file, .LocalMarkdown-tree-item, .LocalMarkdown-search-file)[aria-current="true"]
-    :is(.LocalMarkdown-sidebar-item-icon, .LocalMarkdown-tree-icon) { color: var(--lm-accent); }
-    .LocalMarkdown-tree-name {
-      min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    }
-    .LocalMarkdown-tree-item .LocalMarkdown-tree-name { flex: 1; }
-    .LocalMarkdown-tree-remove {
-      width: var(--lm-control-height-compact); height: var(--lm-control-height-compact);
-      flex: 0 0 var(--lm-control-height-compact); padding: 0;
-      border: 0; border-radius: var(--lm-radius-control); color: var(--lm-faint); background: transparent;
-      font-size: 17px; line-height: 1;
-    }
-    .LocalMarkdown-tree-remove:hover { color: var(--lm-text); }
-    .LocalMarkdown-tree-empty {
-      padding: var(--lm-space-1) var(--lm-space-2) var(--lm-space-2);
-      color: var(--lm-secondary-text); font-size: var(--lm-type-metadata-size);
-    }
+    :is(.LocalMarkdown-file, .LocalMarkdown-search-file)[aria-current="true"]
+    .LocalMarkdown-sidebar-item-icon { color: var(--lm-accent); }
     .LocalMarkdown-search-summary,
     .LocalMarkdown-search-empty {
       padding: var(--lm-space-1) var(--lm-space-2) var(--lm-space-2);
@@ -894,7 +852,7 @@
 <body>
   <div class="LocalMarkdown-app" data-sidebar="open">
     <div class="LocalMarkdown-sidebar-backdrop" id="LocalMarkdown-sidebar-backdrop" aria-hidden="true"></div>
-    <aside class="LocalMarkdown-sidebar" id="LocalMarkdown-sidebar" aria-label="Local Markdown files and folders">
+    <aside class="LocalMarkdown-sidebar" id="LocalMarkdown-sidebar" aria-label="Local Markdown files">
       <div class="LocalMarkdown-sidebar-header">
         <svg class="LocalMarkdown-logo" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
           <rect x="3.5" y="6.5" width="25" height="19" rx="3.5" fill="#fff" stroke="#111" stroke-width="2"></rect>
@@ -912,7 +870,6 @@
           <div class="LocalMarkdown-new-menu" id="LocalMarkdown-new-menu" role="menu" aria-label="Create new" hidden>
             <button class="LocalMarkdown-new-option" id="LocalMarkdown-new-file" type="button" role="menuitem">New File</button>
             <button class="LocalMarkdown-new-option" id="LocalMarkdown-new-section" type="button" role="menuitem">New Section</button>
-            <button class="LocalMarkdown-new-option" id="LocalMarkdown-new-folder" type="button" role="menuitem">Add Folder…</button>
           </div>
         </div>
       </div>
@@ -924,7 +881,7 @@
         <input class="LocalMarkdown-search-input" id="LocalMarkdown-search-input" type="search" placeholder="Search" aria-label="Search files and content" autocomplete="off" spellcheck="false">
         <button class="LocalMarkdown-search-clear" id="LocalMarkdown-search-clear" type="button" aria-label="Clear search" title="Clear search" hidden>&times;</button>
       </div>
-      <nav class="LocalMarkdown-files" id="LocalMarkdown-files" aria-label="Files and folders"></nav>
+      <nav class="LocalMarkdown-files" id="LocalMarkdown-files" aria-label="Files"></nav>
     </aside>
 
     <main class="LocalMarkdown-main">
@@ -980,10 +937,6 @@
     <button class="LocalMarkdown-file-context-item" type="button" role="menuitem" data-action="rename">
       <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m4 14.75.65-3.15 8.7-8.7 3 3-8.7 8.7-3.15.65Zm7.9-10.4 3 3" fill="none" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"></path></svg>
       Rename
-    </button>
-    <button class="LocalMarkdown-file-context-item" type="button" role="menuitem" data-action="favorite">
-      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m10 2.75 2.1 4.35 4.8.65-3.5 3.35.85 4.75L10 13.55 5.75 15.8l.85-4.7-3.5-3.35 4.8-.65z" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"></path></svg>
-      <span>Pin</span>
     </button>
     <div id="LocalMarkdown-file-move-options"></div>
     <button class="LocalMarkdown-file-context-item" type="button" role="menuitem" data-action="delete">
@@ -1074,7 +1027,6 @@
       const newOptions = Array.from(document.querySelectorAll(".LocalMarkdown-new-option"));
       const newFileButton = document.querySelector("#LocalMarkdown-new-file");
       const newSectionButton = document.querySelector("#LocalMarkdown-new-section");
-      const newFolderButton = document.querySelector("#LocalMarkdown-new-folder");
       const openFileButton = document.querySelector("#LocalMarkdown-open-file");
       const mainElement = document.querySelector(".LocalMarkdown-main");
       const filenameElement = document.querySelector("#LocalMarkdown-filename");
@@ -1104,7 +1056,6 @@
       const themeOptions = Array.from(document.querySelectorAll(".LocalMarkdown-theme-option"));
       const fileContextMenu = document.querySelector("#LocalMarkdown-file-context-menu");
       let fileContextItems = Array.from(fileContextMenu.querySelectorAll(".LocalMarkdown-file-context-item"));
-      const favoriteContextLabel = fileContextMenu.querySelector('[data-action="favorite"] span');
       const fileMoveOptions = document.querySelector("#LocalMarkdown-file-move-options");
       const sectionContextMenu = document.querySelector("#LocalMarkdown-section-context-menu");
       const sectionContextItems = Array.from(
@@ -1144,7 +1095,6 @@
       let sessionNeedsSave = false;
       let sessionRestored = false;
       let draggedSidebarItem = null;
-      let workspaceSearchRenderPending = false;
       let excalidrawStylesPromise = null;
       let excalidrawModulesPromise = null;
       let drawingRoot = null;
@@ -1209,9 +1159,7 @@
         "solarized-dark": "Solarized Dark"
       };
       const markdownPickerId = "LocalMarkdownFile";
-      const directoryPickerId = "LocalMarkdownFolder";
       const markdownFilePattern = /\.(?:md|markdown)$/i;
-      const ignoredDirectoryNames = new Set([".git", "node_modules"]);
       const markdownPickerTypes = [{
         description: "Markdown file",
         accept: { "text/markdown": [".md", ".markdown"] }
@@ -1291,18 +1239,16 @@
       }
 
       function fileContextActionAvailable(action, target, sectionId = null) {
-        const location = workspaceLocationForTarget(target);
         const file = target?.file;
-        if (action === "favorite") return Boolean(favoriteKeyForTarget(target));
         if (action === "move-section") {
           return Boolean(isStandaloneSidebarFile(file)
             && (!sectionId || sectionForId(sectionId)));
         }
         if (action === "rename") {
-          return Boolean(location || (file && (!file.handle || typeof file.handle.move === "function")));
+          return Boolean(file && (!file.handle || typeof file.handle.move === "function"));
         }
         if (action === "delete") {
-          return Boolean(location || (file && (!file.handle || typeof file.handle.remove === "function")));
+          return Boolean(file && (!file.handle || typeof file.handle.remove === "function"));
         }
         return false;
       }
@@ -1330,11 +1276,10 @@
         fileContextTarget = target;
         fileContextTrigger = trigger;
         populateFileMoveOptions(target);
-        favoriteContextLabel.textContent = targetIsFavorite(target) ? "Remove from Pinned" : "Pin";
         for (const item of fileContextItems) {
           item.disabled = !fileContextActionAvailable(
             item.dataset.action, target, item.dataset.sectionId || null);
-          item.title = item.disabled ? "Open the containing folder to use this action" : "";
+          item.title = item.disabled ? "This action is unavailable for this file" : "";
         }
         fileContextMenu.setAttribute("aria-label", `Actions for ${targetName(target)}`);
         fileContextMenu.hidden = false;
@@ -1388,8 +1333,7 @@
       }
 
       async function runFileContextAction(action, target, sectionId = null) {
-        if (action === "favorite") toggleFavorite(target);
-        else if (action === "rename") await renameFileTarget(target);
+        if (action === "rename") await renameFileTarget(target);
         else if (action === "delete") await deleteFileTarget(target);
         else if (action === "move-section" && target.file) {
           moveFileToSection(target.file.id, sectionId);
@@ -1486,7 +1430,7 @@
         "# Markdown examples",
         "",
         "This built-in file shows common formatting in Markdown mode.",
-        "Local Markdown opens individual files or recursive folder workspaces and edits one active file at a time. Open files, folders, and edits are restored after a browser refresh. New files show Save until their first manual save; opened and saved files autosave about 700 milliseconds after you stop typing.",
+        "Local Markdown opens individual files and edits one active file at a time. Open files and edits are restored after a browser refresh. New files show Save until their first manual save; opened and saved files autosave about 700 milliseconds after you stop typing.",
         "",
         "## Inline text",
         "**Bold text**, *italic text*, ~~strikethrough~~, and `inline code`.",
@@ -1593,9 +1537,7 @@
       const session = {
         activeId: example.id,
         files: [example],
-        workspaces: [],
-        favoriteKeys: new Set(),
-        sidebar: { pinnedCollapsed: false, sections: [], ungroupedFileIds: [] },
+        sidebar: { sections: [], ungroupedFileIds: [] },
         lastOpenHandle: null
       };
 
@@ -1604,10 +1546,7 @@
       }
 
       function isStandaloneSidebarFile(file) {
-        if (!file || file.builtin || file.welcome) return false;
-        if (!file.workspaceId) return true;
-        const workspace = workspaceForId(file.workspaceId);
-        return !workspace?.nodesByPath.has(file.workspacePath);
+        return Boolean(file && !file.builtin && !file.welcome);
       }
 
       function sectionForId(sectionId) {
@@ -1648,7 +1587,7 @@
       function normalizeSidebarLayout() {
         let changed = false;
         if (!session.sidebar || typeof session.sidebar !== "object") {
-          session.sidebar = { pinnedCollapsed: false, sections: [], ungroupedFileIds: [] };
+          session.sidebar = { sections: [], ungroupedFileIds: [] };
           changed = true;
         }
         if (!Array.isArray(session.sidebar.sections)) {
@@ -1706,7 +1645,6 @@
           changed = true;
         }
         session.sidebar = {
-          pinnedCollapsed: Boolean(session.sidebar.pinnedCollapsed),
           sections,
           ungroupedFileIds
         };
@@ -1791,115 +1729,8 @@
         scheduleSessionSave();
       }
 
-      function createDirectoryNode(handle, name, path = "") {
-        return {
-          kind: "directory",
-          name,
-          path,
-          handle,
-          children: null,
-          loading: false,
-          loadPromise: null,
-          error: null
-        };
-      }
-
-      function createWorkspace({ id = createId(), name, handle, expanded = [""] }) {
-        const root = createDirectoryNode(handle, name || handle?.name || "Folder");
-        const workspace = {
-          id,
-          name: root.name,
-          handle,
-          root,
-          expanded: new Set(Array.isArray(expanded) ? expanded : [""]),
-          nodesByPath: new Map([["", root]]),
-          needsPermission: false,
-          searchIndexed: false,
-          indexGeneration: 0,
-          indexPromise: null
-        };
-        return workspace;
-      }
-
-      function workspaceForId(id) {
-        return session.workspaces.find(workspace => workspace.id === id) || null;
-      }
-
-      function workspaceFavoriteKey(workspace, node) {
-        return `workspace:${workspace.id}:${node.path}`;
-      }
-
-      function workspaceLocationForTarget(target) {
-        if (target?.workspace && target.node?.kind === "file") {
-          return { workspace: target.workspace, node: target.node };
-        }
-        const file = target?.file;
-        if (!file?.workspaceId || typeof file.workspacePath !== "string") return null;
-        const workspace = workspaceForId(file.workspaceId);
-        const node = workspace?.nodesByPath.get(file.workspacePath);
-        return node?.kind === "file" ? { workspace, node } : null;
-      }
-
-      function favoriteKeyForTarget(target) {
-        const fileKey = target?.file && !target.file.builtin ? `file:${target.file.id}` : null;
-        if (fileKey && session.favoriteKeys.has(fileKey)) return fileKey;
-        const location = workspaceLocationForTarget(target);
-        if (location) return workspaceFavoriteKey(location.workspace, location.node);
-        return fileKey;
-      }
-
-      function targetIsFavorite(target) {
-        const key = favoriteKeyForTarget(target);
-        return Boolean(key && session.favoriteKeys.has(key));
-      }
-
       function targetName(target) {
-        return workspaceLocationForTarget(target)?.node.name || target?.file?.name || "file";
-      }
-
-      function favoriteTarget(key) {
-        if (key.startsWith("file:")) {
-          const file = session.files.find(candidate => candidate.id === key.slice(5));
-          return file && !file.builtin ? { file } : null;
-        }
-        if (!key.startsWith("workspace:")) return null;
-        for (const workspace of session.workspaces) {
-          const prefix = `workspace:${workspace.id}:`;
-          if (!key.startsWith(prefix)) continue;
-          const node = workspace.nodesByPath.get(key.slice(prefix.length));
-          return node?.kind === "file"
-            ? { workspace, node, file: openFileForWorkspaceNode(workspace, node) }
-            : null;
-        }
-        return null;
-      }
-
-      function favoriteTargets() {
-        return Array.from(session.favoriteKeys, favoriteTarget).filter(Boolean);
-      }
-
-      async function hydrateFavoriteWorkspaceNodes() {
-        const tasks = [];
-        for (const key of session.favoriteKeys) {
-          if (!key.startsWith("workspace:")) continue;
-          for (const workspace of session.workspaces) {
-            const prefix = `workspace:${workspace.id}:`;
-            if (!key.startsWith(prefix) || workspace.needsPermission) continue;
-            const path = key.slice(prefix.length);
-            if (!path || workspace.nodesByPath.has(path)) break;
-            tasks.push(workspaceNodeAtPath(workspace, path.split("/")).catch(() => null));
-            break;
-          }
-        }
-        await Promise.all(tasks);
-      }
-
-      function syncWorkspaceSearchText(file, { invalidate = false } = {}) {
-        if (!file?.workspaceId || typeof file.workspacePath !== "string") return;
-        const node = workspaceForId(file.workspaceId)?.nodesByPath.get(file.workspacePath);
-        if (!node || node.kind !== "file") return;
-        node.searchText = invalidate ? null : file.text;
-        node.searchError = false;
+        return target?.file?.name || "file";
       }
 
       function openSessionDatabase() {
@@ -1967,9 +1798,7 @@
           version: 2,
           activeId: session.activeId,
           lastOpenHandle: session.lastOpenHandle,
-          favoriteKeys: Array.from(session.favoriteKeys),
           sidebar: {
-            pinnedCollapsed: session.sidebar.pinnedCollapsed,
             sections: session.sidebar.sections.map(section => ({
               id: section.id,
               name: section.name,
@@ -1988,17 +1817,9 @@
               name: file.name,
               text: file.text,
               handle: file.handle || null,
-              workspaceId: file.workspaceId || null,
-              workspacePath: file.workspacePath || null,
               dirty: Boolean(file.dirty),
               attachments: storedAttachments(file)
-            })),
-          workspaces: session.workspaces.map(workspace => ({
-            id: workspace.id,
-            name: workspace.name,
-            handle: workspace.handle,
-            expanded: Array.from(workspace.expanded)
-          }))
+            }))
         };
       }
 
@@ -2053,101 +1874,6 @@
         }
       }
 
-      function isVisibleDirectoryEntry(name, handle) {
-        if (!name || name.startsWith(".")) return false;
-        if (handle.kind === "directory") return !ignoredDirectoryNames.has(name);
-        return handle.kind === "file" && markdownFilePattern.test(name);
-      }
-
-      function compareDirectoryEntries(left, right) {
-        if (left.kind !== right.kind) return left.kind === "directory" ? -1 : 1;
-        return left.name.localeCompare(right.name, undefined, { numeric: true, sensitivity: "base" });
-      }
-
-      async function loadWorkspaceDirectory(workspace, directory) {
-        if (directory.children) return directory.children;
-        if (directory.loadPromise) return directory.loadPromise;
-        directory.loading = true;
-        directory.error = null;
-        directory.loadPromise = (async () => {
-          const children = [];
-          for await (const [name, handle] of directory.handle.entries()) {
-            if (!isVisibleDirectoryEntry(name, handle)) continue;
-            const path = directory.path ? `${directory.path}/${name}` : name;
-            const node = handle.kind === "directory"
-              ? createDirectoryNode(handle, name, path)
-              : { kind: "file", name, path, handle, searchText: null, searchError: false };
-            children.push(node);
-            workspace.nodesByPath.set(path, node);
-          }
-          children.sort(compareDirectoryEntries);
-          directory.children = children;
-          return children;
-        })().catch(error => {
-          directory.error = error;
-          directory.children = [];
-          return directory.children;
-        }).finally(() => {
-          directory.loading = false;
-          directory.loadPromise = null;
-        });
-        return directory.loadPromise;
-      }
-
-      function forgetWorkspaceDescendants(workspace, directory) {
-        const prefix = directory.path ? `${directory.path}/` : "";
-        for (const path of workspace.nodesByPath.keys()) {
-          if (path === directory.path) continue;
-          if (!prefix || path.startsWith(prefix)) workspace.nodesByPath.delete(path);
-        }
-        directory.children = null;
-        directory.error = null;
-        workspace.searchIndexed = false;
-        workspace.indexGeneration += 1;
-      }
-
-      async function workspaceNodeAtPath(workspace, parts) {
-        let directory = workspace.root;
-        for (const [index, name] of parts.entries()) {
-          let children = await loadWorkspaceDirectory(workspace, directory);
-          let node = children.find(child => child.name === name);
-          if (!node) {
-            forgetWorkspaceDescendants(workspace, directory);
-            children = await loadWorkspaceDirectory(workspace, directory);
-            node = children.find(child => child.name === name);
-          }
-          if (!node) return null;
-          if (index === parts.length - 1) return node;
-          if (node.kind !== "directory") return null;
-          directory = node;
-        }
-        return workspace.root;
-      }
-
-      function revealWorkspacePath(workspace, path) {
-        workspace.expanded.add("");
-        const parts = path.split("/").filter(Boolean);
-        for (let index = 1; index < parts.length; index += 1) {
-          workspace.expanded.add(parts.slice(0, index).join("/"));
-        }
-      }
-
-      async function hydrateExpandedWorkspaceDirectory(workspace, directory = workspace.root) {
-        if (!workspace.expanded.has(directory.path)) return;
-        const children = await loadWorkspaceDirectory(workspace, directory);
-        await Promise.all(children
-          .filter(child => child.kind === "directory" && workspace.expanded.has(child.path))
-          .map(child => hydrateExpandedWorkspaceDirectory(workspace, child)));
-      }
-
-      async function refreshRestoredWorkspace(workspace) {
-        const writePermission = await handlePermission(workspace.handle, "readwrite");
-        workspace.needsPermission = writePermission !== null && writePermission !== "granted";
-        if (workspace.needsPermission) return false;
-        await hydrateExpandedWorkspaceDirectory(workspace);
-        return true;
-      }
-
       async function loadFileFromHandle(file) {
         const diskFile = await file.handle.getFile();
         const parsed = parseStoredMarkdown(await diskFile.text());
@@ -2155,7 +1881,6 @@
         file.text = parsed.text;
         file.attachments = parsed.attachments;
         file.dirty = false;
-        syncWorkspaceSearchText(file);
         return parsed.warning;
       }
 
@@ -2193,29 +1918,13 @@
               name: file.name,
               text: file.text,
               handle: file.handle || null,
-              workspaceId: typeof file.workspaceId === "string" ? file.workspaceId : null,
-              workspacePath: typeof file.workspacePath === "string" ? file.workspacePath : null,
               attachments: restoredAttachments(file.attachments),
               builtin: false,
               dirty: Boolean(file.dirty),
               needsPermission: false
             }));
 
-          const restoredWorkspaces = (Array.isArray(storedSession.workspaces)
-            ? storedSession.workspaces : [])
-            .filter(workspace => workspace && typeof workspace.id === "string"
-              && typeof workspace.name === "string" && workspace.handle?.kind === "directory")
-            .map(workspace => createWorkspace(workspace));
-          session.workspaces = restoredWorkspaces;
-          session.favoriteKeys = new Set((Array.isArray(storedSession.favoriteKeys)
-            ? storedSession.favoriteKeys : []).filter(key => typeof key === "string"));
-
-          const [refreshedFiles, refreshedWorkspaces] = await Promise.all([
-            Promise.all(restoredFiles.map(refreshRestoredFile)),
-            Promise.all(restoredWorkspaces.map(refreshRestoredWorkspace))
-          ]);
-          await hydrateFavoriteWorkspaceNodes();
-          for (const file of restoredFiles) syncWorkspaceSearchText(file);
+          const refreshedFiles = await Promise.all(restoredFiles.map(refreshRestoredFile));
           const availableFiles = [example, ...restoredFiles];
           const filesById = new Map(availableFiles.map(file => [file.id, file]));
           const orderedFiles = [];
@@ -2229,7 +1938,6 @@
           if (storedSession.version === 2 && storedSession.sidebar
               && typeof storedSession.sidebar === "object") {
             session.sidebar = {
-              pinnedCollapsed: Boolean(storedSession.sidebar.pinnedCollapsed),
               sections: Array.isArray(storedSession.sidebar.sections)
                 ? storedSession.sidebar.sections : [],
               ungroupedFileIds: Array.isArray(storedSession.sidebar.ungroupedFileIds)
@@ -2237,7 +1945,6 @@
             };
           } else {
             session.sidebar = {
-              pinnedCollapsed: false,
               sections: [],
               ungroupedFileIds: Array.isArray(storedSession.fileOrder)
                 ? [...storedSession.fileOrder] : []
@@ -2251,7 +1958,7 @@
           session.lastOpenHandle = storedSession.lastOpenHandle?.kind === "file"
             ? storedSession.lastOpenHandle
             : (activeFile()?.handle || restoredFiles.find(file => file.handle)?.handle || null);
-          if (refreshedFiles.some(Boolean) || refreshedWorkspaces.some(Boolean)) {
+          if (refreshedFiles.some(Boolean)) {
             sessionNeedsSave = true;
           }
         }
@@ -2301,13 +2008,10 @@
         searchClear.hidden = !query;
         if (query) {
           renderSearchResults(query);
-          for (const workspace of session.workspaces) startWorkspaceSearchIndex(workspace);
           return;
         }
-        filesElement.setAttribute("aria-label", "Files and folders");
+        filesElement.setAttribute("aria-label", "Files");
         if (normalizeSidebarLayout()) scheduleSessionSave();
-        const favorites = favoriteTargets();
-        if (favorites.length) renderPinnedGroup(favorites);
         const ungroupedFiles = sidebarFiles(session.sidebar.ungroupedFileIds);
         const exampleFile = session.files.find(file => file === example);
         const looseFiles = document.createElement("div");
@@ -2317,49 +2021,6 @@
         for (const file of ungroupedFiles) appendOpenFileButton(file, null, looseFiles);
         if (looseFiles.childElementCount) filesElement.append(looseFiles);
         for (const section of session.sidebar.sections) renderTopicSection(section);
-        for (const workspace of session.workspaces) renderWorkspace(workspace);
-      }
-
-      function renderPinnedGroup(targets) {
-        const container = document.createElement("div");
-        container.className = "LocalMarkdown-topic-section LocalMarkdown-pinned-section";
-        const header = document.createElement("div");
-        header.className = "LocalMarkdown-topic-header LocalMarkdown-pinned-header";
-        const toggle = document.createElement("button");
-        toggle.type = "button";
-        toggle.className = "LocalMarkdown-topic-toggle";
-        toggle.setAttribute("aria-expanded", String(!session.sidebar.pinnedCollapsed));
-        const filesId = "LocalMarkdown-pinned-files";
-        toggle.setAttribute("aria-controls", filesId);
-        toggle.title = `${session.sidebar.pinnedCollapsed ? "Expand" : "Collapse"} Pinned`;
-        const icon = document.createElement("span");
-        icon.className = "LocalMarkdown-group-icon LocalMarkdown-pinned-icon";
-        icon.setAttribute("aria-hidden", "true");
-        icon.textContent = "★";
-        const name = document.createElement("span");
-        name.className = "LocalMarkdown-topic-name";
-        name.textContent = "Pinned";
-        const count = document.createElement("span");
-        count.className = "LocalMarkdown-topic-count";
-        count.textContent = String(targets.length);
-        toggle.append(icon, name, count);
-        toggle.addEventListener("click", () => {
-          session.sidebar.pinnedCollapsed = !session.sidebar.pinnedCollapsed;
-          renderFiles();
-          scheduleSessionSave();
-        });
-        header.append(toggle);
-        container.append(header);
-
-        const pinnedFiles = document.createElement("div");
-        pinnedFiles.className = "LocalMarkdown-topic-files";
-        pinnedFiles.id = filesId;
-        pinnedFiles.hidden = session.sidebar.pinnedCollapsed;
-        if (!session.sidebar.pinnedCollapsed) {
-          for (const target of targets) appendFavoriteButton(target, pinnedFiles);
-        }
-        container.append(pinnedFiles);
-        filesElement.append(container);
       }
 
       function renderTopicSection(section) {
@@ -2380,10 +2041,7 @@
         const name = document.createElement("span");
         name.className = "LocalMarkdown-topic-name";
         name.textContent = section.name;
-        const count = document.createElement("span");
-        count.className = "LocalMarkdown-topic-count";
-        count.textContent = String(section.fileIds.length);
-        toggle.append(name, count);
+        toggle.append(name);
         toggle.addEventListener("click", () => {
           section.collapsed = !section.collapsed;
           renderFiles();
@@ -2432,7 +2090,6 @@
           : file.name;
         button.append(sidebarItemIcon("file"), name);
         appendUnsavedMark(button, !file.builtin && file.dirty);
-        if (targetIsFavorite({ file })) appendFavoriteMarker(button);
         button.title = file.builtin ? "Examples" : "Drag to reorder or move to a section";
         button.setAttribute("aria-current", String(file.id === session.activeId));
         button.addEventListener("click", file === example
@@ -2443,22 +2100,6 @@
         container.append(button);
       }
 
-      function appendFavoriteMarker(element) {
-        element.dataset.favorite = "true";
-        const marker = document.createElement("span");
-        marker.className = "LocalMarkdown-favorite-marker";
-        marker.title = "Pinned";
-        marker.setAttribute("aria-label", "Pinned");
-        const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        icon.setAttribute("viewBox", "0 0 20 20");
-        icon.setAttribute("aria-hidden", "true");
-        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        path.setAttribute("d", "m10 2.75 2.1 4.35 4.8.65-3.5 3.35.85 4.75L10 13.55 5.75 15.8l.85-4.7-3.5-3.35 4.8-.65z");
-        icon.append(path);
-        marker.append(icon);
-        element.append(marker);
-      }
-
       function appendUnsavedMark(element, dirty) {
         if (!dirty) return;
         const marker = document.createElement("span");
@@ -2466,29 +2107,6 @@
         marker.title = "Unsaved changes";
         marker.textContent = "Unsaved";
         element.append(marker);
-      }
-
-      function appendFavoriteButton(target, container = filesElement) {
-        const location = workspaceLocationForTarget(target);
-        const file = location
-          ? (target.file || openFileForWorkspaceNode(location.workspace, location.node))
-          : target.file;
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "LocalMarkdown-file";
-        button.title = location ? `${location.workspace.name}/${location.node.path}` : targetName(target);
-        button.setAttribute("aria-current", String(file?.id === session.activeId));
-        const name = document.createElement("span");
-        name.className = "LocalMarkdown-file-name";
-        name.textContent = targetName(target);
-        button.append(sidebarItemIcon("file"), name);
-        appendUnsavedMark(button, file?.dirty);
-        button.addEventListener("click", () => {
-          if (location) void openWorkspaceFile(location.workspace, location.node);
-          else selectFile(file.id);
-        });
-        attachFileContextMenu(button, { ...target, file });
-        container.append(button);
       }
 
       function sidebarItemIcon(kind, className = "LocalMarkdown-sidebar-item-icon") {
@@ -2503,189 +2121,9 @@
         path.setAttribute("stroke", "currentColor");
         path.setAttribute("stroke-width", "1.35");
         path.setAttribute("stroke-linejoin", "round");
-        path.setAttribute("d", kind === "directory"
-          ? "M2.75 5.25h5l1.5 2h8v8.5h-14.5z"
-          : "M4 2.75h7l4 4v10.5H4zM11 2.75v4h4");
+        path.setAttribute("d", "M4 2.75h7l4 4v10.5H4zM11 2.75v4h4");
         svg.append(path);
         return svg;
-      }
-
-      function openFileForWorkspaceNode(workspace, node) {
-        return session.files.find(file => file.workspaceId === workspace.id
-          && file.workspacePath === node.path) || null;
-      }
-
-      function renderWorkspace(workspace) {
-        const container = document.createElement("div");
-        container.className = "LocalMarkdown-workspace LocalMarkdown-topic-section";
-        container.dataset.workspaceId = workspace.id;
-        renderWorkspaceDirectory(workspace, workspace.root, 0, container, true);
-        filesElement.append(container);
-      }
-
-      function renderWorkspaceDirectory(workspace, directory, depth, container, isRoot = false) {
-        const row = document.createElement("div");
-        row.className = isRoot
-          ? "LocalMarkdown-tree-row LocalMarkdown-topic-header LocalMarkdown-workspace-header"
-          : "LocalMarkdown-tree-row";
-        row.style.setProperty("--tree-depth", String(depth));
-
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = isRoot
-          ? "LocalMarkdown-tree-item LocalMarkdown-topic-toggle"
-          : "LocalMarkdown-tree-item";
-        button.dataset.kind = "directory";
-        button.dataset.root = String(isRoot);
-        button.dataset.workspacePath = directory.path;
-        const expanded = workspace.expanded.has(directory.path) && !workspace.needsPermission;
-        button.setAttribute("aria-expanded", String(expanded));
-        button.title = workspace.needsPermission && isRoot
-          ? `Reconnect ${workspace.name}`
-          : `${expanded ? "Collapse" : "Expand"} ${directory.name}`;
-
-        const name = document.createElement("span");
-        name.className = isRoot
-          ? "LocalMarkdown-tree-name LocalMarkdown-topic-name"
-          : "LocalMarkdown-tree-name";
-        name.textContent = workspace.needsPermission && isRoot
-          ? `${directory.name} (Reconnect)`
-          : directory.name;
-        const icon = sidebarItemIcon("directory", "LocalMarkdown-tree-icon");
-        if (isRoot) icon.classList.add("LocalMarkdown-group-icon");
-        button.setAttribute("aria-busy", String(directory.loading));
-        button.append(icon, name);
-        button.addEventListener("click", () => {
-          if (workspace.needsPermission && isRoot) void reconnectWorkspace(workspace);
-          else void toggleWorkspaceDirectory(workspace, directory);
-        });
-        row.append(button);
-
-        if (isRoot) {
-          const remove = document.createElement("button");
-          remove.type = "button";
-          remove.className = "LocalMarkdown-tree-remove LocalMarkdown-topic-menu-button";
-          remove.setAttribute("aria-label", `Remove folder ${workspace.name}`);
-          remove.title = "Remove folder from sidebar";
-          remove.textContent = "×";
-          remove.addEventListener("click", () => removeWorkspace(workspace));
-          row.append(remove);
-        }
-        container.append(row);
-
-        if (!expanded) return;
-        if (directory.error) {
-          appendWorkspaceEmpty(container, depth + 1, "Could not read folder");
-          return;
-        }
-        if (!directory.children) {
-          appendWorkspaceEmpty(container, depth + 1, "Loading…");
-          return;
-        }
-        if (!directory.children.length) {
-          appendWorkspaceEmpty(container, depth + 1, "No Markdown files");
-          return;
-        }
-        for (const child of directory.children) {
-          if (child.kind === "directory") {
-            renderWorkspaceDirectory(workspace, child, depth + 1, container);
-          } else {
-            renderWorkspaceFile(workspace, child, depth + 1, container);
-          }
-        }
-      }
-
-      function appendWorkspaceEmpty(container, depth, message) {
-        const empty = document.createElement("div");
-        empty.className = "LocalMarkdown-tree-empty";
-        empty.style.marginLeft = `${depth * 13}px`;
-        empty.textContent = message;
-        container.append(empty);
-      }
-
-      function renderWorkspaceFile(workspace, node, depth, container) {
-        const openFile = openFileForWorkspaceNode(workspace, node);
-        const row = document.createElement("div");
-        row.className = "LocalMarkdown-tree-row";
-        row.style.setProperty("--tree-depth", String(depth));
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "LocalMarkdown-tree-item";
-        button.dataset.kind = "file";
-        button.dataset.workspacePath = node.path;
-        button.title = node.path;
-        button.setAttribute("aria-current", String(openFile?.id === session.activeId));
-        const name = document.createElement("span");
-        name.className = "LocalMarkdown-tree-name";
-        name.textContent = node.name;
-        button.append(sidebarItemIcon("file", "LocalMarkdown-tree-icon"), name);
-        appendUnsavedMark(button, openFile?.dirty);
-        if (targetIsFavorite({ workspace, node, file: openFile })) appendFavoriteMarker(button);
-        button.addEventListener("click", () => void openWorkspaceFile(workspace, node));
-        attachFileContextMenu(button, { workspace, node, file: openFile });
-        row.append(button);
-        container.append(row);
-      }
-
-      async function toggleWorkspaceDirectory(workspace, directory) {
-        if (workspace.expanded.has(directory.path)) {
-          workspace.expanded.delete(directory.path);
-          renderFiles();
-          scheduleSessionSave();
-          return;
-        }
-        workspace.expanded.add(directory.path);
-        renderFiles();
-        await loadWorkspaceDirectory(workspace, directory);
-        renderFiles();
-        scheduleSessionSave();
-      }
-
-      function markWorkspaceAccessRestored(workspace) {
-        workspace.needsPermission = false;
-        for (const file of session.files) {
-          if (file.workspaceId !== workspace.id) continue;
-          file.needsPermission = false;
-          if (file.dirty) scheduleAutoSave(file);
-        }
-      }
-
-      async function reconnectWorkspace(workspace) {
-        updateStatus(`Reconnecting ${workspace.name}…`);
-        try {
-          const permission = typeof workspace.handle.requestPermission === "function"
-            ? await workspace.handle.requestPermission({ mode: "readwrite" })
-            : "granted";
-          if (permission !== "granted") {
-            updateStatus("Folder access was not restored");
-            return;
-          }
-          markWorkspaceAccessRestored(workspace);
-          forgetWorkspaceDescendants(workspace, workspace.root);
-          await hydrateExpandedWorkspaceDirectory(workspace);
-          renderFiles();
-          updateStatus(`Reconnected ${workspace.name}`);
-          scheduleSessionSave();
-        } catch {
-          updateStatus("Could not reconnect folder");
-        }
-      }
-
-      function removeWorkspace(workspace) {
-        for (const file of session.files) {
-          if (file.workspaceId !== workspace.id) continue;
-          file.workspaceId = null;
-          file.workspacePath = null;
-          syncSidebarFileAvailability(file);
-        }
-        const favoritePrefix = `workspace:${workspace.id}:`;
-        for (const key of session.favoriteKeys) {
-          if (key.startsWith(favoritePrefix)) session.favoriteKeys.delete(key);
-        }
-        session.workspaces = session.workspaces.filter(item => item !== workspace);
-        renderFiles();
-        updateStatus(`Removed ${workspace.name} from sidebar`);
-        scheduleSessionSave();
       }
 
       function normalizedSearchText(value) {
@@ -2768,33 +2206,11 @@
         element.append(mark, document.createTextNode(text.slice(matchIndex + query.length)));
       }
 
-      function workspaceFileNodes(workspace) {
-        return Array.from(workspace.nodesByPath.values()).filter(node => node.kind === "file");
-      }
-
       function searchCandidates() {
         const candidates = [];
-        const representedOpenFiles = new Set();
         let order = 0;
-        for (const workspace of session.workspaces) {
-          for (const node of workspaceFileNodes(workspace)) {
-            const file = openFileForWorkspaceNode(workspace, node);
-            if (file) representedOpenFiles.add(file.id);
-            candidates.push({
-              id: `${workspace.id}:${node.path}`,
-              name: node.name,
-              searchName: `${node.name} ${node.path}`,
-              path: `${workspace.name}/${node.path}`,
-              text: file?.text ?? node.searchText ?? "",
-              file,
-              workspace,
-              node,
-              order: order++
-            });
-          }
-        }
         for (const file of session.files) {
-          if (file.welcome || representedOpenFiles.has(file.id)) continue;
+          if (file.welcome) continue;
           const name = file === example ? "Examples" : file.name;
           candidates.push({
             id: file.id,
@@ -2803,76 +2219,10 @@
             path: name,
             text: file.text,
             file,
-            workspace: null,
-            node: null,
             order: order++
           });
         }
         return candidates;
-      }
-
-      async function collectWorkspaceFiles(workspace, directory, files) {
-        const children = await loadWorkspaceDirectory(workspace, directory);
-        for (const child of children) {
-          if (child.kind === "file") files.push(child);
-          else await collectWorkspaceFiles(workspace, child, files);
-        }
-      }
-
-      async function loadWorkspaceSearchText(workspace, node) {
-        const openFile = openFileForWorkspaceNode(workspace, node);
-        if (openFile) {
-          node.searchText = openFile.text;
-          node.searchError = false;
-          return;
-        }
-        if (node.searchText !== null) return;
-        try {
-          const diskFile = await node.handle.getFile();
-          node.searchText = markdownTextWithoutAttachments(await diskFile.text());
-          node.searchError = false;
-        } catch {
-          node.searchText = "";
-          node.searchError = true;
-        }
-      }
-
-      async function runWithConcurrency(items, concurrency, operation) {
-        let nextIndex = 0;
-        const workers = Array.from({ length: Math.min(concurrency, items.length) }, async () => {
-          while (nextIndex < items.length) {
-            const item = items[nextIndex++];
-            await operation(item);
-          }
-        });
-        await Promise.all(workers);
-      }
-
-      function requestWorkspaceSearchRender() {
-        if (workspaceSearchRenderPending) return;
-        workspaceSearchRenderPending = true;
-        requestAnimationFrame(() => {
-          workspaceSearchRenderPending = false;
-          if (searchInput.value.trim()) renderFiles();
-        });
-      }
-
-      function startWorkspaceSearchIndex(workspace) {
-        if (workspace.needsPermission || workspace.searchIndexed || workspace.indexPromise) return;
-        const generation = workspace.indexGeneration;
-        const indexPromise = (async () => {
-          const files = [];
-          await collectWorkspaceFiles(workspace, workspace.root, files);
-          await runWithConcurrency(files, 4, node => loadWorkspaceSearchText(workspace, node));
-          if (workspace.indexGeneration === generation) workspace.searchIndexed = true;
-        })().catch(() => {
-          if (workspace.indexGeneration === generation) workspace.searchIndexed = true;
-        }).finally(() => {
-          if (workspace.indexPromise === indexPromise) workspace.indexPromise = null;
-          requestWorkspaceSearchRender();
-        });
-        workspace.indexPromise = indexPromise;
-        requestWorkspaceSearchRender();
       }
 
       function renderSearchResults(query) {
@@ -2896,30 +2246,23 @@
             return left.candidate.order - right.candidate.order;
           });
 
-        const indexing = session.workspaces.some(workspace => workspace.indexPromise);
-
         if (!results.length) {
           const empty = document.createElement("div");
           empty.className = "LocalMarkdown-search-empty";
-          empty.textContent = indexing ? "Searching folder contents…" : "No matching files or content";
+          empty.textContent = "No matching files or content";
           filesElement.append(empty);
           return;
         }
 
         const summary = document.createElement("div");
         summary.className = "LocalMarkdown-search-summary";
-        summary.textContent = `${results.length} matching ${results.length === 1 ? "file" : "files"}`
-          + (indexing ? " · searching folders…" : "");
+        summary.textContent = `${results.length} matching ${results.length === 1 ? "file" : "files"}`;
         filesElement.append(summary);
 
         for (const { candidate, nameScore, matches, hasMoreMatches } of results) {
           const result = document.createElement("div");
           result.className = "LocalMarkdown-search-result";
-          const contextTarget = {
-            file: candidate.file,
-            workspace: candidate.workspace,
-            node: candidate.node
-          };
+          const contextTarget = { file: candidate.file };
 
           const fileButton = document.createElement("button");
           fileButton.type = "button";
@@ -2933,7 +2276,6 @@
           else name.textContent = displayName;
           fileButton.append(sidebarItemIcon("file"), name);
           appendUnsavedMark(fileButton, candidate.file?.dirty);
-          if (targetIsFavorite(contextTarget)) appendFavoriteMarker(fileButton);
           if (matches.length) {
             const count = document.createElement("span");
             count.className = "LocalMarkdown-search-count";
@@ -3012,9 +2354,7 @@
 
       async function openSearchResult(candidate, match = null, query = searchInput.value.trim()) {
         captureEditorValue();
-        const file = candidate.workspace
-          ? await openWorkspaceFile(candidate.workspace, candidate.node, { closeMobileSidebar: false })
-          : candidate.file;
+        const file = candidate.file;
         if (!file) return;
         if (file === example) showExamples();
         else if (file.id !== session.activeId) activateFile(file);
@@ -5266,7 +4606,6 @@
             file.name = file.handle.name;
             file.needsPermission = false;
             if (file.text === text) file.dirty = false;
-            syncWorkspaceSearchText(file);
             scheduleSessionSave();
             return true;
           } catch (error) {
@@ -5345,7 +4684,7 @@
           return;
         }
 
-        updateStatus("Choose a file name and folder…");
+        updateStatus("Choose where to save the file…");
         const previousName = file.name;
         const handle = await pickMarkdownFile(file);
         if (!handle || activeFile() !== file) return;
@@ -5360,11 +4699,7 @@
           file.name = previousName;
         } else {
           session.lastOpenHandle = handle;
-          const workspaceLocation = await workspaceLocationForHandle(handle);
-          file.workspaceId = workspaceLocation?.workspace.id || null;
-          file.workspacePath = workspaceLocation?.node.path || null;
           syncSidebarFileAvailability(file);
-          syncWorkspaceSearchText(file);
         }
         renderFiles();
         updateStatus(saved
@@ -5401,11 +4736,7 @@
         file.needsPermission = false;
         if (file.text === savedText) file.dirty = false;
         session.lastOpenHandle = handle;
-        const workspaceLocation = await workspaceLocationForHandle(handle);
-        file.workspaceId = workspaceLocation?.workspace.id || null;
-        file.workspacePath = workspaceLocation?.node.path || null;
         syncSidebarFileAvailability(file);
-        syncWorkspaceSearchText(file);
         renderFiles();
         updateStatus(file.dirty ? "Copy saved; newer changes not saved" : `Saved a copy as ${file.name}`);
         scheduleSessionSave();
@@ -5443,119 +4774,14 @@
         try {
           const file = await handle.getFile();
           const parsed = parseStoredMarkdown(await file.text());
-          const workspaceLocation = await workspaceLocationForHandle(handle);
           activateFile({
             id: createId(), name: file.name, text: parsed.text, handle,
             attachments: parsed.attachments, builtin: false, dirty: false,
-            needsPermission: false,
-            workspaceId: workspaceLocation?.workspace.id || null,
-            workspacePath: workspaceLocation?.node.path || null
+            needsPermission: false
           }, parsed.warning || "Opened local file");
         } catch {
           updateStatus("Could not open file");
         }
-      }
-
-      async function workspaceLocationForHandle(handle) {
-        if (!handle || typeof handle.isSameEntry !== "function") return null;
-        for (const workspace of session.workspaces) {
-          if (typeof workspace.handle.resolve === "function") {
-            try {
-              const parts = await workspace.handle.resolve(handle);
-              if (Array.isArray(parts) && parts.length) {
-                const node = await workspaceNodeAtPath(workspace, parts);
-                if (node?.kind === "file") {
-                  revealWorkspacePath(workspace, node.path);
-                  await hydrateExpandedWorkspaceDirectory(workspace);
-                  return { workspace, node };
-                }
-              }
-            } catch {}
-          }
-          for (const node of workspaceFileNodes(workspace)) {
-            try {
-              if (await node.handle.isSameEntry(handle)) {
-                revealWorkspacePath(workspace, node.path);
-                return { workspace, node };
-              }
-            } catch {}
-          }
-        }
-        return null;
-      }
-
-      async function openWorkspaceFile(workspace, node, { closeMobileSidebar = true } = {}) {
-        if (!workspace || !node || node.kind !== "file") return null;
-        let file = openFileForWorkspaceNode(workspace, node);
-        if (!file) {
-          for (const candidate of session.files) {
-            if (!candidate.handle || typeof candidate.handle.isSameEntry !== "function") continue;
-            try {
-              if (await candidate.handle.isSameEntry(node.handle)) {
-                file = candidate;
-                file.workspaceId = workspace.id;
-                file.workspacePath = node.path;
-                syncSidebarFileAvailability(file);
-                break;
-              }
-            } catch {}
-          }
-        }
-
-        if (!file) {
-          updateStatus(`Opening ${node.name}…`);
-          try {
-            const diskFile = await node.handle.getFile();
-            const parsed = parseStoredMarkdown(await diskFile.text());
-            node.searchText = parsed.text;
-            node.searchError = false;
-            file = {
-              id: createId(),
-              name: diskFile.name,
-              text: parsed.text,
-              handle: node.handle,
-              attachments: parsed.attachments,
-              builtin: false,
-              dirty: false,
-              needsPermission: false,
-              workspaceId: workspace.id,
-              workspacePath: node.path
-            };
-            activateFile(file, parsed.warning || "Opened workspace file");
-          } catch (error) {
-            if (["NotAllowedError", "SecurityError"].includes(error?.name)) {
-              workspace.needsPermission = true;
-              renderFiles();
-              updateStatus("Reconnect the folder to open this file");
-            } else {
-              updateStatus("Could not open workspace file");
-            }
-            return null;
-          }
-        } else if (file.id !== session.activeId) {
-          captureEditorValue();
-          activateFile(file);
-        } else {
-          renderFiles();
-          updateStatus();
-        }
-
-        scheduleSessionSave();
-        if (closeMobileSidebar && mobileSidebarQuery.matches) setSidebarOpen(false);
-        return file;
-      }
-
-      function toggleFavorite(target) {
-        const key = favoriteKeyForTarget(target);
-        if (!key) return;
-        const adding = !session.favoriteKeys.has(key);
-        if (adding) session.favoriteKeys.add(key);
-        else session.favoriteKeys.delete(key);
-        renderFiles();
-        updateStatus(adding
-          ? `Pinned ${targetName(target)}`
-          : `Removed ${targetName(target)} from Pinned`);
-        scheduleSessionSave();
       }
 
       async function requestedMarkdownName(currentName) {
@@ -5580,123 +4806,12 @@
         return name;
       }
 
-      function workspaceParentDirectory(workspace, node) {
-        const parts = node.path.split("/");
-        parts.pop();
-        return workspace.nodesByPath.get(parts.join("/")) || null;
-      }
-
-      async function ensureWorkspaceWriteAccess(workspace) {
-        try {
-          const permission = typeof workspace.handle.requestPermission === "function"
-            ? await workspace.handle.requestPermission({ mode: "readwrite" })
-            : "granted";
-          if (permission !== "granted") {
-            workspace.needsPermission = true;
-            renderFiles();
-            updateStatus("Folder access was not granted");
-            return false;
-          }
-          markWorkspaceAccessRestored(workspace);
-          return true;
-        } catch {
-          updateStatus("Could not access the folder");
-          return false;
-        }
-      }
-
-      async function workspaceNameIsAvailable(parent, currentName, nextName) {
-        if (currentName === nextName) return false;
-        try {
-          await parent.handle.getFileHandle(nextName);
-          updateStatus(`A file named ${nextName} already exists`);
-          return false;
-        } catch (error) {
-          if (error?.name === "NotFoundError") return true;
-          updateStatus("Could not check the new file name");
-          return false;
-        }
-      }
-
-      async function renameWorkspaceFile(workspace, node, openFile, nextName) {
-        const parent = workspaceParentDirectory(workspace, node);
-        if (!parent || !await ensureWorkspaceWriteAccess(workspace)
-            || !await workspaceNameIsAvailable(parent, node.name, nextName)) return;
-
-        if (openFile) {
-          if (activeFile() === openFile) captureEditorValue();
-          cancelAutoSave(openFile);
-          if (activeSaves.has(openFile.id) && !await activeSaves.get(openFile.id)) {
-            if (openFile.dirty) scheduleAutoSave(openFile);
-            updateStatus("Could not finish saving before rename");
-            return;
-          }
-          if (!await waitForFileAttachments(openFile)) {
-            if (openFile.dirty) scheduleAutoSave(openFile);
-            updateStatus("Could not prepare the file for rename");
-            return;
-          }
-        }
-
-        updateStatus(`Renaming ${node.name}…`);
-        let nextHandle = null;
-        const textBeforeWrite = openFile?.text;
-        try {
-          nextHandle = await parent.handle.getFileHandle(nextName, { create: true });
-          const writable = await nextHandle.createWritable();
-          await writable.write(openFile ? serializeFile(openFile) : await node.handle.getFile());
-          await writable.close();
-          await parent.handle.removeEntry(node.name);
-        } catch {
-          if (nextHandle) {
-            try { await parent.handle.removeEntry(nextName); } catch {}
-          }
-          if (openFile?.dirty) scheduleAutoSave(openFile);
-          updateStatus(`Could not rename ${node.name}`);
-          return;
-        }
-
-        const oldPath = node.path;
-        const parentPath = parent.path;
-        const nextPath = parentPath ? `${parentPath}/${nextName}` : nextName;
-        const oldFavoriteKey = workspaceFavoriteKey(workspace, node);
-        workspace.nodesByPath.delete(oldPath);
-        node.name = nextName;
-        node.path = nextPath;
-        node.handle = nextHandle;
-        workspace.nodesByPath.set(nextPath, node);
-        parent.children?.sort(compareDirectoryEntries);
-        if (session.favoriteKeys.delete(oldFavoriteKey)) {
-          session.favoriteKeys.add(workspaceFavoriteKey(workspace, node));
-        }
-        if (openFile) {
-          openFile.name = nextName;
-          openFile.handle = nextHandle;
-          openFile.workspacePath = nextPath;
-          openFile.needsPermission = false;
-          if (openFile.text === textBeforeWrite) openFile.dirty = false;
-          else scheduleAutoSave(openFile);
-        }
-        revealWorkspacePath(workspace, nextPath);
-        workspace.searchIndexed = false;
-        workspace.indexGeneration += 1;
-        renderFiles();
-        updateStatus(`Renamed to ${nextName}`);
-        scheduleSessionSave();
-      }
-
       async function renameFileTarget(target) {
-        const location = workspaceLocationForTarget(target);
-        const file = target.file || (location
-          ? openFileForWorkspaceNode(location.workspace, location.node) : null);
-        const currentName = location?.node.name || file?.name;
+        const file = target.file;
+        const currentName = file?.name;
         if (!currentName) return;
         const nextName = await requestedMarkdownName(currentName);
         if (!nextName || nextName === currentName) return;
-        if (location) {
-          await renameWorkspaceFile(location.workspace, location.node, file, nextName);
-          return;
-        }
         if (!file.handle) {
           file.name = nextName;
           renderFiles();
@@ -5711,7 +4826,7 @@
           updateStatus(`Renamed to ${file.name}`);
           scheduleSessionSave();
         } catch {
-          updateStatus("Open the containing folder to rename this file");
+          updateStatus("Could not rename this file");
         }
       }
 
@@ -5722,7 +4837,6 @@
         releaseAttachmentPreviews(file.id);
         removeFileFromSidebarLayout(file.id);
         session.files = session.files.filter(candidate => candidate !== file && !candidate.welcome);
-        session.favoriteKeys.delete(`file:${file.id}`);
         if (!wasActive) return;
         let next = session.files.find(candidate => !candidate.builtin) || session.files[0];
         if (!next) {
@@ -5733,35 +4847,11 @@
       }
 
       async function deleteFileTarget(target) {
-        const location = workspaceLocationForTarget(target);
-        const file = target.file || (location
-          ? openFileForWorkspaceNode(location.workspace, location.node) : null);
-        const name = location?.node.name || file?.name;
+        const file = target.file;
+        const name = file?.name;
         if (!name) return;
         if (!await requestFileDialog("delete", name, { dirty: file?.dirty })) {
           updateStatus("Delete cancelled");
-          return;
-        }
-
-        if (location) {
-          const { workspace, node } = location;
-          const parent = workspaceParentDirectory(workspace, node);
-          if (!parent || !await ensureWorkspaceWriteAccess(workspace)) return;
-          updateStatus(`Deleting ${name}…`);
-          try {
-            await parent.handle.removeEntry(node.name);
-            parent.children = parent.children?.filter(child => child !== node) || parent.children;
-            workspace.nodesByPath.delete(node.path);
-            session.favoriteKeys.delete(workspaceFavoriteKey(workspace, node));
-            workspace.searchIndexed = false;
-            workspace.indexGeneration += 1;
-            removeSessionFile(file);
-            renderFiles();
-            updateStatus(`Deleted ${name}`);
-            scheduleSessionSave();
-          } catch {
-            updateStatus(`Could not delete ${name}`);
-          }
           return;
         }
 
@@ -5770,64 +4860,13 @@
           try {
             await file.handle.remove();
           } catch {
-            updateStatus("Open the containing folder to delete this file");
+            updateStatus("Could not delete this file");
             return;
           }
         }
         removeSessionFile(file);
         renderFiles();
         updateStatus(`Deleted ${name}`);
-        scheduleSessionSave();
-      }
-
-      async function openLocalFolder() {
-        if (typeof window.showDirectoryPicker !== "function") {
-          updateStatus("Opening folders requires Chrome or Edge");
-          return;
-        }
-
-        let handle;
-        try {
-          handle = await window.showDirectoryPicker({
-            id: directoryPickerId,
-            mode: "readwrite"
-          });
-        } catch (error) {
-          if (error?.name === "AbortError") updateStatus();
-          else updateStatus("Could not choose folder");
-          return;
-        }
-
-        for (const workspace of session.workspaces) {
-          if (typeof workspace.handle.isSameEntry !== "function") continue;
-          try {
-            if (await workspace.handle.isSameEntry(handle)) {
-              workspace.handle = handle;
-              workspace.root.handle = handle;
-              workspace.name = handle.name;
-              workspace.root.name = handle.name;
-              markWorkspaceAccessRestored(workspace);
-              workspace.expanded.add("");
-              forgetWorkspaceDescendants(workspace, workspace.root);
-              await hydrateExpandedWorkspaceDirectory(workspace);
-              renderFiles();
-              updateStatus("Refreshed open folder");
-              scheduleSessionSave();
-              return;
-            }
-          } catch {}
-        }
-
-        captureEditorValue();
-        const workspace = createWorkspace({ name: handle.name, handle });
-        session.workspaces.push(workspace);
-        renderFiles();
-        updateStatus(`Opening ${workspace.name}…`);
-        await loadWorkspaceDirectory(workspace, workspace.root);
-        renderFiles();
-        updateStatus(workspace.root.error
-          ? `Could not read folder ${workspace.name}`
-          : `Opened folder ${workspace.name}`);
         scheduleSessionSave();
       }
 
@@ -5874,10 +4913,6 @@
       newSectionButton.addEventListener("click", () => {
         setNewMenuOpen(false);
         void createSection();
-      });
-      newFolderButton.addEventListener("click", () => {
-        setNewMenuOpen(false);
-        void openLocalFolder();
       });
       newMenu.addEventListener("keydown", event => {
         if (event.key === "Escape") {
@@ -6286,10 +5321,8 @@
 
         cancelAutoSave(file);
         releaseAttachmentPreviews(file.id);
-        syncWorkspaceSearchText(file, { invalidate: file.dirty });
         removeFileFromSidebarLayout(file.id);
         session.files = session.files.filter(item => item !== file && !item.welcome);
-        session.favoriteKeys.delete(`file:${file.id}`);
         let next = session.files.find(item => !item.builtin) || session.files[0];
         if (!next) {
           session.files.push(welcome);
