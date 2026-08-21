@@ -187,8 +187,12 @@
     .LocalMarkdown-new-option {
       width: 100%; min-height: var(--lm-control-height);
       padding: var(--lm-space-1) var(--lm-space-2); display: flex; align-items: center;
+      gap: var(--lm-space-2);
       border: 0; border-radius: var(--lm-radius-control); color: var(--lm-text); background: transparent;
       font-size: var(--lm-type-control-size); text-align: left; white-space: nowrap;
+    }
+    .LocalMarkdown-new-option svg {
+      width: 16px; height: 16px; flex: 0 0 16px; color: var(--lm-muted);
     }
     .LocalMarkdown-new-option:focus-visible {
       outline: 0; box-shadow: inset 0 0 0 1px var(--lm-accent);
@@ -896,9 +900,18 @@
         <div class="LocalMarkdown-new-picker">
           <button class="LocalMarkdown-new" id="LocalMarkdown-new" type="button" aria-label="Add files and sections" aria-haspopup="menu" aria-expanded="false" aria-controls="LocalMarkdown-new-menu">+</button>
           <div class="LocalMarkdown-new-menu" id="LocalMarkdown-new-menu" role="menu" aria-label="Add files and sections" hidden>
-            <button class="LocalMarkdown-new-option" id="LocalMarkdown-new-file" type="button" role="menuitem">New File</button>
-            <button class="LocalMarkdown-new-option" id="LocalMarkdown-open-file" type="button" role="menuitem">Open File…</button>
-            <button class="LocalMarkdown-new-option" id="LocalMarkdown-new-section" type="button" role="menuitem">New Section</button>
+            <button class="LocalMarkdown-new-option" id="LocalMarkdown-new-file" type="button" role="menuitem">
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 2.75h6l4 4v10.5H5V2.75Zm6 0v4h4M7.5 12h5M10 9.5v5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              New File
+            </button>
+            <button class="LocalMarkdown-new-option" id="LocalMarkdown-open-file" type="button" role="menuitem">
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2.75 6h5l1.5 2h7.5M3.25 16.5l2-7.25h12l-2 7.25h-12Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              Open File…
+            </button>
+            <button class="LocalMarkdown-new-option" id="LocalMarkdown-new-section" type="button" role="menuitem">
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 4.25h14v11.5H3V4.25ZM6 8h8M6 12h5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              New Section
+            </button>
           </div>
         </div>
       </div>
