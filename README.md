@@ -15,9 +15,9 @@ Open Local Markdown in desktop Chrome or Edge, choose a Markdown file, and start
 ## Get started
 
 1. Open the [online editor](https://local-markdown.github.io/) in desktop Chrome or Edge.
-2. Select **Open File** for an existing `.md` file, or select **+** to create a file.
+2. Select **+**, then choose **Open File** for an existing `.md` file or **New File** to create one.
 3. Grant access to the file when your browser asks.
-4. Select **Save** once for a new file. After that, changes save automatically.
+4. Hover over a new file, select **⋯**, then **Save…** once. After that, changes save automatically.
 
 ## Features
 
@@ -25,7 +25,7 @@ Open Local Markdown in desktop Chrome or Edge, choose a Markdown file, and start
 - White, Solarized Light, and Solarized Dark color themes
 - Multiple open files in a collapsible, responsive sidebar
 - Persistent topic sections for grouping, collapsing, renaming, and reordering open files
-- File context actions for rename, moving between sections, and confirmed deletion
+- File context actions for saving, renaming, closing, and confirmed deletion
 - Filename and content search across open files
 - Open-file and unsaved edit recovery after refresh
 - Screenshot and copied image pasting
