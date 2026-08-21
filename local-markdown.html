@@ -239,9 +239,6 @@
       transition: background-color 100ms ease, color 100ms ease, opacity 80ms ease;
     }
     .LocalMarkdown-file-name { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; }
-    .LocalMarkdown-sidebar-item-icon {
-      width: 16px; height: 16px; flex: 0 0 16px; color: var(--lm-faint);
-    }
     .LocalMarkdown-file:hover,
     .LocalMarkdown-search-file:hover,
     .LocalMarkdown-search-hit:hover { background: var(--lm-subtle); }
@@ -263,14 +260,11 @@
     }
     .LocalMarkdown-unsaved-mark {
       flex: 0 0 auto; padding: 0 var(--lm-space-1); display: inline-flex;
-      align-items: center; gap: var(--lm-space-1);
+      align-items: center;
       border: 1px solid color-mix(in srgb, var(--lm-unsaved) 35%, var(--lm-border));
       border-radius: var(--lm-radius-control);
       color: var(--lm-unsaved); background: var(--lm-background);
       font-size: var(--lm-type-metadata-size); font-weight: 500; line-height: var(--lm-line-tight);
-    }
-    .LocalMarkdown-unsaved-mark::before {
-      content: ""; width: 4px; height: 4px; border-radius: 50%; background: currentColor;
     }
     .LocalMarkdown-file.LocalMarkdown-dragging { opacity: 0; }
     .LocalMarkdown-topic-section {
@@ -312,8 +306,6 @@
     .LocalMarkdown-topic-files { padding-left: 0; }
     .LocalMarkdown-loose-files { margin-bottom: var(--lm-space-1); }
     .LocalMarkdown-drop-target { box-shadow: inset 0 0 0 1px var(--lm-accent); }
-    :is(.LocalMarkdown-file, .LocalMarkdown-search-file)[aria-current="true"]
-    .LocalMarkdown-sidebar-item-icon { color: var(--lm-accent); }
     .LocalMarkdown-search-summary,
     .LocalMarkdown-search-empty {
       padding: var(--lm-space-1) var(--lm-space-2) var(--lm-space-2);
@@ -2090,7 +2082,7 @@
         name.textContent = file === example
           ? "Examples"
           : file.name;
-        button.append(sidebarItemIcon("file"), name);
+        button.append(name);
         appendUnsavedMark(button, !file.builtin && file.dirty);
         button.title = file.builtin ? "Examples" : "Drag to reorder or move to a section";
         button.setAttribute("aria-current", String(file.id === session.activeId));
@@ -2109,23 +2101,6 @@
         marker.title = "Unsaved changes";
         marker.textContent = "Unsaved";
         element.append(marker);
-      }
-
-      function sidebarItemIcon(kind, className = "LocalMarkdown-sidebar-item-icon") {
-        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.classList.add(className);
-        svg.dataset.iconKind = kind;
-        svg.setAttribute("viewBox", "0 0 20 20");
-        svg.setAttribute("aria-hidden", "true");
-        svg.setAttribute("focusable", "false");
-        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        path.setAttribute("fill", "none");
-        path.setAttribute("stroke", "currentColor");
-        path.setAttribute("stroke-width", "1.35");
-        path.setAttribute("stroke-linejoin", "round");
-        path.setAttribute("d", "M4 2.75h7l4 4v10.5H4zM11 2.75v4h4");
-        svg.append(path);
-        return svg;
       }
 
       function normalizedSearchText(value) {
@@ -2276,7 +2251,7 @@
           const displayName = candidate.name;
           if (nameScore !== null) appendHighlightedText(name, displayName, query);
           else name.textContent = displayName;
-          fileButton.append(sidebarItemIcon("file"), name);
+          fileButton.append(name);
           appendUnsavedMark(fileButton, candidate.file?.dirty);
           if (matches.length) {
             const count = document.createElement("span");
