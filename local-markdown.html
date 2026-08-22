@@ -40,40 +40,46 @@
       --lm-space-6: 24px;
       --lm-space-8: 32px;
       --lm-control-height-compact: 24px;
-      --lm-control-height: 32px;
-      --lm-control-height-large: 40px;
-      --lm-radius-control: 4px;
-      --lm-radius-surface: 8px;
+      --lm-control-height: 30px;
+      --lm-control-height-large: 44px;
+      --lm-radius-control: 5px;
+      --lm-radius-surface: 6px;
       --lm-type-body-size: 15px;
       --lm-type-metadata-size: 12px;
-      --lm-type-control-size: 13px;
+      --lm-type-control-size: 14px;
       --lm-type-heading-size: 16px;
-      --lm-line-body: 1.5;
+      --lm-line-body: 1.6;
       --lm-line-tight: 1.25;
       --lm-background: #fff;
-      --lm-surface: #fafafa;
-      --lm-subtle: #f6f6f6;
-      --lm-selected: #f1f1f1;
-      --lm-text: #111;
-      --lm-muted: #666;
-      --lm-faint: #aaa;
-      --lm-secondary-text: #666;
-      --lm-border: #e5e5e5;
-      --lm-control-border: #d8d8d8;
-      --lm-accent: #111;
+      --lm-sidebar-background: #f7f7f5;
+      --lm-toolbar-background: rgba(255, 255, 255, .94);
+      --lm-surface: #f7f7f5;
+      --lm-subtle: rgba(55, 53, 47, .06);
+      --lm-selected: rgba(55, 53, 47, .09);
+      --lm-text: #37352f;
+      --lm-muted: #787774;
+      --lm-faint: #a6a6a3;
+      --lm-secondary-text: #787774;
+      --lm-border: rgba(55, 53, 47, .12);
+      --lm-control-border: rgba(55, 53, 47, .16);
+      --lm-accent: #37352f;
       --lm-unsaved: #a15c00;
-      --lm-app-background: #f3f4f6;
+      --lm-app-background: #fff;
       --lm-document-background: #fff;
-      --lm-document-border: #dfe2e6;
-      --lm-document-shadow: rgba(17, 24, 39, 0.07);
+      --lm-document-border: transparent;
+      --lm-document-shadow: transparent;
       --lm-overlay: rgba(0, 0, 0, 0.18);
       --lm-sidebar-shadow: rgba(0, 0, 0, 0.12);
-      --lm-menu-shadow: rgba(0, 0, 0, 0.16);
+      --lm-menu-shadow: rgba(15, 15, 15, 0.14);
       --lm-selection: rgba(17, 17, 17, 0.14);
+      --lm-scrollbar: rgba(55, 53, 47, .2);
+      --lm-scrollbar-hover: rgba(55, 53, 47, .38);
     }
     :root[data-theme="solarized-light"] {
       color-scheme: light;
       --lm-background: #fdf6e3;
+      --lm-sidebar-background: #eee8d5;
+      --lm-toolbar-background: rgba(253, 246, 227, .94);
       --lm-surface: #eee8d5;
       --lm-subtle: #f5efdc;
       --lm-selected: #e5deca;
@@ -93,10 +99,14 @@
       --lm-sidebar-shadow: rgba(0, 43, 54, 0.16);
       --lm-menu-shadow: rgba(0, 43, 54, 0.22);
       --lm-selection: rgba(38, 139, 210, 0.2);
+      --lm-scrollbar: rgba(88, 110, 117, .24);
+      --lm-scrollbar-hover: rgba(88, 110, 117, .44);
     }
     :root[data-theme="solarized-dark"] {
       color-scheme: dark;
       --lm-background: #002b36;
+      --lm-sidebar-background: #073642;
+      --lm-toolbar-background: rgba(0, 43, 54, .94);
       --lm-surface: #073642;
       --lm-subtle: #0b3b47;
       --lm-selected: #10424e;
@@ -116,6 +126,8 @@
       --lm-sidebar-shadow: rgba(0, 0, 0, 0.34);
       --lm-menu-shadow: rgba(0, 0, 0, 0.42);
       --lm-selection: rgba(42, 161, 152, 0.24);
+      --lm-scrollbar: rgba(147, 161, 161, .24);
+      --lm-scrollbar-hover: rgba(147, 161, 161, .44);
     }
     ::selection { background: var(--lm-selection); }
     body {
@@ -135,7 +147,7 @@
     button:focus-visible { outline: 2px solid var(--lm-accent); outline-offset: 2px; }
 
     .LocalMarkdown-app {
-      --sidebar-width: 220px;
+      --sidebar-width: 240px;
       height: 100%; display: grid;
       grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
       transition: grid-template-columns 160ms ease;
@@ -143,8 +155,8 @@
     .LocalMarkdown-app[data-sidebar="closed"] { --sidebar-width: 0px; }
     .LocalMarkdown-sidebar {
       min-width: 0; min-height: 0; overflow: hidden; border-right: 1px solid var(--lm-border);
-      background: var(--lm-background);
-      display: grid; grid-template-rows: var(--lm-control-height-large) 48px minmax(0, 1fr);
+      background: var(--lm-sidebar-background);
+      display: grid; grid-template-rows: var(--lm-control-height-large) 42px minmax(0, 1fr);
       opacity: 1; visibility: visible;
       transition: opacity 100ms ease, visibility 0s;
     }
@@ -156,16 +168,15 @@
     .LocalMarkdown-sidebar-header,
     .LocalMarkdown-toolbar {
       height: var(--lm-control-height-large); padding: 0 var(--lm-space-3);
-      border-bottom: 1px solid var(--lm-border);
     }
     .LocalMarkdown-sidebar-header {
       height: var(--lm-control-height-large); padding: 0 var(--lm-space-2);
       display: flex; align-items: center; gap: var(--lm-space-2);
-      color: var(--lm-muted); background: var(--lm-surface);
+      color: var(--lm-text); background: var(--lm-sidebar-background);
     }
     .LocalMarkdown-sidebar-header strong {
       min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      font-size: var(--lm-type-metadata-size); font-weight: 500; line-height: var(--lm-line-tight);
+      font-size: var(--lm-type-control-size); font-weight: 600; line-height: var(--lm-line-tight);
     }
     .LocalMarkdown-logo { width: 18px; height: 18px; flex: 0 0 18px; opacity: .82; }
     .LocalMarkdown-logo rect { fill: var(--lm-background); stroke: var(--lm-muted); }
@@ -202,7 +213,7 @@
       border: 0; border-radius: var(--lm-radius-control); background: transparent;
     }
     .LocalMarkdown-search {
-      position: relative; display: flex; align-items: center; padding: var(--lm-space-2);
+      position: relative; display: flex; align-items: center; padding: var(--lm-space-1) var(--lm-space-2);
     }
     .LocalMarkdown-search svg {
       position: absolute; left: var(--lm-space-4); width: 16px; height: 16px;
@@ -211,16 +222,18 @@
     .LocalMarkdown-search-input {
       width: 100%; height: var(--lm-control-height);
       padding: var(--lm-space-1) var(--lm-space-8) var(--lm-space-1) var(--lm-space-8);
-      border: 1px solid var(--lm-control-border); border-radius: var(--lm-radius-control);
-      color: var(--lm-text); background: var(--lm-surface);
+      border: 1px solid transparent; border-radius: var(--lm-radius-control);
+      color: var(--lm-text); background: transparent;
       font-size: var(--lm-type-control-size); line-height: var(--lm-line-tight);
     }
+    .LocalMarkdown-search-input:hover { background: var(--lm-subtle); }
     .LocalMarkdown-search-input::placeholder { color: var(--lm-secondary-text); opacity: 1; }
     .LocalMarkdown-search-input::-webkit-search-cancel-button {
       display: none; -webkit-appearance: none;
     }
     .LocalMarkdown-search-input:focus {
-      outline: 0; border-color: var(--lm-accent); box-shadow: 0 0 0 1px var(--lm-accent);
+      outline: 0; border-color: var(--lm-control-border); background: var(--lm-background);
+      box-shadow: 0 0 0 1px var(--lm-control-border);
     }
     .LocalMarkdown-search-clear {
       position: absolute; right: var(--lm-space-3);
@@ -230,20 +243,65 @@
     }
     .LocalMarkdown-search-clear[hidden] { display: none; }
     .LocalMarkdown-files {
-      min-height: 0; overflow: auto; padding: var(--lm-space-2);
-      scrollbar-width: none; -ms-overflow-style: none;
+      min-height: 0; overflow: auto;
+      padding: var(--lm-space-1) var(--lm-space-2) var(--lm-space-4);
     }
-    .LocalMarkdown-files::-webkit-scrollbar { display: none; width: 0; height: 0; }
+    :is(
+      .LocalMarkdown-files,
+      .LocalMarkdown-editor .vditor-reset,
+      .LocalMarkdown-editor .vditor-sv,
+      .LocalMarkdown-editor .vditor-preview,
+      .LocalMarkdown-editor .vditor-outline__content
+    ) {
+      scrollbar-width: thin;
+      scrollbar-color: var(--lm-scrollbar) transparent;
+    }
+    :is(
+      .LocalMarkdown-files,
+      .LocalMarkdown-editor .vditor-reset,
+      .LocalMarkdown-editor .vditor-sv,
+      .LocalMarkdown-editor .vditor-preview,
+      .LocalMarkdown-editor .vditor-outline__content
+    )::-webkit-scrollbar { width: 10px; height: 10px; }
+    :is(
+      .LocalMarkdown-files,
+      .LocalMarkdown-editor .vditor-reset,
+      .LocalMarkdown-editor .vditor-sv,
+      .LocalMarkdown-editor .vditor-preview,
+      .LocalMarkdown-editor .vditor-outline__content
+    )::-webkit-scrollbar-track { background: transparent; }
+    :is(
+      .LocalMarkdown-files,
+      .LocalMarkdown-editor .vditor-reset,
+      .LocalMarkdown-editor .vditor-sv,
+      .LocalMarkdown-editor .vditor-preview,
+      .LocalMarkdown-editor .vditor-outline__content
+    )::-webkit-scrollbar-thumb {
+      min-height: 28px; border: 3px solid transparent; border-radius: 999px;
+      background: var(--lm-scrollbar); background-clip: padding-box;
+    }
+    :is(
+      .LocalMarkdown-files,
+      .LocalMarkdown-editor .vditor-reset,
+      .LocalMarkdown-editor .vditor-sv,
+      .LocalMarkdown-editor .vditor-preview,
+      .LocalMarkdown-editor .vditor-outline__content
+    )::-webkit-scrollbar-thumb:hover { background-color: var(--lm-scrollbar-hover); }
     .LocalMarkdown-file-row {
-      position: relative; width: 100%; margin: 0 0 var(--lm-space-1);
+      position: relative; width: 100%; margin: 0 0 1px;
     }
     .LocalMarkdown-file {
       position: relative; width: 100%; min-height: var(--lm-control-height);
-      margin: 0; padding: var(--lm-space-1) var(--lm-space-2); overflow: hidden;
+      margin: 0; padding: 3px var(--lm-space-2);
+      overflow: hidden;
       display: flex; align-items: center; gap: var(--lm-space-1);
       border: 0; border-radius: var(--lm-radius-control); background: transparent;
       text-align: left; white-space: nowrap;
       transition: background-color 100ms ease, color 100ms ease, opacity 80ms ease;
+    }
+    .LocalMarkdown-file-row:hover .LocalMarkdown-file,
+    .LocalMarkdown-file-row:has(.LocalMarkdown-file-menu-button:focus) .LocalMarkdown-file {
+      padding-right: calc(var(--lm-control-height-compact) + var(--lm-space-2));
     }
     .LocalMarkdown-file-name { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; }
     .LocalMarkdown-file:hover,
@@ -258,12 +316,11 @@
     .LocalMarkdown-file[draggable="true"]:active { cursor: grabbing; }
     .LocalMarkdown-file[aria-current="true"],
     .LocalMarkdown-search-file[aria-current="true"] {
-      color: var(--lm-text); background: var(--lm-selected); font-weight: 600;
+      color: var(--lm-text); background: var(--lm-selected); font-weight: 500;
     }
     .LocalMarkdown-file[aria-current="true"]::before,
     .LocalMarkdown-search-file[aria-current="true"]::before {
-      content: ""; position: absolute; inset-block: var(--lm-space-1); inset-inline-start: 0;
-      width: 2px; border-radius: var(--lm-radius-control); background: var(--lm-accent);
+      content: none;
     }
     .LocalMarkdown-unsaved-mark {
       flex: 0 0 auto; padding: 0 var(--lm-space-1); display: inline-flex;
@@ -307,19 +364,19 @@
     }
     .LocalMarkdown-file.LocalMarkdown-dragging { opacity: 0; }
     .LocalMarkdown-topic-section {
-      margin: var(--lm-space-2) 0 var(--lm-space-1); border-radius: var(--lm-radius-control);
+      margin: var(--lm-space-3) 0 var(--lm-space-1); border-radius: var(--lm-radius-control);
       transition: opacity 80ms ease, box-shadow 100ms ease;
     }
     .LocalMarkdown-topic-section.LocalMarkdown-dragging { opacity: .35; }
     .LocalMarkdown-topic-header {
       position: relative; min-width: 0; display: flex; align-items: center;
-      border-top: 1px solid var(--lm-border); border-radius: 0; background: transparent; cursor: grab;
+      border: 0; border-radius: var(--lm-radius-control); background: transparent; cursor: grab;
     }
     .LocalMarkdown-topic-header:active { cursor: grabbing; }
     .LocalMarkdown-topic-toggle {
       min-width: 0; min-height: var(--lm-control-height); flex: 1;
-      padding: var(--lm-space-1) var(--lm-space-2); display: flex; align-items: center;
-      gap: var(--lm-space-2); border: 0; border-radius: 0;
+      padding: 2px var(--lm-space-2); display: flex; align-items: center;
+      gap: var(--lm-space-2); border: 0; border-radius: var(--lm-radius-control);
       color: var(--lm-secondary-text); background: transparent; text-align: left;
     }
     .LocalMarkdown-topic-toggle::before {
@@ -332,8 +389,8 @@
     }
     .LocalMarkdown-topic-name {
       min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      color: var(--lm-muted); font-size: var(--lm-type-metadata-size); font-weight: 500;
-      letter-spacing: .04em; text-transform: uppercase;
+      color: var(--lm-muted); font-size: var(--lm-type-metadata-size); font-weight: 600;
+      letter-spacing: 0; text-transform: none;
     }
     .LocalMarkdown-topic-menu-button {
       position: absolute; z-index: 1; top: 50%; right: var(--lm-space-1);
@@ -397,12 +454,22 @@
     .LocalMarkdown-main {
       min-width: 0; min-height: 0; display: grid;
       grid-template-rows: var(--lm-control-height-large) minmax(0, 1fr);
+      background: var(--lm-document-background);
     }
     .LocalMarkdown-toolbar {
-      display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-      align-items: center; gap: var(--lm-space-2);
+      position: relative; z-index: 4;
+      display: flex; align-items: center; justify-content: space-between; gap: var(--lm-space-2);
+      background: var(--lm-toolbar-background); border-bottom: 1px solid transparent;
     }
     .LocalMarkdown-toolbar-left {
+      min-width: 0; flex: 1; display: flex; align-items: center; gap: var(--lm-space-1);
+    }
+    .LocalMarkdown-toolbar-location {
+      min-width: 0; overflow: hidden; color: var(--lm-muted);
+      font-size: var(--lm-type-control-size); font-weight: 500;
+      text-overflow: ellipsis; white-space: nowrap;
+    }
+    .LocalMarkdown-toolbar-actions {
       min-width: 0; display: flex; align-items: center; gap: var(--lm-space-1);
     }
     .LocalMarkdown-sidebar-toggle {
@@ -414,13 +481,15 @@
     .LocalMarkdown-sidebar-toggle svg,
     .LocalMarkdown-sidebar-dismiss svg { width: 16px; height: 16px; }
     .LocalMarkdown-document-meta {
-      min-width: 0; margin-left: var(--lm-space-1); display: flex;
-      align-items: baseline; gap: var(--lm-space-2);
+      min-width: 0; flex: 1; display: flex; align-items: baseline; gap: var(--lm-space-2);
+    }
+    .LocalMarkdown-document-meta::before {
+      content: "/"; flex: 0 0 auto; color: var(--lm-faint); font-size: var(--lm-type-control-size);
     }
     .LocalMarkdown-filename {
       min-width: 0; margin: 0; overflow: hidden;
-      color: var(--lm-text); font-size: var(--lm-type-heading-size);
-      font-weight: 600; line-height: var(--lm-line-tight);
+      color: var(--lm-text); font-size: var(--lm-type-control-size);
+      font-weight: 500; line-height: var(--lm-line-tight); letter-spacing: 0;
       text-overflow: ellipsis; white-space: nowrap;
     }
     .LocalMarkdown-status {
@@ -431,24 +500,46 @@
     .LocalMarkdown-document-status {
       min-width: 0; display: flex; align-items: baseline;
     }
-    .LocalMarkdown-view-switcher {
-      display: inline-flex; justify-self: center; gap: var(--lm-space-1); padding: var(--lm-space-1);
-      border: 1px solid var(--lm-border); border-radius: var(--lm-radius-surface);
-      background: var(--lm-selected);
+    .LocalMarkdown-view-picker { position: relative; }
+    .LocalMarkdown-view-picker > summary {
+      min-width: 88px; height: var(--lm-control-height); padding: 0 var(--lm-space-2);
+      display: flex; align-items: center; justify-content: space-between; gap: var(--lm-space-2);
+      border-radius: var(--lm-radius-control); color: var(--lm-muted);
+      font-size: var(--lm-type-control-size); font-weight: 500; cursor: pointer;
+      list-style: none;
     }
+    .LocalMarkdown-view-picker > summary::-webkit-details-marker { display: none; }
+    .LocalMarkdown-view-picker > summary:hover,
+    .LocalMarkdown-view-picker[open] > summary { color: var(--lm-text); background: var(--lm-subtle); }
+    .LocalMarkdown-view-picker > summary:focus-visible {
+      outline: 2px solid var(--lm-accent); outline-offset: 2px;
+    }
+    .LocalMarkdown-view-picker-chevron {
+      width: 6px; height: 6px; border-right: 1.5px solid currentColor;
+      border-bottom: 1.5px solid currentColor; transform: translateY(-2px) rotate(45deg);
+    }
+    .LocalMarkdown-view-switcher {
+      position: absolute; z-index: 24; top: calc(100% + var(--lm-space-1)); right: 0;
+      width: 154px; padding: var(--lm-space-1); display: flex; flex-direction: column;
+      border: 1px solid var(--lm-border); border-radius: var(--lm-radius-surface);
+      background: var(--lm-background); box-shadow: 0 6px 20px var(--lm-menu-shadow);
+    }
+    .LocalMarkdown-view-picker:not([open]) .LocalMarkdown-view-switcher { display: none; }
     .LocalMarkdown-view {
-      height: var(--lm-control-height-compact); padding: 0 var(--lm-space-2);
+      position: relative; width: 100%; height: var(--lm-control-height); padding: 0 28px 0 var(--lm-space-2);
       border: 0; border-radius: var(--lm-radius-control);
       color: var(--lm-text); background: transparent;
-      font-size: var(--lm-type-control-size); white-space: nowrap;
-      opacity: .72;
+      font-size: var(--lm-type-control-size); text-align: left; white-space: nowrap;
+      opacity: .78;
     }
     .LocalMarkdown-view:hover:not(:disabled) { opacity: .9; }
     .LocalMarkdown-view:disabled { opacity: .48; }
     .LocalMarkdown-view[aria-pressed="true"] {
-      color: var(--lm-text); background: var(--lm-background); font-weight: 500;
-      opacity: 1;
-      box-shadow: 0 1px 2px var(--lm-menu-shadow), inset 0 0 0 1px var(--lm-control-border);
+      color: var(--lm-text); background: var(--lm-subtle); font-weight: 500; opacity: 1;
+      box-shadow: none;
+    }
+    .LocalMarkdown-view[aria-pressed="true"]::after {
+      content: "✓"; position: absolute; right: var(--lm-space-2); color: var(--lm-muted);
     }
     .LocalMarkdown-theme-picker {
       position: relative;
@@ -460,7 +551,7 @@
     }
     .LocalMarkdown-theme-toggle svg { width: 16px; height: 16px; }
     .LocalMarkdown-theme-menu {
-      position: absolute; z-index: 20; top: calc(100% + var(--lm-space-2)); left: 0;
+      position: absolute; z-index: 20; top: calc(100% + var(--lm-space-2)); right: 0;
       width: max-content; min-width: 164px; padding: var(--lm-space-1);
       border: 1px solid var(--lm-control-border); border-radius: var(--lm-radius-surface);
       background: var(--lm-background); box-shadow: 0 5px 18px var(--lm-menu-shadow);
@@ -546,25 +637,21 @@
       background: #9f1f17;
     }
     .LocalMarkdown-editor {
-      position: relative; z-index: 1;
+      position: relative;
       min-width: 0; min-height: 0; overflow: visible;
     }
 
     .LocalMarkdown-editor.vditor {
-      --lm-document-max-width: 900px;
-      --lm-document-padding-block: clamp(
-        var(--lm-space-6), 5%, calc(var(--lm-space-6) + var(--lm-space-6))
-      );
-      --lm-document-padding-inline: clamp(
-        var(--lm-space-6), 6%, calc(var(--lm-space-8) + var(--lm-space-8))
-      );
+      --lm-document-max-width: 760px;
+      --lm-document-padding-block: 20px;
+      --lm-document-padding-inline: 0;
       --toolbar-height: var(--lm-control-height);
       --toolbar-divider-margin-top: var(--lm-space-2);
       --border-color: var(--lm-border);
       --second-color: var(--lm-selection);
       --panel-background-color: var(--lm-background);
       --panel-shadow: 0 1px 5px var(--lm-menu-shadow);
-      --toolbar-background-color: var(--lm-surface);
+      --toolbar-background-color: var(--lm-document-background);
       --toolbar-icon-color: var(--lm-muted);
       --toolbar-icon-hover-color: var(--lm-accent);
       --textarea-background-color: var(--lm-document-background);
@@ -588,8 +675,10 @@
       position: fixed; inset: 0; width: 100vw; height: 100vh !important;
     }
     .LocalMarkdown-editor .vditor-toolbar {
-      flex-shrink: 0; padding: 0 var(--lm-space-2);
-      border: 0; border-bottom: 1px solid var(--lm-border); background: var(--lm-surface);
+      flex-shrink: 0;
+      padding: 0 max(var(--lm-space-2), calc((100% - var(--lm-document-max-width)) / 2));
+      border: 0; border-top: 1px solid var(--lm-border); border-bottom: 1px solid var(--lm-border);
+      background: var(--lm-document-background);
     }
     .LocalMarkdown-editor .vditor-toolbar__item .vditor-tooltipped {
       width: var(--lm-control-height-compact); height: var(--lm-control-height);
@@ -608,6 +697,29 @@
     svg.LocalMarkdown-toolbar-icon * {
       stroke: var(--toolbar-icon-hover-color, var(--lm-accent)) !important;
     }
+    .vditor-tooltipped::after {
+      color: #fff !important;
+      background: #202124 !important;
+      opacity: 1 !important;
+      filter: none !important;
+      mix-blend-mode: normal !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, .24);
+    }
+    .vditor-tooltipped::before {
+      color: #202124 !important; opacity: 1 !important;
+    }
+    :is(
+      .vditor-tooltipped__n, .vditor-tooltipped__ne, .vditor-tooltipped__nw
+    )::before { border-top-color: #202124 !important; }
+    :is(
+      .vditor-tooltipped__s, .vditor-tooltipped__se, .vditor-tooltipped__sw
+    )::before { border-bottom-color: #202124 !important; }
+    .vditor-tooltipped__e::before {
+      border-right-color: #202124 !important;
+    }
+    .vditor-tooltipped__w::before {
+      border-left-color: #202124 !important;
+    }
     .LocalMarkdown-editor .vditor-toolbar__divider {
       margin-right: var(--lm-space-1); margin-left: var(--lm-space-1);
     }
@@ -622,7 +734,7 @@
     .LocalMarkdown-editor .vditor-resize { display: none !important; }
     .LocalMarkdown-editor .vditor-content {
       flex: 1; min-height: 0; height: auto !important;
-      padding: 0 var(--lm-space-4); gap: var(--lm-space-3);
+      padding: 0 64px; gap: var(--lm-space-6);
       background: var(--lm-app-background);
     }
     .LocalMarkdown-editor .vditor-ir,
@@ -632,35 +744,41 @@
     .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg) > .vditor-reset {
       width: min(100%, var(--lm-document-max-width)); height: 100%; margin: 0 auto;
       padding: var(--lm-document-padding-block) var(--lm-document-padding-inline) !important;
-      border: 1px solid var(--lm-document-border); border-radius: var(--lm-radius-control);
+      padding-bottom: 96px !important;
+      border: 0; border-radius: 0;
       background: var(--lm-document-background);
-      box-shadow: 0 1px 3px var(--lm-document-shadow);
+      box-shadow: none;
     }
     .LocalMarkdown-editor .vditor-sv {
-      padding: var(--lm-space-8) !important;
-      border: 1px solid var(--lm-document-border); border-radius: var(--lm-radius-control);
+      padding: var(--lm-space-6) 0 96px !important;
+      border: 0; border-radius: 0;
       background: var(--lm-document-background);
-      box-shadow: 0 1px 3px var(--lm-document-shadow);
+      box-shadow: none;
     }
-    .LocalMarkdown-editor .vditor-preview { background: transparent; }
+    .LocalMarkdown-editor .vditor-preview {
+      border-left: 0 !important; background: transparent;
+    }
     .LocalMarkdown-editor .vditor-preview[style*="display: block"] {
       display: grid !important; grid-template-rows: auto minmax(0, 1fr); overflow: hidden;
     }
     .LocalMarkdown-editor .vditor-preview > .vditor-reset {
       min-height: 0; height: auto;
-      padding: var(--lm-space-8) !important;
-      border: 1px solid var(--lm-document-border); border-radius: var(--lm-radius-control);
+      padding: var(--lm-space-6) 0 96px !important;
+      border: 0; border-radius: 0;
       background: var(--lm-document-background);
-      box-shadow: 0 1px 3px var(--lm-document-shadow);
+      box-shadow: none;
     }
     .LocalMarkdown-editor .vditor-reset {
       color: var(--lm-text); font-family: inherit;
-      font-size: var(--lm-type-body-size); line-height: var(--lm-line-body);
+      font-size: 16px; line-height: var(--lm-line-body);
     }
     .LocalMarkdown-editor .vditor-reset :is(h1, h2, h3, h4, h5, h6) {
       color: var(--lm-text); border-bottom-color: var(--lm-border);
-      font-weight: 700; line-height: var(--lm-line-tight);
+      font-weight: 650; line-height: 1.25; letter-spacing: -.018em;
     }
+    .LocalMarkdown-editor .vditor-reset h1 { font-size: 1.875em; margin-top: 1.35em; }
+    .LocalMarkdown-editor .vditor-reset h2 { font-size: 1.5em; margin-top: 1.25em; }
+    .LocalMarkdown-editor .vditor-reset h3 { font-size: 1.25em; margin-top: 1.15em; }
     .LocalMarkdown-editor .vditor-reset :is(h1, h2) { border-bottom: 0; }
     .LocalMarkdown-editor .vditor-reset pre { background-color: var(--lm-surface); }
     .LocalMarkdown-editor .vditor-reset code:not(.hljs):not(.highlight-chroma) {
@@ -813,14 +931,7 @@
     .LocalMarkdown-drawing-loading[hidden] { display: none; }
 
     @media (max-width: 900px) {
-      .LocalMarkdown-toolbar { grid-template-columns: auto minmax(0, 1fr) auto; }
-      .LocalMarkdown-document-meta {
-        align-self: center; display: grid; grid-template-columns: minmax(0, 1fr); gap: 0;
-      }
-      .LocalMarkdown-status {
-        display: block; font-size: var(--lm-type-metadata-size); line-height: 1.1;
-      }
-      .LocalMarkdown-view-switcher { justify-self: center; }
+      .LocalMarkdown-editor .vditor-content { padding-inline: 48px; }
     }
 
     @media (max-width: 650px) {
@@ -831,8 +942,8 @@
         transition: none;
       }
       .LocalMarkdown-sidebar {
-        position: fixed; z-index: 3; inset: 0 auto 0 0;
-        width: min(280px, 85vw); background: var(--lm-background);
+        position: fixed; z-index: 6; inset: 0 auto 0 0;
+        width: min(280px, 85vw); background: var(--lm-sidebar-background);
         box-shadow: 12px 0 28px var(--lm-sidebar-shadow);
         transform: translateX(0);
         transition: transform 160ms ease, visibility 0s;
@@ -843,7 +954,7 @@
         transition: transform 160ms ease, visibility 0s 160ms;
       }
       .LocalMarkdown-sidebar-backdrop {
-        position: fixed; z-index: 2; inset: 0; display: block;
+        position: fixed; z-index: 5; inset: 0; display: block;
         background: var(--lm-overlay); opacity: 1;
         transition: opacity 160ms ease;
       }
@@ -853,10 +964,12 @@
       .LocalMarkdown-sidebar-header { padding: 0 var(--lm-space-2); }
       .LocalMarkdown-sidebar-dismiss { display: inline-grid; place-items: center; }
       .LocalMarkdown-toolbar { padding: 0 var(--lm-space-2); gap: var(--lm-space-1); }
-      .LocalMarkdown-view { padding: 0 var(--lm-space-1); }
+      .LocalMarkdown-toolbar-location { display: none; }
+      .LocalMarkdown-document-meta::before { display: none; }
+      .LocalMarkdown-status { display: none; }
       .LocalMarkdown-editor .vditor-toolbar { padding: 0 var(--lm-space-1); }
       .LocalMarkdown-editor .vditor-content {
-        padding: 0 var(--lm-space-2); gap: var(--lm-space-2);
+        padding: 0 var(--lm-space-6); gap: var(--lm-space-6);
       }
       .LocalMarkdown-editor.vditor {
         --lm-document-padding-block: var(--lm-space-6);
@@ -870,7 +983,7 @@
 
     @media (max-width: 360px) {
       .LocalMarkdown-toolbar { padding: 0 var(--lm-space-1); gap: var(--lm-space-1); }
-      .LocalMarkdown-view { padding: 0 var(--lm-space-1); }
+      .LocalMarkdown-editor .vditor-content { padding-inline: var(--lm-space-4); }
       .LocalMarkdown-theme-toggle { width: var(--lm-control-height-compact); }
     }
 
@@ -935,6 +1048,26 @@
               <path d="M7 3.5v13" fill="none" stroke="currentColor" stroke-width="1.5"></path>
             </svg>
           </button>
+          <span class="LocalMarkdown-toolbar-location">Local Markdown</span>
+          <div class="LocalMarkdown-document-meta">
+            <h1 class="LocalMarkdown-filename" id="LocalMarkdown-filename">Local Markdown</h1>
+            <div class="LocalMarkdown-document-status">
+              <span class="LocalMarkdown-status" id="LocalMarkdown-status" role="status">Loading…</span>
+            </div>
+          </div>
+        </div>
+        <div class="LocalMarkdown-toolbar-actions">
+          <details class="LocalMarkdown-view-picker" id="LocalMarkdown-view-picker">
+            <summary id="LocalMarkdown-view-toggle" aria-label="Editor view: Markdown">
+              <span id="LocalMarkdown-view-label">Markdown</span>
+              <span class="LocalMarkdown-view-picker-chevron" aria-hidden="true"></span>
+            </summary>
+            <div class="LocalMarkdown-view-switcher" role="group" aria-label="Editor view">
+              <button class="LocalMarkdown-view" type="button" data-mode="wysiwyg" aria-pressed="false" title="Edit the rendered document" disabled>Visual</button>
+              <button class="LocalMarkdown-view" type="button" data-mode="ir" aria-pressed="true" title="Edit Markdown with inline formatting" disabled>Markdown</button>
+              <button class="LocalMarkdown-view" type="button" data-mode="sv" aria-pressed="false" title="Edit source beside a live preview" disabled>Split</button>
+            </div>
+          </details>
           <div class="LocalMarkdown-theme-picker">
             <button class="LocalMarkdown-theme-toggle" id="LocalMarkdown-theme-toggle" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="LocalMarkdown-theme-menu">
               <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
@@ -954,17 +1087,6 @@
               </button>
             </div>
           </div>
-          <div class="LocalMarkdown-document-meta">
-            <h1 class="LocalMarkdown-filename" id="LocalMarkdown-filename">Local Markdown</h1>
-            <div class="LocalMarkdown-document-status">
-              <span class="LocalMarkdown-status" id="LocalMarkdown-status" role="status">Loading…</span>
-            </div>
-          </div>
-        </div>
-        <div class="LocalMarkdown-view-switcher" role="group" aria-label="Editor view">
-          <button class="LocalMarkdown-view" type="button" data-mode="wysiwyg" aria-pressed="false" title="Edit the rendered document" disabled>Visual</button>
-          <button class="LocalMarkdown-view" type="button" data-mode="ir" aria-pressed="true" title="Edit Markdown with inline formatting" disabled>Markdown</button>
-          <button class="LocalMarkdown-view" type="button" data-mode="sv" aria-pressed="false" title="Edit source beside a live preview" disabled>Split</button>
         </div>
       </header>
       <div class="LocalMarkdown-editor" id="LocalMarkdown-editor"></div>
@@ -1102,6 +1224,9 @@
       const imagePreviewContent = document.querySelector("#LocalMarkdown-image-preview-content");
       const imagePreviewClose = document.querySelector("#LocalMarkdown-image-preview-close");
       const viewButtons = document.querySelectorAll(".LocalMarkdown-view");
+      const viewPicker = document.querySelector("#LocalMarkdown-view-picker");
+      const viewToggle = document.querySelector("#LocalMarkdown-view-toggle");
+      const viewLabel = document.querySelector("#LocalMarkdown-view-label");
       const themeToggle = document.querySelector("#LocalMarkdown-theme-toggle");
       const themeMenu = document.querySelector("#LocalMarkdown-theme-menu");
       const themeOptions = Array.from(document.querySelectorAll(".LocalMarkdown-theme-option"));
@@ -1210,6 +1335,7 @@
         "solarized-light": "Solarized Light",
         "solarized-dark": "Solarized Dark"
       };
+      const viewNames = { wysiwyg: "Visual", ir: "Markdown", sv: "Split" };
       const markdownPickerId = "LocalMarkdownFile";
       const markdownFilePattern = /\.(?:md|markdown)$/i;
       const markdownPickerTypes = [{
@@ -2524,6 +2650,9 @@
         for (const button of viewButtons) {
           button.setAttribute("aria-pressed", String(button.dataset.mode === mode));
         }
+        const label = viewNames[mode] || viewNames.ir;
+        viewLabel.textContent = label;
+        viewToggle.setAttribute("aria-label", `Editor view: ${label}`);
       }
 
       function rememberIrScrollPosition() {
@@ -4979,6 +5108,7 @@
         closeFileContextMenu();
         closeSectionContextMenu();
         setThemeMenuOpen(false);
+        viewPicker.open = false;
         setNewMenuOpen(newToggle.getAttribute("aria-expanded") !== "true", { focus: true });
       });
       newFileButton.addEventListener("click", () => {
@@ -5013,6 +5143,7 @@
         closeFileContextMenu();
         closeSectionContextMenu();
         setNewMenuOpen(false);
+        viewPicker.open = false;
         setThemeMenuOpen(themeToggle.getAttribute("aria-expanded") !== "true", { focus: true });
       });
       for (const option of themeOptions) {
@@ -5149,6 +5280,10 @@
         setThemeMenuOpen(false);
       });
       document.addEventListener("pointerdown", event => {
+        if (!viewPicker.open || viewPicker.contains(event.target)) return;
+        viewPicker.open = false;
+      });
+      document.addEventListener("pointerdown", event => {
         if (fileContextMenu.hidden || fileContextMenu.contains(event.target)) return;
         closeFileContextMenu();
       });
@@ -5273,10 +5408,38 @@
         closeSectionContextMenu();
         setNewMenuOpen(false);
         setThemeMenuOpen(false);
+        viewPicker.open = false;
         void openLocalFile();
       });
+      viewPicker.addEventListener("toggle", () => {
+        if (!viewPicker.open) return;
+        closeFileContextMenu();
+        closeSectionContextMenu();
+        setNewMenuOpen(false);
+        setThemeMenuOpen(false);
+      });
+      viewPicker.addEventListener("keydown", event => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          viewPicker.open = false;
+          viewToggle.focus();
+          return;
+        }
+        if (!viewPicker.open || !["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+        event.preventDefault();
+        const buttons = Array.from(viewButtons).filter(button => !button.disabled);
+        const currentIndex = Math.max(0, buttons.indexOf(document.activeElement));
+        const nextIndex = event.key === "Home" ? 0
+          : event.key === "End" ? buttons.length - 1
+          : (currentIndex + (event.key === "ArrowDown" ? 1 : -1) + buttons.length)
+            % buttons.length;
+        buttons[nextIndex]?.focus();
+      });
       for (const button of viewButtons) {
-        button.addEventListener("click", () => switchEditorMode(button.dataset.mode));
+        button.addEventListener("click", () => {
+          viewPicker.open = false;
+          switchEditorMode(button.dataset.mode);
+        });
       }
       for (const tools of tableEdgeTools) {
         tools.addEventListener("pointerdown", event => event.preventDefault());
