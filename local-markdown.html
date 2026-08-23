@@ -414,7 +414,10 @@
     }
     .LocalMarkdown-topic-files { padding-left: 0; }
     .LocalMarkdown-loose-files { margin-bottom: var(--lm-space-1); }
-    .LocalMarkdown-drop-target { box-shadow: inset 0 0 0 1px var(--lm-accent); }
+    .LocalMarkdown-drop-target { background: var(--lm-selected); }
+    .LocalMarkdown-files.LocalMarkdown-drop-target {
+      background: color-mix(in srgb, var(--lm-selected) 45%, transparent);
+    }
     .LocalMarkdown-search-summary,
     .LocalMarkdown-search-empty {
       padding: var(--lm-space-1) var(--lm-space-2) var(--lm-space-2);
@@ -2526,6 +2529,7 @@
       }
 
       function clearSidebarDropTargets() {
+        filesElement.classList.remove("LocalMarkdown-drop-target");
         for (const element of filesElement.querySelectorAll(".LocalMarkdown-drop-target")) {
           element.classList.remove("LocalMarkdown-drop-target");
         }
