@@ -1189,12 +1189,14 @@
     </form>
   </dialog>
   <div class="LocalMarkdown-table-edge-tools" id="LocalMarkdown-table-row-tools" data-axis="row" role="toolbar" aria-label="Row edge actions" aria-controls="LocalMarkdown-editor" hidden>
-    <button class="LocalMarkdown-table-edge-tool" type="button" data-table-action="row-below" aria-label="Add row below" title="Add row below">+</button>
+    <button class="LocalMarkdown-table-edge-tool" type="button" data-table-action="row-above" aria-label="Add row above" title="Add row above">+</button>
     <button class="LocalMarkdown-table-edge-tool" type="button" data-table-action="delete-row" data-destructive="true" aria-label="Delete row" title="Delete row">−</button>
+    <button class="LocalMarkdown-table-edge-tool" type="button" data-table-action="row-below" aria-label="Add row below" title="Add row below">+</button>
   </div>
   <div class="LocalMarkdown-table-edge-tools" id="LocalMarkdown-table-column-tools" data-axis="column" role="toolbar" aria-label="Column edge actions" aria-controls="LocalMarkdown-editor" hidden>
-    <button class="LocalMarkdown-table-edge-tool" type="button" data-table-action="column-right" aria-label="Add column to the right" title="Add column to the right">+</button>
+    <button class="LocalMarkdown-table-edge-tool" type="button" data-table-action="column-left" aria-label="Add column before" title="Add column before">+</button>
     <button class="LocalMarkdown-table-edge-tool" type="button" data-table-action="delete-column" data-destructive="true" aria-label="Delete column" title="Delete column">−</button>
+    <button class="LocalMarkdown-table-edge-tool" type="button" data-table-action="column-right" aria-label="Add column after" title="Add column after">+</button>
   </div>
   <button class="LocalMarkdown-table-resize-handle" id="LocalMarkdown-table-resize-handle" type="button" tabindex="-1" role="separator" aria-orientation="vertical" aria-label="Resize table columns" hidden></button>
   <div class="LocalMarkdown-image-resizer" id="LocalMarkdown-image-resizer" hidden>
@@ -1304,7 +1306,7 @@
       let tableHoverCell = null;
       let tableResizeCell = null;
       let tableResizeSession = null;
-      let tableWidthRefreshTimer = null;
+      let tableWidthRefreshFrame = null;
       let selectedImage = null;
       let imageResizeSession = null;
       let imagePreviewTimer = null;
@@ -1360,6 +1362,7 @@
       const pastedImageMaxDimension = 2000;
       const minimumImageWidth = 48;
       const minimumTableColumnWidth = 48;
+      const defaultTableColumnWidth = 80;
       const tableWidthsCommentName = "local-markdown:table-widths";
       const pastedImageWebpQuality = 0.9;
       const pastedLinkTitleTimeout = 1500;
@@ -3284,6 +3287,44 @@
         return Math.round(value * 100) / 100;
       }
 
+      function resizedTableColumnLayout(
+        columnPixels, columnIndex, deltaPixels, tablePixels, widthBasisPixels
+      ) {
+        const initialColumnPixels = columnPixels[columnIndex];
+        if (!initialColumnPixels || !tablePixels || !widthBasisPixels) return null;
+        const nextColumnPixels = Math.max(
+          minimumTableColumnWidth, initialColumnPixels + deltaPixels);
+        const appliedDelta = nextColumnPixels - initialColumnPixels;
+        const nextTablePixels = tablePixels + appliedDelta;
+        const nextWidths = columnPixels.map((width, index) =>
+          index === columnIndex ? nextColumnPixels : width);
+        const widths = normalizedTableWidths(nextWidths, nextWidths.length);
+        const tableWidth = normalizedTableWidth(
+          nextTablePixels / widthBasisPixels * 100);
+        return widths && tableWidth ? { widths, tableWidth, appliedDelta } : null;
+      }
+
+      function tableLayoutAfterColumnAction(
+        widths, tableWidth, action, columnIndex, defaultColumnWidth
+      ) {
+        const physicalWidths = widths.map(width => width * tableWidth / 100);
+        if (["column-left", "column-right"].includes(action)) {
+          if (!Number.isFinite(defaultColumnWidth) || defaultColumnWidth <= 0) return null;
+          const insertionIndex = action === "column-left" ? columnIndex : columnIndex + 1;
+          physicalWidths.splice(insertionIndex, 0, defaultColumnWidth);
+        } else if (action === "delete-column") {
+          physicalWidths.splice(columnIndex, 1);
+        } else {
+          return null;
+        }
+        const nextTableWidth = normalizedTableWidth(
+          physicalWidths.reduce((sum, width) => sum + width, 0));
+        const nextWidths = normalizedTableWidths(physicalWidths, physicalWidths.length);
+        return nextWidths && nextTableWidth
+          ? { widths: nextWidths, tableWidth: nextTableWidth }
+          : null;
+      }
+
       function parseTableWidthsComment(line, columnCount) {
         const match = line.match(/^([ \t]*)<!--\s*local-markdown:table-widths\s*=\s*([\d.]+(?:\s*,\s*[\d.]+)*)(?:\s*;\s*table-width\s*=\s*([\d.]+))?\s*-->[ \t]*$/i);
         if (!match) return null;
@@ -3433,11 +3474,11 @@
       }
 
       function scheduleTableWidths() {
-        clearTimeout(tableWidthRefreshTimer);
-        tableWidthRefreshTimer = setTimeout(() => {
-          tableWidthRefreshTimer = null;
+        cancelAnimationFrame(tableWidthRefreshFrame);
+        tableWidthRefreshFrame = requestAnimationFrame(() => {
+          tableWidthRefreshFrame = null;
           refreshTableWidths();
-        }, 0);
+        });
       }
 
       function tableCellFromNode(node) {
@@ -3481,11 +3522,9 @@
 
         tableResizeCell = cell;
         tableResizeHandle.hidden = false;
-        const tableEdge = columnIndex === columnCount - 1;
-        tableResizeHandle.dataset.edge = tableEdge ? "table" : "column";
-        tableResizeHandle.setAttribute("aria-label",
-          tableEdge ? "Resize table width" : "Resize table columns");
-        tableResizeHandle.title = tableEdge ? "Resize table width" : "Resize columns";
+        tableResizeHandle.dataset.edge = "column";
+        tableResizeHandle.setAttribute("aria-label", "Resize column");
+        tableResizeHandle.title = "Resize column";
         tableResizeHandle.style.left = `${Math.round(cellRect.right)}px`;
         tableResizeHandle.style.top = `${Math.round(top)}px`;
         tableResizeHandle.style.height = `${Math.round(bottom - top)}px`;
@@ -3627,31 +3666,27 @@
         const layoutWidths = tableColumnWidthsFromLayout(table);
         const widths = context?.block.widths || layoutWidths;
         const firstRow = table.rows[0];
-        const leftCell = firstRow?.cells[columnIndex];
-        const rightCell = firstRow?.cells[columnIndex + 1];
-        const tableEdge = columnIndex === tableColumnCount(table) - 1;
-        if (!context || !widths || (!tableEdge && (!leftCell || !rightCell))) return;
+        const resizedCell = firstRow?.cells[columnIndex];
+        if (!context || !widths || !resizedCell) return;
 
         event.preventDefault();
         hideTableEdgeTools();
         applyTableWidths(table, widths, context.block.tableWidth);
         const tablePixels = table.getBoundingClientRect().width;
-        const leftPixels = leftCell?.getBoundingClientRect().width || 0;
-        const rightPixels = rightCell?.getBoundingClientRect().width || 0;
+        const columnPixels = Array.from(firstRow.cells,
+          cell => cell.getBoundingClientRect().width);
         const handleLeft = Number.parseFloat(tableResizeHandle.style.left);
         tableResizeSession = {
           table,
           tableIndex: context.tableIndex,
           columnIndex,
-          tableEdge,
           initialWidths: [...widths],
           widths: [...widths],
           initialTableWidth: context.block.tableWidth,
           tableWidth: context.block.tableWidth,
           hadStoredWidths: Boolean(context.block.widths),
           startX: event.clientX,
-          pairPixels: leftPixels + rightPixels,
-          pairPercentage: tableEdge ? 0 : widths[columnIndex] + widths[columnIndex + 1],
+          columnPixels,
           tablePixels,
           widthBasisPixels: tablePixels / (context.block.tableWidth / 100),
           handleLeft: Number.isFinite(handleLeft) ? handleLeft : event.clientX,
@@ -3667,39 +3702,21 @@
       function renderTableResize(resize, clientX) {
         const deltaPixels = clientX - resize.startX;
         resize.renderedX = clientX;
-        if (resize.tableEdge) {
-          const minimumPixels = Math.min(resize.widthBasisPixels,
-            minimumTableColumnWidth * resize.widths.length);
-          const nextPixels = Math.max(minimumPixels, resize.tablePixels + deltaPixels);
-          resize.tableWidth = normalizedTableWidth(
-            nextPixels / resize.widthBasisPixels * 100) || resize.initialTableWidth;
-          const appliedDelta = nextPixels - resize.tablePixels;
-          resize.changed = Math.abs(appliedDelta) >= 1;
-          resize.table.style.setProperty("--lm-table-width", `${resize.tableWidth}%`);
-          tableResizeHandle.style.left = `${Math.round(resize.handleLeft + appliedDelta)}px`;
-          return;
-        }
-        if (!resize.pairPixels) return;
-        const minimumPercentage = Math.min(
-          minimumTableColumnWidth / resize.tablePixels * 100,
-          Math.max(.5, resize.pairPercentage / 2 - .5)
-        );
-        const initialLeft = resize.initialWidths[resize.columnIndex];
-        const nextLeft = Math.max(minimumPercentage, Math.min(
-          resize.pairPercentage - minimumPercentage,
-          initialLeft + deltaPixels / resize.pairPixels * resize.pairPercentage
-        ));
-        resize.widths[resize.columnIndex] = nextLeft;
-        resize.widths[resize.columnIndex + 1] = resize.pairPercentage - nextLeft;
+        const layout = resizedTableColumnLayout(
+          resize.columnPixels, resize.columnIndex, deltaPixels,
+          resize.tablePixels, resize.widthBasisPixels);
+        if (!layout) return;
+        resize.widths = layout.widths;
+        resize.tableWidth = layout.tableWidth;
+        resize.table.style.setProperty("--lm-table-width", `${layout.tableWidth}%`);
         const firstRow = resize.table.rows[0];
-        for (const columnIndex of [resize.columnIndex, resize.columnIndex + 1]) {
+        for (let columnIndex = 0; columnIndex < layout.widths.length; columnIndex += 1) {
           firstRow.cells[columnIndex].style.setProperty(
-            "--lm-table-column-width", `${resize.widths[columnIndex]}%`);
+            "--lm-table-column-width", `${layout.widths[columnIndex]}%`);
         }
-        const appliedDelta = (nextLeft - initialLeft)
-          / resize.pairPercentage * resize.pairPixels;
-        resize.changed = Math.abs(appliedDelta) >= 1;
-        tableResizeHandle.style.left = `${Math.round(resize.handleLeft + appliedDelta)}px`;
+        resize.changed = Math.abs(layout.appliedDelta) >= 1;
+        tableResizeHandle.style.left = `${Math.round(
+          resize.handleLeft + layout.appliedDelta)}px`;
       }
 
       function continueTableResize(event) {
@@ -3725,9 +3742,8 @@
         if (!widths || !tableWidth) return false;
         const updated = replaceTableWidthsMetadata(
           value, table, widths, tableWidth);
-        const message = resize.tableEdge ? "Table width updated" : "Column widths updated";
         const committed = applyTableWidthTextUpdate(
-          file, value, updated, message, { rerender: false });
+          file, value, updated, "Column width updated", { rerender: false });
         if (committed && resize.table.isConnected) {
           applyTableWidths(resize.table, widths, tableWidth);
         }
@@ -3775,54 +3791,70 @@
         return surface;
       }
 
-      function tableWidthColumnActionContext(action) {
-        if (!tableHoverCell || !["column-right", "delete-column"].includes(action)) return null;
+      function tableActionWidthContext(action) {
+        if (!tableHoverCell || ![
+          "row-above", "row-below", "delete-row",
+          "column-left", "column-right", "delete-column"
+        ].includes(action)) return null;
         const file = activeFile();
         const table = tableHoverCell.closest("table");
         if (!file || !table) return null;
         const value = canonicalEditorText(editor.getValue(), file);
         const context = markdownTableContext(table, value);
-        if (!context?.block.widths) return null;
+        const widths = context?.block.widths || tableColumnWidthsFromLayout(table);
+        if (!context || !widths) return null;
+        const tablePixels = table.getBoundingClientRect().width;
+        const widthBasisPixels = tablePixels / (context.block.tableWidth / 100);
         return {
           action,
           file,
           tableIndex: context.tableIndex,
           columnIndex: tableHoverCell.cellIndex,
-          widths: [...context.block.widths],
-          tableWidth: context.block.tableWidth
+          widths: [...widths],
+          tableWidth: context.block.tableWidth,
+          defaultColumnWidth: defaultTableColumnWidth / widthBasisPixels * 100
         };
       }
 
-      function synchronizeTableWidthsAfterColumnAction(context, message) {
+      function synchronizeTableWidthsAfterAction(context, message) {
         if (activeFile() !== context.file || !editorReady) return;
         const value = canonicalEditorText(editor.getValue(), context.file);
         const table = markdownTableBlocks(value)[context.tableIndex];
         if (!table) return;
-        const widths = [...context.widths];
-        if (context.action === "column-right" && table.columnCount === widths.length + 1) {
-          const width = widths[context.columnIndex] / 2;
-          widths[context.columnIndex] = width;
-          widths.splice(context.columnIndex + 1, 0, width);
-        } else if (context.action === "delete-column" && table.columnCount === widths.length - 1) {
-          widths.splice(context.columnIndex, 1);
-        } else {
+        let widths = context.widths;
+        let tableWidth = context.tableWidth;
+        const columnAdded = ["column-left", "column-right"].includes(context.action)
+          && table.columnCount === widths.length + 1;
+        const columnDeleted = context.action === "delete-column"
+          && table.columnCount === widths.length - 1;
+        if (columnAdded || columnDeleted) {
+          const layout = tableLayoutAfterColumnAction(
+            widths, tableWidth, context.action, context.columnIndex,
+            context.defaultColumnWidth);
+          if (!layout) return;
+          widths = layout.widths;
+          tableWidth = layout.tableWidth;
+        } else if (!["row-above", "row-below", "delete-row"].includes(context.action)
+          || table.columnCount !== widths.length) {
           scheduleTableWidths();
           return;
         }
-        const updated = replaceTableWidthsMetadata(value, table, widths, context.tableWidth);
+        const updated = replaceTableWidthsMetadata(value, table, widths, tableWidth);
         applyTableWidthTextUpdate(
           context.file, value, updated, message, { mergeHistory: true });
       }
 
       function runTableAction(action) {
         const shortcuts = {
+          "row-above": { key: "f", code: "KeyF", shiftKey: true, status: "Row added above" },
           "row-below": { key: "=", code: "Equal", shiftKey: false, status: "Row added below" },
-          "column-right": { key: "=", code: "Equal", shiftKey: true, status: "Column added to the right" },
+          "column-left": { key: "g", code: "KeyG", shiftKey: true, status: "Column added before" },
+          "column-right": { key: "=", code: "Equal", shiftKey: true, status: "Column added after" },
           "delete-row": { key: "-", code: "Minus", shiftKey: false, status: "Row deleted" },
           "delete-column": { key: "-", code: "Minus", shiftKey: true, status: "Column deleted" }
         };
         const shortcut = shortcuts[action];
-        const widthContext = tableWidthColumnActionContext(action);
+        const widthContext = tableActionWidthContext(action);
         const surface = shortcut && selectHoveredTableCell();
         if (!surface) {
           hideTableEdgeTools();
@@ -3831,7 +3863,9 @@
 
         const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.platform);
         // Vditor matches shifted punctuation differently on macOS and other platforms.
-        const shiftedKey = shortcut.key === "=" ? "+" : "_";
+        const shiftedKey = shortcut.key === "=" ? "+"
+          : shortcut.key === "-" ? "_"
+          : shortcut.key.toUpperCase();
         const keyVariants = shortcut.shiftKey
           ? [shiftedKey, shortcut.key]
           : [shortcut.key];
@@ -3851,7 +3885,7 @@
         if (handled) {
           updateStatus(shortcut.status);
           if (widthContext) {
-            setTimeout(() => synchronizeTableWidthsAfterColumnAction(
+            setTimeout(() => synchronizeTableWidthsAfterAction(
               widthContext, shortcut.status), 0);
           } else {
             scheduleTableWidths();
@@ -6062,7 +6096,6 @@
         hideTableEdgeTools();
         hideTableResizeHandle();
         hideImageResizer();
-        scheduleTableWidths();
       });
       editorElement.addEventListener("keydown", handleEditorViewShortcut, true);
       editorElement.addEventListener("keydown", handleEditorKeydown, true);
@@ -6327,6 +6360,7 @@
             && consumeEditorHistorySynchronization(file);
           if (canonical === file.text) return;
           const before = documentSnapshot(file, { captureSelection: false });
+          const wasDirty = file.dirty;
           file.text = canonical;
           if (!file.builtin) {
             file.dirty = true;
@@ -6337,10 +6371,9 @@
             if (pendingEditorHistoryInput?.fileId === file.id) pendingEditorHistoryInput = null;
           } else if (synchronizeHistory) synchronizeDocumentHistoryPresent(file, canonical);
           else recordDocumentMutation(file, before, editorHistoryDetails(file));
-          renderFiles();
+          if (!wasDirty && file.dirty) renderFiles();
           updateStatus();
           scheduleAttachmentPreviews();
-          scheduleTableWidths();
         },
         after() {
           editorReady = true;
@@ -6360,7 +6393,7 @@
       addEventListener("unload", () => {
         attachmentPreviewObserver?.disconnect();
         cancelAnimationFrame(irScrollRestoreFrame);
-        clearTimeout(tableWidthRefreshTimer);
+        cancelAnimationFrame(tableWidthRefreshFrame);
         releaseAttachmentPreviews();
         imageWorker?.terminate();
         if (imageWorkerUrl) URL.revokeObjectURL(imageWorkerUrl);
