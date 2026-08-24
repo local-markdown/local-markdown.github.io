@@ -10,10 +10,6 @@
       if (["white", "solarized-light", "solarized-dark"].includes(theme)) {
         document.documentElement.dataset.theme = theme;
       }
-      const interfaceScale = localStorage.getItem("LocalMarkdown:interface-scale:v1");
-      if (["80", "90", "100"].includes(interfaceScale)) {
-        document.documentElement.dataset.interfaceScale = interfaceScale;
-      }
     } catch {}
   </script>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3.5' y='6.5' width='25' height='19' rx='3.5' fill='white' stroke='%23111' stroke-width='2'/%3E%3Cpath d='M7.5 21V11.5l4.7 4.7 4.4-4.7V21m6-9.5V21m-3-3 3 3 3-3' fill='none' stroke='%23111' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
@@ -34,13 +30,9 @@
   </script>
   <style>
     * { box-sizing: border-box; }
-    html { height: 100%; overflow: hidden; }
-    body {
-      width: 100%; height: 100%; margin: 0; zoom: var(--lm-interface-scale);
-    }
+    html, body { height: 100%; margin: 0; }
     :root {
       color-scheme: light;
-      --lm-interface-scale: 1;
       --lm-space-1: 4px;
       --lm-space-2: 8px;
       --lm-space-3: 12px;
@@ -83,8 +75,6 @@
       --lm-scrollbar: rgba(55, 53, 47, .2);
       --lm-scrollbar-hover: rgba(55, 53, 47, .38);
     }
-    :root[data-interface-scale="80"] { --lm-interface-scale: .8; }
-    :root[data-interface-scale="90"] { --lm-interface-scale: .9; }
     :root[data-theme="solarized-light"] {
       color-scheme: light;
       --lm-background: #fdf6e3;
@@ -166,8 +156,7 @@
     .LocalMarkdown-sidebar {
       min-width: 0; min-height: 0; overflow: hidden; border-right: 1px solid var(--lm-border);
       background: var(--lm-sidebar-background);
-      display: grid;
-      grid-template-rows: var(--lm-control-height-large) 42px minmax(0, 1fr) auto;
+      display: grid; grid-template-rows: var(--lm-control-height-large) 42px minmax(0, 1fr);
       opacity: 1; visibility: visible;
       transition: opacity 100ms ease, visibility 0s;
     }
@@ -259,9 +248,6 @@
     }
     :is(
       .LocalMarkdown-files,
-      .LocalMarkdown-editor .vditor-reset,
-      .LocalMarkdown-editor .vditor-sv,
-      .LocalMarkdown-editor .vditor-preview,
       .LocalMarkdown-editor .vditor-outline__content
     ) {
       scrollbar-width: thin;
@@ -269,23 +255,14 @@
     }
     :is(
       .LocalMarkdown-files,
-      .LocalMarkdown-editor .vditor-reset,
-      .LocalMarkdown-editor .vditor-sv,
-      .LocalMarkdown-editor .vditor-preview,
       .LocalMarkdown-editor .vditor-outline__content
     )::-webkit-scrollbar { width: 10px; height: 10px; }
     :is(
       .LocalMarkdown-files,
-      .LocalMarkdown-editor .vditor-reset,
-      .LocalMarkdown-editor .vditor-sv,
-      .LocalMarkdown-editor .vditor-preview,
       .LocalMarkdown-editor .vditor-outline__content
     )::-webkit-scrollbar-track { background: transparent; }
     :is(
       .LocalMarkdown-files,
-      .LocalMarkdown-editor .vditor-reset,
-      .LocalMarkdown-editor .vditor-sv,
-      .LocalMarkdown-editor .vditor-preview,
       .LocalMarkdown-editor .vditor-outline__content
     )::-webkit-scrollbar-thumb {
       min-height: 28px; border: 3px solid transparent; border-radius: 999px;
@@ -293,11 +270,21 @@
     }
     :is(
       .LocalMarkdown-files,
-      .LocalMarkdown-editor .vditor-reset,
-      .LocalMarkdown-editor .vditor-sv,
-      .LocalMarkdown-editor .vditor-preview,
       .LocalMarkdown-editor .vditor-outline__content
     )::-webkit-scrollbar-thumb:hover { background-color: var(--lm-scrollbar-hover); }
+    :is(
+      .LocalMarkdown-editor .vditor-reset,
+      .LocalMarkdown-editor .vditor-sv,
+      .LocalMarkdown-editor .vditor-preview
+    ) {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    :is(
+      .LocalMarkdown-editor .vditor-reset,
+      .LocalMarkdown-editor .vditor-sv,
+      .LocalMarkdown-editor .vditor-preview
+    )::-webkit-scrollbar { display: none; }
     .LocalMarkdown-file-row {
       position: relative; width: 100%; margin: 0 0 1px;
     }
@@ -465,38 +452,6 @@
     .LocalMarkdown-search-result mark {
       padding: 0; color: inherit; background: var(--lm-selection); border-radius: 2px;
     }
-    .LocalMarkdown-interface-size {
-      padding: var(--lm-space-3) var(--lm-space-2);
-      border-top: 1px solid var(--lm-border);
-    }
-    .LocalMarkdown-interface-size-header {
-      margin-bottom: var(--lm-space-2); display: flex; align-items: center;
-      justify-content: space-between; gap: var(--lm-space-2);
-      color: var(--lm-muted); font-size: var(--lm-type-metadata-size);
-      line-height: var(--lm-line-tight);
-    }
-    .LocalMarkdown-interface-size-label {
-      display: inline-flex; align-items: center; gap: var(--lm-space-2);
-    }
-    .LocalMarkdown-interface-size-label svg {
-      width: 14px; height: 14px; flex: 0 0 14px;
-    }
-    .LocalMarkdown-interface-size-value {
-      color: var(--lm-text); font-variant-numeric: tabular-nums;
-    }
-    .LocalMarkdown-interface-size-options {
-      padding: 3px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: var(--lm-space-1); border: 1px solid var(--lm-border);
-      border-radius: var(--lm-radius-surface); background: var(--lm-background);
-    }
-    .LocalMarkdown-interface-size-option {
-      height: var(--lm-control-height-compact); padding: 0 var(--lm-space-1);
-      border: 0; color: var(--lm-secondary-text); background: transparent;
-      font-size: var(--lm-type-metadata-size); font-weight: 500;
-    }
-    .LocalMarkdown-interface-size-option[aria-pressed="true"] {
-      color: var(--lm-text); background: var(--lm-selected);
-    }
     .LocalMarkdown-main {
       min-width: 0; min-height: 0; display: grid;
       grid-template-rows: var(--lm-control-height-large) minmax(0, 1fr);
@@ -545,6 +500,33 @@
     }
     .LocalMarkdown-document-status {
       min-width: 0; display: flex; align-items: baseline;
+    }
+    .LocalMarkdown-editor-width {
+      height: var(--lm-control-height); padding: 0 var(--lm-space-2);
+      display: flex; align-items: center; gap: var(--lm-space-2);
+      border-radius: var(--lm-radius-control); color: var(--lm-muted);
+    }
+    .LocalMarkdown-editor-width:hover,
+    .LocalMarkdown-editor-width:focus-within {
+      color: var(--lm-text); background: var(--lm-subtle);
+    }
+    .LocalMarkdown-editor-width-reset {
+      width: var(--lm-control-height-compact); height: var(--lm-control-height-compact);
+      padding: 3px; flex: 0 0 var(--lm-control-height-compact);
+      display: inline-grid; place-items: center;
+      border: 0; border-radius: var(--lm-radius-control);
+      color: inherit; background: transparent;
+    }
+    .LocalMarkdown-editor-width-reset:hover { background: var(--lm-selected); }
+    .LocalMarkdown-editor-width-reset:focus-visible {
+      outline: 2px solid var(--lm-accent); outline-offset: 1px;
+    }
+    .LocalMarkdown-editor-width-reset svg {
+      width: 16px; height: 16px; flex: 0 0 16px;
+    }
+    .LocalMarkdown-editor-width-input {
+      width: 96px; height: var(--lm-control-height-compact); margin: 0;
+      accent-color: var(--lm-accent); cursor: ew-resize;
     }
     .LocalMarkdown-view-picker { position: relative; }
     .LocalMarkdown-view-picker > summary {
@@ -981,6 +963,7 @@
 
     @media (max-width: 900px) {
       .LocalMarkdown-editor .vditor-content { padding-inline: 48px; }
+      .LocalMarkdown-editor-width-input { width: 72px; }
     }
 
     @media (max-width: 650px) {
@@ -1016,6 +999,10 @@
       .LocalMarkdown-toolbar-location { display: none; }
       .LocalMarkdown-document-meta::before { display: none; }
       .LocalMarkdown-status { display: none; }
+      .LocalMarkdown-editor-width {
+        padding-inline: var(--lm-space-1); gap: var(--lm-space-1);
+      }
+      .LocalMarkdown-editor-width-input { width: 64px; }
       .LocalMarkdown-editor .vditor-toolbar { padding: 0 var(--lm-space-1); }
       .LocalMarkdown-editor .vditor-content {
         padding: 0 var(--lm-space-6); gap: var(--lm-space-6);
@@ -1032,6 +1019,7 @@
 
     @media (max-width: 360px) {
       .LocalMarkdown-toolbar { padding: 0 var(--lm-space-1); gap: var(--lm-space-1); }
+      .LocalMarkdown-editor-width-input { width: 48px; }
       .LocalMarkdown-editor .vditor-content { padding-inline: var(--lm-space-4); }
       .LocalMarkdown-theme-toggle { width: var(--lm-control-height-compact); }
     }
@@ -1086,23 +1074,6 @@
         <button class="LocalMarkdown-search-clear" id="LocalMarkdown-search-clear" type="button" aria-label="Clear search" title="Clear search" hidden>&times;</button>
       </div>
       <nav class="LocalMarkdown-files" id="LocalMarkdown-files" aria-label="Files"></nav>
-      <div class="LocalMarkdown-interface-size">
-        <div class="LocalMarkdown-interface-size-header">
-          <span class="LocalMarkdown-interface-size-label">
-            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
-              <rect x="2.5" y="3.25" width="15" height="10.5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"></rect>
-              <path d="M7 16.75h6M10 13.75v3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path>
-            </svg>
-            Interface size
-          </span>
-          <output class="LocalMarkdown-interface-size-value" id="LocalMarkdown-interface-size-value">100%</output>
-        </div>
-        <div class="LocalMarkdown-interface-size-options" role="group" aria-label="Interface size">
-          <button class="LocalMarkdown-interface-size-option" type="button" data-interface-scale="80" aria-pressed="false">80%</button>
-          <button class="LocalMarkdown-interface-size-option" type="button" data-interface-scale="90" aria-pressed="false">90%</button>
-          <button class="LocalMarkdown-interface-size-option" type="button" data-interface-scale="100" aria-pressed="true">100%</button>
-        </div>
-      </div>
     </aside>
 
     <main class="LocalMarkdown-main">
@@ -1123,6 +1094,14 @@
           </div>
         </div>
         <div class="LocalMarkdown-toolbar-actions">
+          <div class="LocalMarkdown-editor-width" id="LocalMarkdown-editor-width-control">
+            <button class="LocalMarkdown-editor-width-reset" id="LocalMarkdown-editor-width-reset" type="button" aria-label="Reset editor width" title="Reset editor width to 760px">
+              <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+                <path d="M4 4v4h4M4.45 7.45A6.25 6.25 0 1 1 5.7 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </button>
+            <input class="LocalMarkdown-editor-width-input" id="LocalMarkdown-editor-width" type="range" min="480" max="1600" step="20" value="760" aria-label="Editor width">
+          </div>
           <details class="LocalMarkdown-view-picker" id="LocalMarkdown-view-picker">
             <summary id="LocalMarkdown-view-toggle" aria-label="Editor view: Markdown">
               <span id="LocalMarkdown-view-label">Markdown</span>
@@ -1293,12 +1272,11 @@
       const viewPicker = document.querySelector("#LocalMarkdown-view-picker");
       const viewToggle = document.querySelector("#LocalMarkdown-view-toggle");
       const viewLabel = document.querySelector("#LocalMarkdown-view-label");
+      const editorWidthReset = document.querySelector("#LocalMarkdown-editor-width-reset");
+      const editorWidthInput = document.querySelector("#LocalMarkdown-editor-width");
       const themeToggle = document.querySelector("#LocalMarkdown-theme-toggle");
       const themeMenu = document.querySelector("#LocalMarkdown-theme-menu");
       const themeOptions = Array.from(document.querySelectorAll(".LocalMarkdown-theme-option"));
-      const interfaceScaleValue = document.querySelector("#LocalMarkdown-interface-size-value");
-      const interfaceScaleOptions = Array.from(
-        document.querySelectorAll(".LocalMarkdown-interface-size-option"));
       const fileContextMenu = document.querySelector("#LocalMarkdown-file-context-menu");
       const fileContextItems = Array.from(fileContextMenu.querySelectorAll(".LocalMarkdown-file-context-item"));
       const fileSaveLabel = document.querySelector("#LocalMarkdown-file-save-label");
@@ -1399,7 +1377,8 @@
       const sessionSaveDelay = 200;
       const sidebarStorageKey = "LocalMarkdown:sidebar:v1";
       const themeStorageKey = "LocalMarkdown:theme:v1";
-      const interfaceScaleStorageKey = "LocalMarkdown:interface-scale:v1";
+      const editorWidthStorageKey = "LocalMarkdown:editor-width:v1";
+      const defaultEditorWidth = 760;
       const themeNames = {
         white: "White",
         "solarized-light": "Solarized Light",
@@ -1413,6 +1392,20 @@
         accept: { "text/markdown": [".md", ".markdown"] }
       }];
       const mobileSidebarQuery = matchMedia("(max-width: 650px)");
+
+      function setEditorWidth(value, { persist = true } = {}) {
+        const minimum = Number(editorWidthInput.min);
+        const maximum = Number(editorWidthInput.max);
+        const parsed = value === null || value === "" ? NaN : Number(value);
+        const width = Math.min(maximum, Math.max(minimum,
+          Number.isFinite(parsed) ? parsed : defaultEditorWidth));
+        editorElement.style.setProperty("--lm-document-max-width", `${width}px`);
+        editorWidthInput.value = String(width);
+        editorWidthInput.title = `Editor width: ${width}px`;
+        if (persist) {
+          try { localStorage.setItem(editorWidthStorageKey, String(width)); } catch {}
+        }
+      }
 
       function setTheme(theme, { persist = true } = {}) {
         if (!Object.hasOwn(themeNames, theme)) theme = "white";
@@ -1429,18 +1422,6 @@
         }
         if (persist) {
           try { localStorage.setItem(themeStorageKey, theme); } catch {}
-        }
-      }
-
-      function setInterfaceScale(scale, { persist = true } = {}) {
-        if (!["80", "90", "100"].includes(scale)) scale = "100";
-        document.documentElement.dataset.interfaceScale = scale;
-        interfaceScaleValue.value = `${scale}%`;
-        for (const option of interfaceScaleOptions) {
-          option.setAttribute("aria-pressed", String(option.dataset.interfaceScale === scale));
-        }
-        if (persist) {
-          try { localStorage.setItem(interfaceScaleStorageKey, scale); } catch {}
         }
       }
 
@@ -1628,7 +1609,9 @@
       }
 
       setTheme(document.documentElement.dataset.theme, { persist: false });
-      setInterfaceScale(document.documentElement.dataset.interfaceScale || "100", { persist: false });
+      let storedEditorWidth = null;
+      try { storedEditorWidth = localStorage.getItem(editorWidthStorageKey); } catch {}
+      setEditorWidth(storedEditorWidth, { persist: false });
 
       function setSidebarOpen(open, { persist = true } = {}) {
         const focusToggle = !open && sidebarElement.contains(document.activeElement);
@@ -5230,15 +5213,21 @@
         viewPicker.open = false;
         setThemeMenuOpen(themeToggle.getAttribute("aria-expanded") !== "true", { focus: true });
       });
+      editorWidthReset.addEventListener("click", () => {
+        setEditorWidth(defaultEditorWidth);
+      });
+      editorWidthInput.addEventListener("input", () => {
+        setEditorWidth(editorWidthInput.value, { persist: false });
+      });
+      editorWidthInput.addEventListener("change", () => {
+        setEditorWidth(editorWidthInput.value);
+      });
       for (const option of themeOptions) {
         option.addEventListener("click", () => {
           setTheme(option.dataset.themeOption);
           setThemeMenuOpen(false);
           themeToggle.focus();
         });
-      }
-      for (const option of interfaceScaleOptions) {
-        option.addEventListener("click", () => setInterfaceScale(option.dataset.interfaceScale));
       }
       themeMenu.addEventListener("keydown", event => {
         if (event.key === "Escape") {
