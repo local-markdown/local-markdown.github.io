@@ -896,6 +896,44 @@
       font-size: 17px; line-height: 1;
     }
     .LocalMarkdown-table-edge-tool[data-destructive="true"] { color: var(--lm-muted); }
+    .LocalMarkdown-table-export-tools {
+      position: fixed; z-index: 27;
+    }
+    .LocalMarkdown-table-export-tools[hidden],
+    .LocalMarkdown-table-export-menu[hidden] { display: none; }
+    .LocalMarkdown-table-export-toggle {
+      width: var(--lm-control-height-compact); height: var(--lm-control-height-compact);
+      padding: 5px; display: grid; place-items: center;
+      border: 1px solid var(--lm-control-border); border-radius: var(--lm-radius-control);
+      color: var(--lm-muted); background: var(--lm-background);
+      box-shadow: 0 3px 10px var(--lm-menu-shadow);
+    }
+    .LocalMarkdown-table-export-toggle:hover,
+    .LocalMarkdown-table-export-toggle[aria-expanded="true"] {
+      color: var(--lm-text); background: var(--lm-selected);
+    }
+    .LocalMarkdown-table-export-toggle svg { width: 16px; height: 16px; }
+    .LocalMarkdown-table-export-menu {
+      position: absolute; top: calc(100% + var(--lm-space-1)); left: 0;
+      width: max-content; min-width: 176px; padding: var(--lm-space-1);
+      border: 1px solid var(--lm-control-border); border-radius: var(--lm-radius-surface);
+      background: var(--lm-background); box-shadow: 0 5px 18px var(--lm-menu-shadow);
+    }
+    .LocalMarkdown-table-export-action {
+      width: 100%; min-height: var(--lm-control-height);
+      padding: var(--lm-space-1) var(--lm-space-2); display: flex;
+      align-items: center; gap: var(--lm-space-2);
+      border: 0; border-radius: var(--lm-radius-control);
+      color: var(--lm-text); background: transparent;
+      font-size: var(--lm-type-control-size); text-align: left; white-space: nowrap;
+    }
+    .LocalMarkdown-table-export-action:hover { background: var(--lm-subtle); }
+    .LocalMarkdown-table-export-action:focus-visible {
+      outline: 0; box-shadow: inset 0 0 0 1px var(--lm-accent);
+    }
+    .LocalMarkdown-table-export-action svg {
+      width: 16px; height: 16px; flex: 0 0 16px; color: var(--lm-muted);
+    }
     .LocalMarkdown-table-resize-handle {
       position: fixed; z-index: 25; width: 11px; padding: 0;
       border: 0; background: transparent; cursor: col-resize;
@@ -1198,6 +1236,21 @@
     <button class="LocalMarkdown-table-edge-tool" type="button" data-table-action="delete-column" data-destructive="true" aria-label="Delete column" title="Delete column">−</button>
     <button class="LocalMarkdown-table-edge-tool" type="button" data-table-action="column-right" aria-label="Add column after" title="Add column after">+</button>
   </div>
+  <div class="LocalMarkdown-table-export-tools" id="LocalMarkdown-table-export-tools" hidden>
+    <button class="LocalMarkdown-table-export-toggle" id="LocalMarkdown-table-export-toggle" type="button" aria-label="Export table" aria-haspopup="menu" aria-expanded="false" title="Export table">
+      <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M3 3.5h12v11H3zM3 7h12M7 7v7.5m4-7.5v7.5M9 1.5v8m0 0L6.5 7M9 9.5 11.5 7" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    </button>
+    <div class="LocalMarkdown-table-export-menu" id="LocalMarkdown-table-export-menu" role="menu" aria-label="Table export options" hidden>
+      <button class="LocalMarkdown-table-export-action" type="button" role="menuitem" data-table-export="copy">
+        <svg viewBox="0 0 18 18" aria-hidden="true"><rect x="6" y="5" width="8.5" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.35"></rect><path d="M4 12.5H3.5A1.5 1.5 0 0 1 2 11V3.5A1.5 1.5 0 0 1 3.5 2h6A1.5 1.5 0 0 1 11 3.5V4" fill="none" stroke="currentColor" stroke-width="1.35"></path></svg>
+        Copy for Excel
+      </button>
+      <button class="LocalMarkdown-table-export-action" type="button" role="menuitem" data-table-export="csv">
+        <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M3 2.5h7l4 4v9H3zM10 2.5v4h4M5.5 10h6M5.5 12.5h6" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        Download CSV
+      </button>
+    </div>
+  </div>
   <button class="LocalMarkdown-table-resize-handle" id="LocalMarkdown-table-resize-handle" type="button" tabindex="-1" role="separator" aria-orientation="vertical" aria-label="Resize table columns" hidden></button>
   <div class="LocalMarkdown-image-resizer" id="LocalMarkdown-image-resizer" hidden>
     <div class="LocalMarkdown-image-alignment" role="group" aria-label="Image alignment">
@@ -1261,6 +1314,11 @@
       const tableToolButtons = tableEdgeTools.flatMap(tools =>
         Array.from(tools.querySelectorAll("[data-table-action]")));
       const deleteTableRowButton = tableRowTools.querySelector('[data-table-action="delete-row"]');
+      const tableExportTools = document.querySelector("#LocalMarkdown-table-export-tools");
+      const tableExportToggle = document.querySelector("#LocalMarkdown-table-export-toggle");
+      const tableExportMenu = document.querySelector("#LocalMarkdown-table-export-menu");
+      const tableExportActions = Array.from(
+        tableExportMenu.querySelectorAll("[data-table-export]"));
       const tableResizeHandle = document.querySelector("#LocalMarkdown-table-resize-handle");
       const imageResizer = document.querySelector("#LocalMarkdown-image-resizer");
       const imageResizeHandles = Array.from(
@@ -1306,6 +1364,7 @@
       let splitScrollFollower = null;
       let splitScrollFollowerTop = null;
       let tableHoverCell = null;
+      let tableExportTarget = null;
       let tableResizeCell = null;
       let tableResizeSession = null;
       let tableWidthRefreshFrame = null;
@@ -1728,7 +1787,7 @@
         "| Split | `⌘ + Option + 9` | `Ctrl + Alt + 9` |",
         "",
         "### Tables",
-        "Drag a divider between columns to resize them, or drag the right edge to resize the whole table. Hover the left edge of a row or the top edge of a column to show + and − controls. The same actions are also available with these shortcuts.",
+        "Drag a divider between columns to resize them, or drag the right edge to resize the whole table. Hover the left edge of a row or the top edge of a column to show + and − controls. Hover the upper-left cell to copy the table for Excel or download a CSV. The same editing actions are also available with these shortcuts.",
         "",
         "| Action | Mac | Windows |",
         "| --- | --- | --- |",
@@ -3478,6 +3537,244 @@
       function tablesInSurface(surface) {
         return Array.from(surface?.querySelectorAll("table") || [])
           .filter(table => tableSurface(table) === surface);
+      }
+
+      function tableFromNode(node) {
+        const element = node?.nodeType === Node.ELEMENT_NODE ? node : node?.parentElement;
+        const table = element?.closest?.("table");
+        return table && editorElement.contains(table) && tableSurface(table) ? table : null;
+      }
+
+      function tableCellExportText(cell) {
+        const clone = cell.cloneNode(true);
+        for (const checkbox of clone.querySelectorAll('input[type="checkbox"]')) {
+          checkbox.replaceWith(document.createTextNode(checkbox.checked ? "TRUE" : "FALSE"));
+        }
+        for (const image of clone.querySelectorAll("img")) {
+          image.replaceWith(document.createTextNode(image.alt || ""));
+        }
+        for (const lineBreak of clone.querySelectorAll(
+          "br, .LocalMarkdown-table-line-break")) {
+          lineBreak.replaceWith(document.createTextNode("\n"));
+        }
+        for (const marker of clone.querySelectorAll(
+          ".vditor-ir__marker, .vditor-wysiwyg__marker, script, style")) {
+          marker.remove();
+        }
+        return clone.textContent
+          .replace(/\u00a0/g, " ")
+          .replace(/\r\n?/g, "\n")
+          .replace(/[ \t]+\n/g, "\n")
+          .trim();
+      }
+
+      function tableExportData(table, selectedCells = null) {
+        const rows = Array.from(table?.rows || []);
+        if (!rows.length) return null;
+        let rowStart = 0;
+        let rowEnd = rows.length - 1;
+        let columnStart = 0;
+        let columnEnd = Math.max(0, ...rows.map(row => row.cells.length - 1));
+        if (selectedCells) {
+          const positions = [];
+          rows.forEach((row, rowIndex) => {
+            Array.from(row.cells).forEach((cell, columnIndex) => {
+              if (selectedCells.has(cell)) positions.push({ rowIndex, columnIndex });
+            });
+          });
+          if (!positions.length) return null;
+          rowStart = Math.min(...positions.map(position => position.rowIndex));
+          rowEnd = Math.max(...positions.map(position => position.rowIndex));
+          columnStart = Math.min(...positions.map(position => position.columnIndex));
+          columnEnd = Math.max(...positions.map(position => position.columnIndex));
+        }
+        return {
+          rows: rows.slice(rowStart, rowEnd + 1).map(row =>
+            Array.from(row.cells).slice(columnStart, columnEnd + 1).map(cell => ({
+              text: tableCellExportText(cell),
+              header: cell.tagName === "TH"
+            })))
+        };
+      }
+
+      function delimitedTableText(data, delimiter) {
+        return data.rows.map(row => row.map(cell => {
+          const value = cell.text;
+          return value.includes(delimiter) || /["\r\n]/.test(value)
+            ? `"${value.replace(/"/g, '""')}"`
+            : value;
+        }).join(delimiter)).join("\r\n");
+      }
+
+      function escapedTableHtml(value) {
+        return value
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/\n/g, "<br>");
+      }
+
+      function tableClipboardHtml(data) {
+        const rows = data.rows.map(row => `<tr>${row.map(cell => {
+          const tag = cell.header ? "th" : "td";
+          return `<${tag}>${escapedTableHtml(cell.text)}</${tag}>`;
+        }).join("")}</tr>`).join("");
+        return `<table>${rows}</table>`;
+      }
+
+      function selectedTableExportData() {
+        const selection = getSelection();
+        if (!selection || selection.isCollapsed || selection.rangeCount !== 1) return null;
+        const range = selection.getRangeAt(0);
+        const startTable = tableFromNode(range.startContainer);
+        const endTable = tableFromNode(range.endContainer);
+        if (!startTable || startTable !== endTable) return null;
+        const selectedCells = new Set(Array.from(startTable.querySelectorAll("th, td"))
+          .filter(cell => {
+            try { return range.intersectsNode(cell); } catch { return false; }
+          }));
+        if (selectedCells.size < 2) return null;
+        const data = tableExportData(startTable, selectedCells);
+        return data ? { table: startTable, data } : null;
+      }
+
+      function handleTableCopy(event) {
+        const selected = selectedTableExportData();
+        if (!selected || !event.clipboardData) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        event.clipboardData.setData("text/plain", delimitedTableText(selected.data, "\t"));
+        event.clipboardData.setData("text/html", tableClipboardHtml(selected.data));
+        updateStatus("Table copied for Excel");
+      }
+
+      function copyTableWithSelectionFallback(data) {
+        const selection = getSelection();
+        const savedRanges = selection
+          ? Array.from({ length: selection.rangeCount }, (_, index) =>
+            selection.getRangeAt(index).cloneRange())
+          : [];
+        const clipboardContent = document.createElement("div");
+        clipboardContent.contentEditable = "true";
+        clipboardContent.setAttribute("aria-hidden", "true");
+        clipboardContent.style.cssText = "position:fixed;left:-10000px;top:0;";
+        clipboardContent.innerHTML = tableClipboardHtml(data);
+        document.body.append(clipboardContent);
+        const range = document.createRange();
+        range.selectNodeContents(clipboardContent);
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+        let copied = false;
+        try { copied = document.execCommand("copy"); } catch {}
+        clipboardContent.remove();
+        selection?.removeAllRanges();
+        for (const savedRange of savedRanges) selection?.addRange(savedRange);
+        return copied;
+      }
+
+      async function copyTableForExcel(table) {
+        const data = tableExportData(table);
+        if (!data) return false;
+        const text = delimitedTableText(data, "\t");
+        const html = tableClipboardHtml(data);
+        let copied = false;
+        if (navigator.clipboard?.write && window.ClipboardItem) {
+          try {
+            await navigator.clipboard.write([new ClipboardItem({
+              "text/plain": new Blob([text], { type: "text/plain" }),
+              "text/html": new Blob([html], { type: "text/html" })
+            })]);
+            copied = true;
+          } catch {}
+        }
+        if (!copied) copied = copyTableWithSelectionFallback(data);
+        updateStatus(copied ? "Table copied for Excel" : "Could not copy this table");
+        return copied;
+      }
+
+      function tableCsvFilename(table) {
+        const file = activeFile();
+        const base = (file?.name || "table")
+          .replace(/\.(?:md|markdown)$/i, "")
+          .replace(/[<>:"/\\|?*\u0000-\u001F]/g, "-")
+          .replace(/[.\s]+$/, "")
+          .slice(0, 72) || "table";
+        const index = Math.max(0, tablesInSurface(tableSurface(table)).indexOf(table)) + 1;
+        return `${base}-table-${index}.csv`;
+      }
+
+      function downloadTableCsv(table) {
+        const data = tableExportData(table);
+        if (!data) return false;
+        const url = URL.createObjectURL(new Blob([
+          "\uFEFF", delimitedTableText(data, ",")
+        ], { type: "text/csv;charset=utf-8" }));
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = tableCsvFilename(table);
+        document.body.append(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        updateStatus("CSV downloaded");
+        return true;
+      }
+
+      function setTableExportMenuOpen(open, { focus = false } = {}) {
+        tableExportMenu.hidden = !open;
+        tableExportToggle.setAttribute("aria-expanded", String(open));
+        if (open && focus) tableExportActions[0]?.focus();
+      }
+
+      function hideTableExportTools() {
+        setTableExportMenuOpen(false);
+        tableExportTools.hidden = true;
+        tableExportTarget = null;
+      }
+
+      function showTableExportTools(table) {
+        const surface = tableSurface(table);
+        const topLeftCell = table.rows[0]?.cells[0];
+        if (!surface || !topLeftCell) {
+          hideTableExportTools();
+          return;
+        }
+        const cellRect = topLeftCell.getBoundingClientRect();
+        const surfaceRect = surface.getBoundingClientRect();
+        if (tableExportTarget !== table) setTableExportMenuOpen(false);
+        tableExportTarget = table;
+        tableExportTools.hidden = false;
+        const toggleRect = tableExportToggle.getBoundingClientRect();
+        const top = cellRect.top + 4;
+        const left = cellRect.left + 4;
+        if (top < Math.max(2, surfaceRect.top)
+          || left < Math.max(2, surfaceRect.left)
+          || top + toggleRect.height > Math.min(innerHeight - 2, surfaceRect.bottom)
+          || left + toggleRect.width > Math.min(innerWidth - 2, surfaceRect.right)) {
+          hideTableExportTools();
+          return;
+        }
+        tableExportTools.style.top = `${Math.round(top)}px`;
+        tableExportTools.style.left = `${Math.round(left)}px`;
+      }
+
+      function handleTableExportPointerMove(event) {
+        if (tableExportTools.contains(event.target) || !tableExportMenu.hidden) return;
+        const table = tableFromNode(event.target);
+        if (table) showTableExportTools(table);
+        else hideTableExportTools();
+      }
+
+      async function runTableExportAction(action) {
+        const table = tableExportTarget;
+        setTableExportMenuOpen(false);
+        if (!table?.isConnected) {
+          hideTableExportTools();
+          return;
+        }
+        if (action === "copy") await copyTableForExcel(table);
+        else if (action === "csv") downloadTableCsv(table);
       }
 
       function markdownTableContext(table, value) {
@@ -5851,7 +6148,7 @@
           closeFileContextMenu();
           return;
         }
-        if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+        if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
         event.preventDefault();
         const enabledItems = fileContextItems.filter(item => !item.hidden && !item.disabled);
         const currentIndex = Math.max(0, enabledItems.indexOf(document.activeElement));
@@ -5960,9 +6257,18 @@
         hideTableResizeHandle();
       });
       document.addEventListener("pointerdown", event => {
+        if (tableExportTools.contains(event.target)) return;
+        if (tableExportTarget?.contains(event.target)) {
+          setTableExportMenuOpen(false);
+          return;
+        }
+        hideTableExportTools();
+      });
+      document.addEventListener("pointerdown", event => {
         if (imageResizer.contains(event.target) || editableImageFromNode(event.target)) return;
         hideImageResizer();
       });
+      document.addEventListener("pointermove", handleTableExportPointerMove);
       document.addEventListener("pointermove", handleTableEdgePointerMove);
       document.addEventListener("pointermove", continueTableResize);
       document.addEventListener("pointerup", event => finishTableResize(event));
@@ -5970,6 +6276,7 @@
       document.addEventListener("scroll", () => {
         hideTableEdgeTools();
         hideTableResizeHandle();
+        hideTableExportTools();
         closeFileContextMenu();
         closeSectionContextMenu();
         positionImageResizer();
@@ -5977,6 +6284,7 @@
       addEventListener("resize", () => {
         hideTableEdgeTools();
         hideTableResizeHandle();
+        hideTableExportTools();
         closeFileContextMenu();
         closeSectionContextMenu();
         positionImageResizer();
@@ -6113,6 +6421,38 @@
       for (const button of tableToolButtons) {
         button.addEventListener("click", () => runTableAction(button.dataset.tableAction));
       }
+      tableExportToggle.addEventListener("click", () => {
+        setTableExportMenuOpen(tableExportMenu.hidden);
+      });
+      tableExportToggle.addEventListener("keydown", event => {
+        if (event.key === "ArrowDown") {
+          event.preventDefault();
+          setTableExportMenuOpen(true, { focus: true });
+        } else if (event.key === "Escape") {
+          event.preventDefault();
+          hideTableExportTools();
+        }
+      });
+      tableExportMenu.addEventListener("keydown", event => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          setTableExportMenuOpen(false);
+          tableExportToggle.focus();
+          return;
+        }
+        if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+        event.preventDefault();
+        const currentIndex = Math.max(0, tableExportActions.indexOf(document.activeElement));
+        const nextIndex = event.key === "Home" ? 0
+          : event.key === "End" ? tableExportActions.length - 1
+          : (currentIndex + (event.key === "ArrowDown" ? 1 : -1)
+            + tableExportActions.length) % tableExportActions.length;
+        tableExportActions[nextIndex]?.focus();
+      });
+      for (const button of tableExportActions) {
+        button.addEventListener("click", () => void runTableExportAction(
+          button.dataset.tableExport));
+      }
       tableResizeHandle.addEventListener("pointerdown", startTableResize);
       for (const button of imageAlignButtons) {
         button.addEventListener("pointerdown", event => event.preventDefault());
@@ -6138,12 +6478,14 @@
         restoreIrScrollPosition();
         hideTableEdgeTools();
         hideTableResizeHandle();
+        hideTableExportTools();
         hideImageResizer();
       });
       editorElement.addEventListener("scroll", handleSplitViewScroll, true);
       editorElement.addEventListener("keydown", handleEditorViewShortcut, true);
       editorElement.addEventListener("keydown", handleEditorKeydown, true);
       editorElement.addEventListener("click", handleTaskCheckboxClick, true);
+      editorElement.addEventListener("copy", handleTableCopy, true);
       editorElement.addEventListener("paste", event => void pasteFormattedLink(event), true);
       editorElement.addEventListener("pointerover", event => {
         const image = editableImageFromNode(event.target);
