@@ -787,14 +787,14 @@
       box-shadow: none;
     }
     .LocalMarkdown-editor .vditor-preview {
-      border-left: 0 !important; background: transparent;
+      border-left: 1px solid var(--lm-border) !important; background: transparent;
     }
     .LocalMarkdown-editor .vditor-preview[style*="display: block"] {
       display: grid !important; grid-template-rows: auto minmax(0, 1fr); overflow: hidden;
     }
     .LocalMarkdown-editor .vditor-preview > .vditor-reset {
       min-height: 0; height: auto;
-      padding: var(--lm-space-6) 0 96px !important;
+      padding: var(--lm-space-6) 0 96px var(--lm-space-6) !important;
       border: 0; border-radius: 0;
       background: var(--lm-document-background);
       box-shadow: none;
@@ -1303,6 +1303,8 @@
       let editorReady = false;
       let irScrollTopBeforeInput = null;
       let irScrollRestoreFrame = null;
+      let splitScrollFollower = null;
+      let splitScrollFollowerTop = null;
       let tableHoverCell = null;
       let tableResizeCell = null;
       let tableResizeSession = null;
@@ -1391,6 +1393,7 @@
       const sidebarStorageKey = "LocalMarkdown:sidebar:v1";
       const themeStorageKey = "LocalMarkdown:theme:v1";
       const editorWidthStorageKey = "LocalMarkdown:editor-width:v1";
+      const editorModeStorageKey = "LocalMarkdown:editor-mode:v1";
       const defaultEditorWidth = 760;
       const themeNames = {
         white: "White",
@@ -1398,6 +1401,11 @@
         "solarized-dark": "Solarized Dark"
       };
       const viewNames = { wysiwyg: "Visual", ir: "Markdown", sv: "Split" };
+      let initialEditorMode = "ir";
+      try {
+        const storedEditorMode = localStorage.getItem(editorModeStorageKey);
+        if (Object.hasOwn(viewNames, storedEditorMode)) initialEditorMode = storedEditorMode;
+      } catch {}
       const markdownPickerId = "LocalMarkdownFile";
       const markdownFilePattern = /\.(?:md|markdown)$/i;
       const markdownPickerTypes = [{
@@ -3163,6 +3171,11 @@
         viewToggle.setAttribute("aria-label", `Editor view: ${label}`);
       }
 
+      function rememberEditorMode(mode) {
+        if (!Object.hasOwn(viewNames, mode)) return;
+        try { localStorage.setItem(editorModeStorageKey, mode); } catch {}
+      }
+
       function rememberIrScrollPosition() {
         if (!editorReady || editor.getCurrentMode() !== "ir") return;
         const anchor = document.getSelection()?.anchorNode;
@@ -3182,6 +3195,35 @@
           const scroller = editorElement.querySelector(".vditor-ir > .vditor-reset");
           if (scroller) scroller.scrollTop = scrollTop;
         });
+      }
+
+      function handleSplitViewScroll(event) {
+        if (!editorReady || editor.getCurrentMode() !== "sv") return;
+        const sourcePane = editorElement.querySelector(".vditor-sv");
+        const previewPane = editorElement.querySelector(".vditor-preview > .vditor-reset");
+        const leader = event.target;
+        if (!sourcePane || !previewPane || (leader !== sourcePane && leader !== previewPane)) return;
+
+        if (leader === splitScrollFollower
+            && Math.abs(leader.scrollTop - splitScrollFollowerTop) <= 1) {
+          splitScrollFollower = null;
+          splitScrollFollowerTop = null;
+          return;
+        }
+
+        splitScrollFollower = null;
+        splitScrollFollowerTop = null;
+        const follower = leader === sourcePane ? previewPane : sourcePane;
+        const leaderRange = Math.max(0, leader.scrollHeight - leader.clientHeight);
+        const followerRange = Math.max(0, follower.scrollHeight - follower.clientHeight);
+        const nextScrollTop = leaderRange
+          ? (leader.scrollTop / leaderRange) * followerRange
+          : 0;
+        if (Math.abs(follower.scrollTop - nextScrollTop) <= 1) return;
+
+        splitScrollFollower = follower;
+        splitScrollFollowerTop = nextScrollTop;
+        follower.scrollTop = nextScrollTop;
       }
 
       function switchEditorMode(mode) {
@@ -3204,6 +3246,7 @@
           updateStatus("Could not change editor view");
           return;
         }
+        rememberEditorMode(currentMode);
         scheduleAttachmentPreviews();
         scheduleTableWidths();
         editor.focus();
@@ -6097,6 +6140,7 @@
         hideTableResizeHandle();
         hideImageResizer();
       });
+      editorElement.addEventListener("scroll", handleSplitViewScroll, true);
       editorElement.addEventListener("keydown", handleEditorViewShortcut, true);
       editorElement.addEventListener("keydown", handleEditorKeydown, true);
       editorElement.addEventListener("click", handleTaskCheckboxClick, true);
@@ -6307,9 +6351,10 @@
         rocket: "🚀", airplane: "✈️", car: "🚗", house: "🏠"
       };
 
+      updateViewButtons(initialEditorMode);
       editor = new Vditor("LocalMarkdown-editor", {
         cdn: vditorCdn,
-        mode: "ir",
+        mode: initialEditorMode,
         value: activeFile().text,
         height: "100%",
         minHeight: 200,
