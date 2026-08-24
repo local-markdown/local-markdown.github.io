@@ -1323,6 +1323,11 @@
       let excalidrawModulesPromise = null;
       let drawingRoot = null;
       let drawingSession = null;
+      let pendingEditorHistoryInput = null;
+      let editorHistorySynchronization = null;
+      let editorHistorySynchronizationTimer = null;
+      let documentHistoryRecordingDepth = 0;
+      let restoringDocumentHistory = false;
       let fileContextTarget = null;
       let fileContextTrigger = null;
       let sectionContextTarget = null;
@@ -1336,7 +1341,12 @@
       const attachmentPreviewReferences = new Map();
       const attachmentImageIds = new WeakMap();
       const imageWorkerRequests = new Map();
+      const documentHistories = new Map();
+      const editorHistoryValueWaiters = new Map();
       const autoSaveDelay = 700;
+      const documentHistoryLimit = 100;
+      const documentHistoryByteLimit = 24 * 1024 * 1024;
+      const documentHistoryCoalesceDelay = 900;
       const attachmentBlockStart = "<!-- LocalMarkdown attachments:v1";
       const attachmentBlockEnd = "-->";
       const attachmentPathPrefix = "lmd/";
@@ -1762,6 +1772,418 @@
         return session.files.find(file => file.id === session.activeId);
       }
 
+      function activeEditorSurface() {
+        if (!editorReady) return null;
+        return editor.vditor?.[editor.getCurrentMode()]?.element || null;
+      }
+
+      function selectionNodePath(root, node) {
+        const path = [];
+        let current = node;
+        while (current && current !== root) {
+          const parent = current.parentNode;
+          if (!parent) return null;
+          const index = Array.prototype.indexOf.call(parent.childNodes, current);
+          if (index < 0) return null;
+          path.unshift(index);
+          current = parent;
+        }
+        return current === root ? path : null;
+      }
+
+      function editorSelectionSnapshot(file) {
+        if (activeFile() !== file) return null;
+        const surface = activeEditorSurface();
+        const selection = getSelection();
+        if (!surface || !selection?.rangeCount) return null;
+        const range = selection.getRangeAt(0);
+        if (!surface.contains(range.startContainer) || !surface.contains(range.endContainer)) {
+          return null;
+        }
+        const startPath = selectionNodePath(surface, range.startContainer);
+        const endPath = selectionNodePath(surface, range.endContainer);
+        if (!startPath || !endPath) return null;
+        return {
+          mode: editor.getCurrentMode(),
+          startPath,
+          startOffset: range.startOffset,
+          endPath,
+          endOffset: range.endOffset
+        };
+      }
+
+      function currentEditorRange(file) {
+        if (activeFile() !== file) return null;
+        const surface = activeEditorSurface();
+        const selection = getSelection();
+        if (!surface || !selection?.rangeCount) return null;
+        const range = selection.getRangeAt(0);
+        const startElement = range.startContainer.nodeType === Node.ELEMENT_NODE
+          ? range.startContainer : range.startContainer.parentElement;
+        const block = startElement?.closest?.("[data-block]");
+        return block && surface.contains(block)
+          && surface.contains(range.startContainer) && surface.contains(range.endContainer)
+          ? range.cloneRange()
+          : null;
+      }
+
+      function restoreEditorRange(range) {
+        const surface = activeEditorSurface();
+        if (!surface) return;
+        const selection = getSelection();
+        const nextRange = range?.startContainer?.isConnected ? range : document.createRange();
+        if (nextRange !== range) {
+          const blocks = surface.querySelectorAll("[data-block]");
+          nextRange.selectNodeContents(blocks[blocks.length - 1] || surface);
+          nextRange.collapse(false);
+        }
+        selection.removeAllRanges();
+        selection.addRange(nextRange);
+        surface.focus({ preventScroll: true });
+      }
+
+      function nodeAtSelectionPath(root, path) {
+        let node = root;
+        for (const index of path) {
+          node = node?.childNodes?.[index];
+          if (!node) return null;
+        }
+        return node;
+      }
+
+      function selectionOffsetLimit(node) {
+        return node?.nodeType === Node.TEXT_NODE
+          ? node.data.length
+          : node?.childNodes?.length || 0;
+      }
+
+      function restoreEditorSelection(file, bookmark) {
+        cancelAnimationFrame(irScrollRestoreFrame);
+        irScrollRestoreFrame = requestAnimationFrame(() => {
+          irScrollRestoreFrame = null;
+          if (activeFile() !== file || !editorReady) return;
+          const surface = activeEditorSurface();
+          if (!surface || bookmark?.mode !== editor.getCurrentMode()) {
+            editor.focus();
+            return;
+          }
+          const start = nodeAtSelectionPath(surface, bookmark.startPath);
+          const end = nodeAtSelectionPath(surface, bookmark.endPath);
+          if (!start || !end) {
+            editor.focus();
+            return;
+          }
+          try {
+            const range = document.createRange();
+            range.setStart(start, Math.min(bookmark.startOffset, selectionOffsetLimit(start)));
+            range.setEnd(end, Math.min(bookmark.endOffset, selectionOffsetLimit(end)));
+            const selection = getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            surface.focus({ preventScroll: true });
+          } catch {
+            editor.focus();
+          }
+        });
+      }
+
+      function documentSnapshot(file, { captureSelection = true } = {}) {
+        const referenced = referencedAttachmentIds(file.text);
+        const attachments = new Map();
+        for (const id of referenced) {
+          const attachment = file.attachments.get(id);
+          if (attachment) attachments.set(id, attachment);
+        }
+        return {
+          text: file.text,
+          attachments,
+          selection: captureSelection ? editorSelectionSnapshot(file) : null,
+          label: null
+        };
+      }
+
+      function sameDocumentSnapshot(left, right) {
+        if (!left || !right || left.text !== right.text
+          || left.attachments.size !== right.attachments.size) return false;
+        for (const [id, attachment] of left.attachments) {
+          if (right.attachments.get(id) !== attachment) return false;
+        }
+        return true;
+      }
+
+      function documentHistoryFor(file) {
+        let history = documentHistories.get(file.id);
+        if (!history) {
+          history = {
+            past: [],
+            present: documentSnapshot(file),
+            future: [],
+            lastChange: null
+          };
+          documentHistories.set(file.id, history);
+        }
+        return history;
+      }
+
+      function resetDocumentHistory(file) {
+        if (!file) return;
+        if (pendingEditorHistoryInput?.fileId === file.id) pendingEditorHistoryInput = null;
+        documentHistories.set(file.id, {
+          past: [],
+          present: documentSnapshot(file),
+          future: [],
+          lastChange: null
+        });
+        updateDocumentHistoryControls();
+      }
+
+      function documentHistoryBytes(history) {
+        const attachments = new Set();
+        let bytes = 0;
+        for (const snapshot of [...history.past, history.present, ...history.future]) {
+          bytes += snapshot.text.length * 2;
+          for (const attachment of snapshot.attachments.values()) attachments.add(attachment);
+        }
+        for (const attachment of attachments) {
+          bytes += typeof attachment.data === "string" ? attachment.data.length * 2 : 256;
+        }
+        return bytes;
+      }
+
+      function trimDocumentHistory(history) {
+        while (history.past.length > documentHistoryLimit) history.past.shift();
+        while (history.past.length && documentHistoryBytes(history) > documentHistoryByteLimit) {
+          history.past.shift();
+        }
+      }
+
+      function breakDocumentHistoryCoalescing(file = activeFile()) {
+        const history = file && documentHistories.get(file.id);
+        if (history) history.lastChange = null;
+      }
+
+      function synchronizeDocumentHistoryPresent(file, value) {
+        const history = documentHistoryFor(file);
+        const label = history.present.label;
+        file.text = value;
+        if (!file.builtin) {
+          file.dirty = true;
+          scheduleAutoSave(file);
+          scheduleSessionSave();
+        }
+        history.present = documentSnapshot(file);
+        history.present.label = label;
+        history.lastChange = null;
+        updateDocumentHistoryControls();
+      }
+
+      function updateDocumentHistoryControls() {
+        if (!editorReady) return;
+        const history = documentHistoryFor(activeFile());
+        for (const [name, enabled] of [
+          ["history-undo", history.past.length > 0],
+          ["history-redo", history.future.length > 0]
+        ]) {
+          const button = editor.vditor?.toolbar?.elements?.[name]?.querySelector("button");
+          if (!button) continue;
+          button.disabled = !enabled;
+          button.setAttribute("aria-disabled", String(!enabled));
+        }
+      }
+
+      function recordDocumentMutation(file, before, {
+        label = "edit", coalesceKey = null, mergeWithPrevious = false
+      } = {}) {
+        if (restoringDocumentHistory || documentHistoryRecordingDepth) return false;
+        const history = documentHistoryFor(file);
+        if (!sameDocumentSnapshot(history.present, before)) {
+          history.past = [];
+          history.present = before;
+          history.future = [];
+          history.lastChange = null;
+        } else if (before.selection) {
+          history.present.selection = before.selection;
+        }
+
+        const next = documentSnapshot(file);
+        if (sameDocumentSnapshot(history.present, next)) return false;
+        const now = performance.now();
+        const canCoalesce = Boolean(coalesceKey && !history.future.length
+          && history.lastChange?.key === coalesceKey
+          && now - history.lastChange.time <= documentHistoryCoalesceDelay);
+        const canMerge = Boolean(mergeWithPrevious && history.past.length
+          && history.lastChange
+          && now - history.lastChange.time <= documentHistoryCoalesceDelay * 2);
+        if (!canCoalesce && !canMerge) history.past.push(history.present);
+        next.label = canMerge ? history.present.label : label;
+        history.present = next;
+        history.future = [];
+        history.lastChange = { key: coalesceKey, time: now };
+        trimDocumentHistory(history);
+        updateDocumentHistoryControls();
+        return true;
+      }
+
+      function applyDocumentSnapshot(file, snapshot) {
+        if (pendingEditorHistoryInput?.fileId === file.id) pendingEditorHistoryInput = null;
+        restoringDocumentHistory = true;
+        try {
+          releaseAttachmentPreviews(file.id);
+          file.text = snapshot.text;
+          file.attachments = new Map(snapshot.attachments);
+          file.tableWidthsOutOfSync = false;
+          if (!file.builtin) {
+            file.dirty = true;
+            scheduleAutoSave(file);
+            scheduleSessionSave();
+          }
+          if (activeFile() === file && editorReady) {
+            setEditorValue(file);
+            const canonical = canonicalEditorText(editor.getValue(), file);
+            if (canonical !== file.text) {
+              file.text = canonical;
+              snapshot.text = canonical;
+            }
+          }
+        } finally {
+          restoringDocumentHistory = false;
+        }
+        renderFiles();
+        scheduleAttachmentPreviews();
+        scheduleTableWidths();
+        if (activeFile() === file) restoreEditorSelection(file, snapshot.selection);
+      }
+
+      function undoDocumentChange() {
+        const file = activeFile();
+        if (!file) return false;
+        captureEditorValue();
+        const history = documentHistoryFor(file);
+        if (!history.past.length) return false;
+        history.present.selection = editorSelectionSnapshot(file) || history.present.selection;
+        const current = history.present;
+        const target = history.past.pop();
+        history.future.push(current);
+        history.present = target;
+        history.lastChange = null;
+        applyDocumentSnapshot(file, target);
+        updateDocumentHistoryControls();
+        updateStatus(`Undid ${current.label || "change"}`);
+        return true;
+      }
+
+      function redoDocumentChange() {
+        const file = activeFile();
+        if (!file) return false;
+        captureEditorValue();
+        const history = documentHistoryFor(file);
+        if (!history.future.length) return false;
+        history.present.selection = editorSelectionSnapshot(file) || history.present.selection;
+        const target = history.future.pop();
+        history.past.push(history.present);
+        history.present = target;
+        history.lastChange = null;
+        applyDocumentSnapshot(file, target);
+        updateDocumentHistoryControls();
+        updateStatus(`Redid ${target.label || "change"}`);
+        return true;
+      }
+
+      function markEditorHistoryPending(inputType = "", source = "command") {
+        const file = activeFile();
+        if (!file || restoringDocumentHistory || documentHistoryRecordingDepth) return false;
+        if (editorHistorySynchronization?.fileId === file.id) {
+          clearTimeout(editorHistorySynchronizationTimer);
+          editorHistorySynchronization = null;
+          editorHistorySynchronizationTimer = null;
+        }
+        const history = documentHistoryFor(file);
+        const startsPendingBatch = pendingEditorHistoryInput?.fileId !== file.id
+          || (source === "beforeinput" && pendingEditorHistoryInput?.source !== "beforeinput");
+        if (startsPendingBatch
+          && sameDocumentSnapshot(history.present,
+            documentSnapshot(file, { captureSelection: false }))) {
+          history.present.selection = editorSelectionSnapshot(file) || history.present.selection;
+        }
+        pendingEditorHistoryInput = {
+          fileId: file.id,
+          inputType,
+          source,
+          time: performance.now()
+        };
+        return true;
+      }
+
+      function expectEditorHistorySynchronization(file) {
+        clearTimeout(editorHistorySynchronizationTimer);
+        editorHistorySynchronization = { fileId: file.id };
+        editorHistorySynchronizationTimer = setTimeout(() => {
+          editorHistorySynchronization = null;
+          editorHistorySynchronizationTimer = null;
+        }, 2000);
+      }
+
+      function consumeEditorHistorySynchronization(file) {
+        if (documentHistoryRecordingDepth || editorHistorySynchronization?.fileId !== file.id) {
+          return false;
+        }
+        clearTimeout(editorHistorySynchronizationTimer);
+        editorHistorySynchronization = null;
+        editorHistorySynchronizationTimer = null;
+        return true;
+      }
+
+      function waitForEditorHistoryValue(file, previousText) {
+        return new Promise(resolve => {
+          const timeout = setTimeout(() => {
+            editorHistoryValueWaiters.delete(file.id);
+            expectEditorHistorySynchronization(file);
+            resolve(canonicalEditorText(editor.getValue(), file));
+          }, 1000);
+          editorHistoryValueWaiters.set(file.id, { resolve, timeout, previousText });
+        });
+      }
+
+      function resolveEditorHistoryValue(file, value) {
+        const waiter = editorHistoryValueWaiters.get(file.id);
+        if (!waiter) return false;
+        if (value === waiter.previousText) return false;
+        editorHistoryValueWaiters.delete(file.id);
+        clearTimeout(waiter.timeout);
+        waiter.resolve(value);
+        return true;
+      }
+
+      function prepareEditorHistoryInput(event) {
+        if (["historyUndo", "historyRedo"].includes(event.inputType)) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          if (event.inputType === "historyRedo") redoDocumentChange();
+          else undoDocumentChange();
+          return false;
+        }
+        return markEditorHistoryPending(event.inputType || "", "beforeinput");
+      }
+
+      function editorHistoryDetails(file) {
+        const pending = pendingEditorHistoryInput;
+        const inputType = pending?.fileId === file.id
+          && performance.now() - pending.time < 2000 ? pending.inputType : "";
+        if (pending?.fileId === file.id) pendingEditorHistoryInput = null;
+        if (["insertText", "insertCompositionText"].includes(inputType)) {
+          return { label: "typing", coalesceKey: `typing:${editor.getCurrentMode()}` };
+        }
+        if (["deleteContentBackward", "deleteContentForward"].includes(inputType)) {
+          return { label: "deletion", coalesceKey: `deletion:${inputType}:${editor.getCurrentMode()}` };
+        }
+        if (inputType.startsWith("format")) return { label: "formatting" };
+        if (inputType.includes("Paste") || inputType.includes("Drop")) return { label: "paste" };
+        if (inputType === "insertParagraph" || inputType === "insertLineBreak") {
+          return { label: "line break" };
+        }
+        return { label: "edit" };
+      }
+
       function isStandaloneSidebarFile(file) {
         return Boolean(file && !file.builtin && !file.welcome);
       }
@@ -2087,6 +2509,7 @@
         file.text = parsed.text;
         file.attachments = parsed.attachments;
         file.dirty = false;
+        resetDocumentHistory(file);
         return parsed.warning;
       }
 
@@ -2178,17 +2601,28 @@
         }
       }
 
-      function captureEditorValue() {
+      function captureEditorValue(options = null) {
         if (!editorReady) return;
         const file = activeFile();
         const value = canonicalEditorText(editor.getValue(), file);
-        if (value === file.text) return;
+        if (value === file.text) {
+          if (pendingEditorHistoryInput?.fileId === file.id) pendingEditorHistoryInput = null;
+          return;
+        }
+        if (!options && pendingEditorHistoryInput?.fileId !== file.id) {
+          synchronizeDocumentHistoryPresent(file, value);
+          return;
+        }
+        const details = options || editorHistoryDetails(file);
+        const before = documentSnapshot(file, { captureSelection: false });
         file.text = value;
         if (!file.builtin) {
           file.dirty = true;
           scheduleAutoSave(file);
           scheduleSessionSave();
         }
+        recordDocumentMutation(file, before, details);
+        if (pendingEditorHistoryInput?.fileId === file.id) pendingEditorHistoryInput = null;
       }
 
       function updateStatus(message = null) {
@@ -2679,6 +3113,7 @@
 
       function activateFile(file, message = null) {
         const previous = activeFile();
+        pendingEditorHistoryInput = null;
         if (previous) releaseAttachmentPreviews(previous.id);
         if (tableResizeSession) finishTableResize(null, false);
         else hideTableResizeHandle();
@@ -2691,11 +3126,13 @@
         session.activeId = file.id;
         if (file.handle) session.lastOpenHandle = file.handle;
         if (editorReady) setEditorValue(file);
+        documentHistoryFor(file);
         renderFiles();
         updateStatus(message);
         scheduleAttachmentPreviews();
         scheduleTableWidths();
         scheduleSessionSave();
+        updateDocumentHistoryControls();
       }
 
       function selectFile(id) {
@@ -2710,6 +3147,7 @@
         captureEditorValue();
         example.text = exampleText;
         example.attachments.clear();
+        resetDocumentHistory(example);
         activateFile(example);
       }
 
@@ -3153,9 +3591,10 @@
       }
 
       function applyTableWidthTextUpdate(
-        file, value, updated, message, { rerender = true } = {}
+        file, value, updated, message, { rerender = true, mergeHistory = false } = {}
       ) {
         if (!updated || updated === value) return false;
+        const before = documentSnapshot(file);
         file.text = updated;
         if (!file.builtin) {
           file.dirty = true;
@@ -3168,6 +3607,10 @@
         updateStatus(message);
         scheduleAttachmentPreviews();
         scheduleTableWidths();
+        recordDocumentMutation(file, before, {
+          label: "table resize",
+          mergeWithPrevious: mergeHistory
+        });
         return true;
       }
 
@@ -3177,7 +3620,8 @@
         const table = tableResizeCell.closest("table");
         const file = activeFile();
         if (!table || !file) return;
-        const value = canonicalEditorText(editor.getValue(), file);
+        captureEditorValue();
+        const value = file.text;
         const context = markdownTableContext(table, value);
         const columnIndex = tableResizeCell.cellIndex;
         const layoutWidths = tableColumnWidthsFromLayout(table);
@@ -3276,11 +3720,18 @@
         const value = file.text;
         const table = markdownTableBlocks(value)[resize.tableIndex];
         if (!table || table.columnCount !== resize.widths.length) return false;
+        const widths = normalizedTableWidths(resize.widths, table.columnCount);
+        const tableWidth = normalizedTableWidth(resize.tableWidth);
+        if (!widths || !tableWidth) return false;
         const updated = replaceTableWidthsMetadata(
-          value, table, resize.widths, resize.tableWidth);
+          value, table, widths, tableWidth);
         const message = resize.tableEdge ? "Table width updated" : "Column widths updated";
-        return applyTableWidthTextUpdate(
+        const committed = applyTableWidthTextUpdate(
           file, value, updated, message, { rerender: false });
+        if (committed && resize.table.isConnected) {
+          applyTableWidths(resize.table, widths, tableWidth);
+        }
+        return committed;
       }
 
       function finishTableResize(event, commit = true) {
@@ -3359,7 +3810,8 @@
           return;
         }
         const updated = replaceTableWidthsMetadata(value, table, widths, context.tableWidth);
-        applyTableWidthTextUpdate(context.file, value, updated, message);
+        applyTableWidthTextUpdate(
+          context.file, value, updated, message, { mergeHistory: true });
       }
 
       function runTableAction(action) {
@@ -3690,6 +4142,7 @@
 
       function applyImageUpdate(file, value, updated, message) {
         if (!updated || updated === value) return false;
+        const before = documentSnapshot(file);
         file.text = updated;
         if (!file.builtin) {
           file.dirty = true;
@@ -3702,6 +4155,7 @@
         renderFiles();
         updateStatus(message);
         scheduleAttachmentPreviews();
+        recordDocumentMutation(file, before, { label: message.toLocaleLowerCase() });
         return true;
       }
 
@@ -4178,6 +4632,7 @@
         drawingSession = {
           token,
           file,
+          editorRange: currentEditorRange(file),
           attachmentId,
           modules: null,
           elements: [],
@@ -4273,27 +4728,44 @@
 
           const isNew = !current.attachmentId;
           const id = current.attachmentId || createAttachmentId(current.file);
-          revokeAttachmentPreview(current.file.id, id);
-          current.file.attachments.set(id, {
-            id,
-            type: "image/svg+xml",
-            data: payload.data,
-            kind: "excalidraw",
-            blob: payload.blob,
-            pending: null,
-            error: false
-          });
+          const before = documentSnapshot(current.file);
+          let editorValuePromise = null;
+          documentHistoryRecordingDepth += 1;
+          try {
+            revokeAttachmentPreview(current.file.id, id);
+            current.file.attachments.set(id, {
+              id,
+              type: "image/svg+xml",
+              data: payload.data,
+              kind: "excalidraw",
+              blob: payload.blob,
+              pending: null,
+              error: false
+            });
 
-          closeDrawingDialog({ focusEditor: false });
-          if (isNew) {
-            editor.insertMD(`\n\n![Excalidraw drawing](${attachmentPath(id)})\n\n`);
-            current.file.text = canonicalEditorText(editor.getValue(), current.file);
+            if (isNew) {
+              if (drawingDialog.open) drawingDialog.close();
+              restoreEditorRange(current.editorRange);
+              editorValuePromise = waitForEditorHistoryValue(current.file, before.text);
+              editor.insertEmptyBlock("afterend");
+              editor.insertMD(`\n\n![Excalidraw drawing](${attachmentPath(id)})\n\n`);
+              drawingDialog.showModal();
+            }
+          } finally {
+            documentHistoryRecordingDepth -= 1;
           }
+          if (isNew) {
+            current.file.text = await editorValuePromise;
+          }
+          closeDrawingDialog({ focusEditor: false });
           current.file.dirty = true;
           renderFiles();
           scheduleAttachmentPreviews();
           scheduleAutoSave(current.file);
           scheduleSessionSave();
+          recordDocumentMutation(current.file, before, {
+            label: isNew ? "drawing insertion" : "drawing update"
+          });
           updateStatus(isNew ? "Drawing embedded in Markdown" : "Drawing updated");
           editor.focus();
         } catch (error) {
@@ -4471,32 +4943,44 @@
           return "Create or open a Markdown file before pasting images";
         }
 
-        const attachments = images.map(image => {
-          const id = createAttachmentId(file);
-          const attachment = {
-            id,
-            type: image.type || "image/png",
-            data: null,
-            blob: image,
-            pending: null,
-            error: false
-          };
-          file.attachments.set(id, attachment);
-          return { attachment, image };
-        });
+        const before = documentSnapshot(file);
+        let attachments;
+        let editorValuePromise;
+        documentHistoryRecordingDepth += 1;
+        try {
+          attachments = images.map(image => {
+            const id = createAttachmentId(file);
+            const attachment = {
+              id,
+              type: image.type || "image/png",
+              data: null,
+              blob: image,
+              pending: null,
+              error: false
+            };
+            file.attachments.set(id, attachment);
+            return { attachment, image };
+          });
 
-        editor.insertMD(attachments
-          .map(({ attachment }) => `![Pasted image](${attachmentPath(attachment.id)})`)
-          .join("\n\n"));
-        file.text = canonicalEditorText(editor.getValue(), file);
+          editorValuePromise = waitForEditorHistoryValue(file, before.text);
+          editor.insertMD(attachments
+            .map(({ attachment }) => `![Pasted image](${attachmentPath(attachment.id)})`)
+            .join("\n\n"));
+          file.text = canonicalEditorText(editor.getValue(), file);
+        } finally {
+          documentHistoryRecordingDepth -= 1;
+        }
+        file.text = await editorValuePromise;
         file.dirty = true;
         renderFiles();
         scheduleAttachmentPreviews();
         scheduleAutoSave(file);
         scheduleSessionSave();
+        recordDocumentMutation(file, before, {
+          label: images.length === 1 ? "image paste" : "image paste batch"
+        });
         updateStatus(images.length === 1 ? "Embedding pasted image…" : `Embedding ${images.length} images…`);
 
-        await new Promise(resolve => requestAnimationFrame(resolve));
         const results = await Promise.all(attachments.map(({ attachment, image }) =>
           processPastedAttachment(file, attachment, image)));
 
@@ -4689,18 +5173,40 @@
         }
         if (activeFile() !== file) return;
 
+        markEditorHistoryPending("insertFromPaste", "command");
         editor.insertMD(markdownLink(title || fallbackLinkTitle(url), url));
         updateStatus(title ? "Link pasted with title" : "Link pasted");
       }
 
       function handleEditorKeydown(event) {
+        const surface = activeEditorSurface();
+        if (!surface?.contains(event.target) || event.isComposing) return;
         const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.platform);
         const commandKey = isMac ? event.metaKey : event.ctrlKey;
-        if (!editorReady || !commandKey || !event.shiftKey || event.altKey
-            || event.key.toLowerCase() !== "z") return;
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        editor.vditor.undo.redo(editor.vditor);
+        const key = event.key.toLowerCase();
+        const undoShortcut = editorReady && commandKey && !event.shiftKey
+          && !event.altKey && key === "z";
+        const redoShortcut = editorReady && commandKey && !event.altKey
+          && ((event.shiftKey && key === "z") || (!event.shiftKey && key === "y"));
+        if (undoShortcut || redoShortcut) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          if (redoShortcut) redoDocumentChange();
+          else undoDocumentChange();
+          return;
+        }
+        const commandMutation = commandKey && (
+          ["=", "-", "j"].includes(key)
+          || (event.shiftKey && ["f", "g", "l", "c", "r"].includes(key))
+          || (event.altKey && /^[1-6]$/.test(key))
+        );
+        if (commandMutation) {
+          markEditorHistoryPending("", "command");
+        }
+        if (commandKey || event.altKey || [
+          "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown",
+          "Home", "End", "PageUp", "PageDown", "Escape"
+        ].includes(event.key)) breakDocumentHistoryCoalescing();
       }
 
       function taskItemCheckbox(item) {
@@ -4751,7 +5257,7 @@
           const updatedCheckbox = surface.querySelectorAll(
             'li.vditor-task > input[type="checkbox"]')[taskIndex];
           if (!updatedCheckbox || !reorderTaskSiblings(updatedCheckbox)) return;
-          captureEditorValue();
+          captureEditorValue({ mergeWithPrevious: true, label: "task update" });
           renderFiles();
           updateStatus();
         });
@@ -5075,6 +5581,7 @@
         const wasActive = file.id === session.activeId;
         cancelAutoSave(file);
         releaseAttachmentPreviews(file.id);
+        documentHistories.delete(file.id);
         removeFileFromSidebarLayout(file.id);
         session.files = session.files.filter(candidate => candidate !== file && !candidate.welcome);
         if (!wasActive) return;
@@ -5547,7 +6054,9 @@
         handle.addEventListener("pointerup", event => finishImageResize(event));
         handle.addEventListener("pointercancel", event => finishImageResize(event, false));
       }
-      editorElement.addEventListener("beforeinput", rememberIrScrollPosition, true);
+      editorElement.addEventListener("beforeinput", event => {
+        if (prepareEditorHistoryInput(event)) rememberIrScrollPosition();
+      }, true);
       editorElement.addEventListener("input", () => {
         restoreIrScrollPosition();
         hideTableEdgeTools();
@@ -5571,6 +6080,12 @@
       }, true);
       imageResizer.addEventListener("pointerleave", hideImageResizerAfterHover);
       editorElement.addEventListener("pointerdown", event => {
+        breakDocumentHistoryCoalescing();
+        const toolbarType = event.target.closest?.(".vditor-toolbar button")?.dataset.type;
+        if (toolbarType && ![
+          "history-undo", "history-redo", "draw", "fullscreen",
+          "outline", "export", "edit-mode"
+        ].includes(toolbarType)) markEditorHistoryPending("", "command");
         if (event.button !== 0) return;
         const image = editableImageFromNode(event.target);
         if (image) showImageResizer(image, true);
@@ -5692,6 +6207,24 @@
         };
       }
 
+      function historyToolbarControl(direction) {
+        const isRedo = direction === "redo";
+        const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.platform);
+        const shortcut = isRedo
+          ? (isMac ? "⌘⇧Z" : "Ctrl+Shift+Z / Ctrl+Y")
+          : (isMac ? "⌘Z" : "Ctrl+Z");
+        return {
+          name: `history-${direction}`,
+          tip: `${isRedo ? "Redo" : "Undo"} (${shortcut})`,
+          tipPosition: "nw",
+          icon: toolbarIcon(direction),
+          click() {
+            if (isRedo) redoDocumentChange();
+            else undoDocumentChange();
+          }
+        };
+      }
+
       function drawingToolbarControl() {
         return {
           name: "draw",
@@ -5758,7 +6291,7 @@
           toolbarControl("inline-code"), toolbarControl("insert-before"),
           toolbarControl("insert-after"), "|", toolbarControl("upload"),
           toolbarControl("table"), drawingToolbarControl(), "|",
-          toolbarControl("undo", "nw"), toolbarControl("redo", "nw"), "|",
+          historyToolbarControl("undo"), historyToolbarControl("redo"), "|",
           toolbarControl("fullscreen", "nw"),
           toolbarControl("outline", "nw"), toolbarControl("export", "nw"),
           { name: "edit-mode", className: "LocalMarkdown-internal-edit-mode" }
@@ -5789,13 +6322,21 @@
         input(value) {
           const file = activeFile();
           const canonical = canonicalEditorText(value, file);
+          const transactionInput = resolveEditorHistoryValue(file, canonical);
+          const synchronizeHistory = !transactionInput
+            && consumeEditorHistorySynchronization(file);
           if (canonical === file.text) return;
+          const before = documentSnapshot(file, { captureSelection: false });
           file.text = canonical;
           if (!file.builtin) {
             file.dirty = true;
             scheduleAutoSave(file);
             scheduleSessionSave();
           }
+          if (transactionInput) {
+            if (pendingEditorHistoryInput?.fileId === file.id) pendingEditorHistoryInput = null;
+          } else if (synchronizeHistory) synchronizeDocumentHistoryPresent(file, canonical);
+          else recordDocumentMutation(file, before, editorHistoryDetails(file));
           renderFiles();
           updateStatus();
           scheduleAttachmentPreviews();
@@ -5808,6 +6349,8 @@
           updateViewButtons(editor.getCurrentMode());
           observeAttachmentPreviews();
           setEditorValue(activeFile());
+          documentHistoryFor(activeFile());
+          updateDocumentHistoryControls();
           updateStatus();
           scheduleAttachmentPreviews();
           scheduleTableWidths();
