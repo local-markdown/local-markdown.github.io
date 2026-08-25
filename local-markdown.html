@@ -3612,7 +3612,7 @@
           .replace(/</g, "&lt;")
           .replace(/>/g, "&gt;")
           .replace(/"/g, "&quot;")
-          .replace(/\n/g, "<br>");
+          .replace(/\n/g, '<br style="mso-data-placement:same-cell">');
       }
 
       function tableClipboardHtml(data) {
@@ -3620,7 +3620,11 @@
           const tag = cell.header ? "th" : "td";
           return `<${tag}>${escapedTableHtml(cell.text)}</${tag}>`;
         }).join("")}</tr>`).join("");
-        return `<table>${rows}</table>`;
+        return '<html xmlns:o="urn:schemas-microsoft-com:office:office" '
+          + 'xmlns:x="urn:schemas-microsoft-com:office:excel">'
+          + '<head><meta charset="utf-8"><style>'
+          + 'br{mso-data-placement:same-cell;}</style></head>'
+          + `<body><table>${rows}</table></body></html>`;
       }
 
       function selectedTableExportData() {
