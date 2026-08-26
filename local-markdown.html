@@ -824,6 +824,36 @@
     .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg)
     .vditor-reset > :is(h1, h2, h3, h4, h5, h6)::before { content: none !important; }
     .LocalMarkdown-editor .vditor-reset img { cursor: zoom-in; }
+    .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg) li.vditor-task {
+      position: relative; margin-left: -2.5em; padding-left: 2.5em;
+    }
+    .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg) li.vditor-task::before {
+      content: ""; position: absolute; top: .25em; left: .05em;
+      width: 1em; height: 1.15em; border-radius: var(--lm-radius-control);
+      color: var(--lm-secondary-text); cursor: grab; opacity: 0;
+      background-image: radial-gradient(circle, currentColor 1.2px, transparent 1.35px);
+      background-position: 1px 1px; background-size: 5px 5px;
+      transition: color 100ms ease, opacity 100ms ease;
+    }
+    .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg)
+    li.vditor-task:is(.LocalMarkdown-task-handle-hover, .LocalMarkdown-task-dragging)::before {
+      opacity: 1;
+    }
+    .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg)
+    li.vditor-task.LocalMarkdown-task-dragging {
+      opacity: .45;
+    }
+    .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg)
+    li.vditor-task.LocalMarkdown-task-dragging::before { cursor: grabbing; }
+    .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg)
+    li.vditor-task:is(.LocalMarkdown-task-drop-before, .LocalMarkdown-task-drop-after)::after {
+      content: ""; position: absolute; z-index: 1; left: 0; right: 0;
+      height: 2px; border-radius: 999px; background: var(--lm-accent); pointer-events: none;
+    }
+    .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg)
+    li.vditor-task.LocalMarkdown-task-drop-before::after { top: -2px; }
+    .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg)
+    li.vditor-task.LocalMarkdown-task-drop-after::after { bottom: -2px; }
 
     .LocalMarkdown-image-preview {
       width: 100vw; height: 100dvh; max-width: none; max-height: none;
@@ -1382,6 +1412,10 @@
       let sessionNeedsSave = false;
       let sessionRestored = false;
       let draggedSidebarItem = null;
+      let taskDragHandleItem = null;
+      let taskPointerDragSession = null;
+      let taskDropTarget = null;
+      let taskDropAfter = false;
       let excalidrawStylesPromise = null;
       let excalidrawModulesPromise = null;
       let drawingRoot = null;
@@ -5592,6 +5626,138 @@
           child.matches('input[type="checkbox"]')) || null;
       }
 
+      function taskItemFromEvent(event) {
+        return event.target instanceof Element
+          ? event.target.closest("li.vditor-task")
+          : null;
+      }
+
+      function taskItemFromPoint(x, y) {
+        const target = document.elementFromPoint(x, y);
+        return target instanceof Element ? target.closest("li.vditor-task") : null;
+      }
+
+      function isTaskDragHandlePoint(item, event) {
+        const checkbox = taskItemCheckbox(item);
+        if (!checkbox) return false;
+        const rect = checkbox.getBoundingClientRect();
+        return event.clientX >= rect.left - 20 && event.clientX <= rect.left - 2
+          && event.clientY >= rect.top - 4 && event.clientY <= rect.bottom + 4;
+      }
+
+      function clearTaskDropTarget() {
+        taskDropTarget?.classList.remove(
+          "LocalMarkdown-task-drop-before", "LocalMarkdown-task-drop-after");
+        taskDropTarget = null;
+        taskDropAfter = false;
+      }
+
+      function markTaskDropTarget(item, dropAfter) {
+        if (taskDropTarget === item && taskDropAfter === dropAfter) return;
+        clearTaskDropTarget();
+        taskDropTarget = item;
+        taskDropAfter = dropAfter;
+        item.classList.add(dropAfter
+          ? "LocalMarkdown-task-drop-after"
+            : "LocalMarkdown-task-drop-before");
+      }
+
+      function setTaskDragHandleItem(item) {
+        if (taskDragHandleItem === item) return;
+        taskDragHandleItem?.classList.remove("LocalMarkdown-task-handle-hover");
+        taskDragHandleItem = item;
+        taskDragHandleItem?.classList.add("LocalMarkdown-task-handle-hover");
+      }
+
+      function resetTaskDrag() {
+        const session = taskPointerDragSession;
+        clearTaskDropTarget();
+        session?.item.classList.remove("LocalMarkdown-task-dragging");
+        if (session?.item.hasPointerCapture?.(session.pointerId)) {
+          session.item.releasePointerCapture(session.pointerId);
+        }
+        taskPointerDragSession = null;
+        setTaskDragHandleItem(null);
+      }
+
+      function updateTaskDragHandle(event) {
+        if (taskPointerDragSession) return;
+        const item = taskItemFromEvent(event);
+        setTaskDragHandleItem(item?.closest(".vditor-ir, .vditor-wysiwyg")
+            && isTaskDragHandlePoint(item, event) ? item : null);
+      }
+
+      function startTaskPointerDrag(event) {
+        if (event.button !== 0 || taskPointerDragSession) return;
+        const item = taskItemFromEvent(event);
+        if (!item?.closest(".vditor-ir, .vditor-wysiwyg")
+            || !isTaskDragHandlePoint(item, event)) return;
+        event.preventDefault();
+        event.stopPropagation();
+        taskPointerDragSession = {
+          item,
+          pointerId: event.pointerId,
+          startX: event.clientX,
+          startY: event.clientY,
+          started: false
+        };
+        setTaskDragHandleItem(item);
+        item.setPointerCapture?.(event.pointerId);
+      }
+
+      function moveTaskPointerDrag(event) {
+        const session = taskPointerDragSession;
+        if (!session) {
+          updateTaskDragHandle(event);
+          return;
+        }
+        if (event.pointerId !== session.pointerId) return;
+        event.preventDefault();
+        event.stopPropagation();
+        if (!session.started) {
+          const distance = Math.hypot(
+            event.clientX - session.startX, event.clientY - session.startY);
+          if (distance < 4) return;
+          session.started = true;
+          session.item.classList.add("LocalMarkdown-task-dragging");
+        }
+
+        const target = taskItemFromPoint(event.clientX, event.clientY);
+        if (!target || target === session.item
+            || target.parentElement !== session.item.parentElement) {
+          clearTaskDropTarget();
+          return;
+        }
+        const checkbox = taskItemCheckbox(target);
+        if (!checkbox) return;
+        const checkboxRect = checkbox.getBoundingClientRect();
+        markTaskDropTarget(target, event.clientY >= checkboxRect.top + checkboxRect.height / 2);
+      }
+
+      function finishTaskPointerDrag(event, commit = true) {
+        const session = taskPointerDragSession;
+        if (!session || event.pointerId !== session.pointerId) return;
+        event.preventDefault();
+        event.stopPropagation();
+        const item = session.item;
+        const target = taskDropTarget;
+        const dropAfter = taskDropAfter;
+        const list = item.parentElement;
+        const shouldReorder = commit && session.started && target
+          && target.parentElement === list;
+        resetTaskDrag();
+        if (!shouldReorder) return;
+
+        const beforeOrder = Array.from(list.children);
+        const reference = dropAfter ? target.nextSibling : target;
+        list.insertBefore(item, reference);
+        if (beforeOrder.every((child, index) => child === list.children[index])) return;
+
+        captureEditorValue({ label: "task reorder" });
+        renderFiles();
+        updateStatus("Task reordered");
+      }
+
       function reorderTaskSiblings(checkbox) {
         const item = checkbox.closest("li.vditor-task");
         const list = item?.parentElement;
@@ -6489,6 +6655,14 @@
       editorElement.addEventListener("keydown", handleEditorViewShortcut, true);
       editorElement.addEventListener("keydown", handleEditorKeydown, true);
       editorElement.addEventListener("click", handleTaskCheckboxClick, true);
+      editorElement.addEventListener("pointermove", moveTaskPointerDrag, true);
+      editorElement.addEventListener("pointerdown", startTaskPointerDrag, true);
+      window.addEventListener("pointerup", finishTaskPointerDrag, true);
+      window.addEventListener("pointercancel", event =>
+        finishTaskPointerDrag(event, false), true);
+      editorElement.addEventListener("pointerleave", () => {
+        if (!taskPointerDragSession) setTaskDragHandleItem(null);
+      });
       editorElement.addEventListener("copy", handleTableCopy, true);
       editorElement.addEventListener("paste", event => void pasteFormattedLink(event), true);
       editorElement.addEventListener("pointerover", event => {
