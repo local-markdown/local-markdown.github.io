@@ -63,12 +63,12 @@
       --lm-border: rgba(55, 53, 47, .12);
       --lm-control-border: rgba(55, 53, 47, .16);
       --lm-accent: #37352f;
-      --lm-heading-1: #0969da;
-      --lm-heading-2: #cf222e;
-      --lm-heading-3: #1a7f37;
-      --lm-heading-4: #8250df;
-      --lm-heading-5: #bc4c00;
-      --lm-heading-6: #0f766e;
+      --lm-heading-1: #2563eb;
+      --lm-heading-2: #be123c;
+      --lm-heading-3: #047857;
+      --lm-heading-4: #7e22ce;
+      --lm-heading-5: #b45309;
+      --lm-heading-6: #0e7490;
       --lm-unsaved: #a15c00;
       --lm-app-background: #fff;
       --lm-document-background: #fff;
@@ -96,12 +96,12 @@
       --lm-border: #d8d1bd;
       --lm-control-border: #c9c2ae;
       --lm-accent: #268bd2;
-      --lm-heading-1: #1477ad;
-      --lm-heading-2: #b52f2b;
-      --lm-heading-3: #28744a;
-      --lm-heading-4: #7452a8;
-      --lm-heading-5: #a45100;
-      --lm-heading-6: #1b7570;
+      --lm-heading-1: #2563eb;
+      --lm-heading-2: #be123c;
+      --lm-heading-3: #047857;
+      --lm-heading-4: #7e22ce;
+      --lm-heading-5: #b45309;
+      --lm-heading-6: #0e7490;
       --lm-unsaved: #9b6b00;
       --lm-app-background: #eee8d5;
       --lm-document-background: #fdf6e3;
@@ -129,12 +129,12 @@
       --lm-border: #164653;
       --lm-control-border: #315661;
       --lm-accent: #2aa198;
-      --lm-heading-1: #58a6ff;
-      --lm-heading-2: #ff7b72;
-      --lm-heading-3: #73c991;
-      --lm-heading-4: #c099ff;
-      --lm-heading-5: #f2a65a;
-      --lm-heading-6: #5cc8be;
+      --lm-heading-1: #60a5fa;
+      --lm-heading-2: #fb7185;
+      --lm-heading-3: #34d399;
+      --lm-heading-4: #c084fc;
+      --lm-heading-5: #fbbf24;
+      --lm-heading-6: #22d3ee;
       --lm-unsaved: #d6a700;
       --lm-app-background: #001f27;
       --lm-document-background: #073642;
@@ -709,7 +709,7 @@
       --count-background-color: var(--lm-selection);
       --heading-border-color: var(--lm-border);
       --blockquote-color: var(--lm-muted);
-      --ir-heading-color: #6c71c4;
+      --ir-heading-color: var(--lm-heading-4);
       --ir-title-color: var(--lm-muted);
       --ir-bi-color: #cb4b16;
       --ir-link-color: #859900;
@@ -776,15 +776,45 @@
       font-size: var(--lm-type-metadata-size); line-height: var(--lm-line-tight);
     }
     .LocalMarkdown-editor .vditor-outline__content {
-      font-size: var(--lm-type-control-size); line-height: var(--lm-line-body);
+      font-size: var(--lm-type-control-size); line-height: var(--lm-line-tight);
+    }
+    .LocalMarkdown-editor .vditor-outline__content li > span {
+      padding-block: 3px;
+    }
+    .LocalMarkdown-editor .vditor-outline__content li > span > svg {
+      margin-right: var(--lm-space-1);
+    }
+    .LocalMarkdown-editor .vditor-outline__content [data-heading-level="1"] {
+      color: var(--lm-heading-1);
+    }
+    .LocalMarkdown-editor .vditor-outline__content [data-heading-level="2"] {
+      color: var(--lm-heading-2);
+    }
+    .LocalMarkdown-editor .vditor-outline__content [data-heading-level="3"] {
+      color: var(--lm-heading-3);
+    }
+    .LocalMarkdown-editor .vditor-outline__content [data-heading-level="4"] {
+      color: var(--lm-heading-4);
+    }
+    .LocalMarkdown-editor .vditor-outline__content [data-heading-level="5"] {
+      color: var(--lm-heading-5);
+    }
+    .LocalMarkdown-editor .vditor-outline__content [data-heading-level="6"] {
+      color: var(--lm-heading-6);
     }
     .LocalMarkdown-internal-edit-mode { display: none !important; }
     .LocalMarkdown-editor .vditor-counter,
     .LocalMarkdown-editor .vditor-resize { display: none !important; }
     .LocalMarkdown-editor .vditor-content {
+      --lm-editor-edge-margin: var(--lm-space-8);
       flex: 1; min-height: 0; height: auto !important;
-      padding: 0 64px; gap: var(--lm-space-6);
-      background: var(--lm-app-background);
+      padding: 0 0 0 var(--lm-editor-edge-margin); gap: var(--lm-space-6);
+      background: var(--lm-document-background);
+    }
+    .LocalMarkdown-editor .vditor-content:not(
+      :has(> .vditor-preview[style*="display: block"])
+    ):not(:has(> .vditor-outline[style*="display: block"])) {
+      padding-right: var(--lm-editor-edge-margin);
     }
     .LocalMarkdown-editor .vditor-ir,
     .LocalMarkdown-editor .vditor-wysiwyg {
@@ -805,13 +835,14 @@
       box-shadow: none;
     }
     .LocalMarkdown-editor .vditor-preview {
+      padding-right: var(--lm-space-6);
       border-left: 1px solid var(--lm-border) !important; background: transparent;
     }
     .LocalMarkdown-editor .vditor-preview[style*="display: block"] {
       display: grid !important; grid-template-rows: auto minmax(0, 1fr); overflow: hidden;
     }
     .LocalMarkdown-editor .vditor-preview > .vditor-reset {
-      min-height: 0; height: auto;
+      min-width: 0; width: 100%; min-height: 0; height: auto;
       padding: var(--lm-space-6) 0 96px var(--lm-space-6) !important;
       border: 0; border-radius: 0;
       background: var(--lm-document-background);
@@ -843,7 +874,10 @@
       color: var(--lm-text); background-color: var(--lm-surface);
     }
     .LocalMarkdown-editor .vditor-reset table { display: table; width: 100%; }
-    .LocalMarkdown-editor .vditor-reset table tr { background-color: var(--lm-background); }
+    .LocalMarkdown-editor .vditor-reset table tr,
+    .LocalMarkdown-editor .vditor-reset table tr:nth-child(2n) {
+      background-color: var(--lm-document-background);
+    }
     .LocalMarkdown-editor .vditor-reset :is(td, th) { border-color: var(--lm-border); }
     .LocalMarkdown-editor .vditor-reset hr { background-color: var(--lm-border); }
     .LocalMarkdown-editor .vditor-reset a { color: var(--lm-accent); }
@@ -1067,7 +1101,9 @@
     .LocalMarkdown-drawing-loading[hidden] { display: none; }
 
     @media (max-width: 900px) {
-      .LocalMarkdown-editor .vditor-content { padding-inline: 48px; }
+      .LocalMarkdown-editor .vditor-content {
+        --lm-editor-edge-margin: var(--lm-space-6);
+      }
       .LocalMarkdown-editor-width-input { width: 72px; }
     }
 
@@ -1109,15 +1145,15 @@
       }
       .LocalMarkdown-editor-width-input { width: 64px; }
       .LocalMarkdown-editor .vditor-toolbar { padding: 0 var(--lm-space-1); }
-      .LocalMarkdown-editor .vditor-content {
-        padding: 0 var(--lm-space-6); gap: var(--lm-space-6);
-      }
+      .LocalMarkdown-editor .vditor-content { gap: var(--lm-space-6); }
       .LocalMarkdown-editor.vditor {
         --lm-document-padding-block: var(--lm-space-6);
         --lm-document-padding-inline: var(--lm-space-6);
       }
-      .LocalMarkdown-editor .vditor-sv,
-      .LocalMarkdown-editor .vditor-preview > .vditor-reset { padding: var(--lm-space-6) !important; }
+      .LocalMarkdown-editor .vditor-sv { padding: var(--lm-space-6) !important; }
+      .LocalMarkdown-editor .vditor-preview > .vditor-reset {
+        padding: var(--lm-space-6) 0 var(--lm-space-6) var(--lm-space-6) !important;
+      }
       .LocalMarkdown-drawing-header { padding-left: var(--lm-space-2); }
       .LocalMarkdown-drawing-status { display: none; }
     }
@@ -1125,7 +1161,9 @@
     @media (max-width: 360px) {
       .LocalMarkdown-toolbar { padding: 0 var(--lm-space-1); gap: var(--lm-space-1); }
       .LocalMarkdown-editor-width-input { width: 48px; }
-      .LocalMarkdown-editor .vditor-content { padding-inline: var(--lm-space-4); }
+      .LocalMarkdown-editor .vditor-content {
+        --lm-editor-edge-margin: var(--lm-space-4);
+      }
       .LocalMarkdown-theme-toggle { width: var(--lm-control-height-compact); }
     }
 
@@ -1440,6 +1478,8 @@
       let imagePreviewTimer = null;
       let attachmentPreviewTimer = null;
       let attachmentPreviewObserver = null;
+      let outlineObserver = null;
+      let outlineRefreshFrame = null;
       let imageWorker = null;
       let imageWorkerUrl = null;
       let imageWorkerRequestId = 0;
@@ -1481,6 +1521,7 @@
       const documentHistoryLimit = 100;
       const documentHistoryByteLimit = 24 * 1024 * 1024;
       const documentHistoryCoalesceDelay = 900;
+      const outlineScrollOffset = 16;
       const attachmentBlockStart = "<!-- LocalMarkdown attachments:v1";
       const attachmentBlockEnd = "-->";
       const attachmentPathPrefix = "lmd/";
@@ -1521,6 +1562,7 @@
       const sessionStorageKey = "current:v1";
       const sessionSaveDelay = 200;
       const sidebarStorageKey = "LocalMarkdown:sidebar:v1";
+      const outlineStorageKey = "LocalMarkdown:outline:v1";
       const themeStorageKey = "LocalMarkdown:theme:v1";
       const editorWidthStorageKey = "LocalMarkdown:editor-width:v1";
       const editorModeStorageKey = "LocalMarkdown:editor-mode:v1";
@@ -3326,6 +3368,78 @@
           irScrollRestoreFrame = null;
           const scroller = editorElement.querySelector(".vditor-ir > .vditor-reset");
           if (scroller) scroller.scrollTop = scrollTop;
+        });
+      }
+
+      function handleOutlineNavigation(event) {
+        const item = event.target.closest?.(
+          ".vditor-outline__content [data-target-id]");
+        if (!item || event.target.closest?.(".vditor-outline__action")) return;
+        const target = document.getElementById(item.dataset.targetId);
+        if (!target) return;
+        const scroller = target.closest(".vditor-reset, .vditor-sv");
+        if (!scroller) return;
+        requestAnimationFrame(() => {
+          const targetTop = target.getBoundingClientRect().top;
+          const scrollerTop = scroller.getBoundingClientRect().top;
+          scroller.scrollTop += targetTop - scrollerTop - outlineScrollOffset;
+        });
+      }
+
+      function outlineIsOpen(outline = editorElement.querySelector(".vditor-outline")) {
+        return Boolean(outline && getComputedStyle(outline).display !== "none");
+      }
+
+      function persistOutlineStatus(outline) {
+        try {
+          localStorage.setItem(outlineStorageKey,
+            outlineIsOpen(outline) ? "open" : "closed");
+        } catch {}
+      }
+
+      function synchronizeOutlineHeadingLevels() {
+        outlineRefreshFrame = null;
+        const items = editorElement.querySelectorAll(
+          ".vditor-outline__content [data-target-id]");
+        for (const item of items) {
+          const target = document.getElementById(item.dataset.targetId);
+          const match = target?.tagName.match(/^H([1-6])$/);
+          if (match) item.dataset.headingLevel = match[1];
+          else delete item.dataset.headingLevel;
+        }
+      }
+
+      function scheduleOutlineHeadingLevels() {
+        cancelAnimationFrame(outlineRefreshFrame);
+        outlineRefreshFrame = requestAnimationFrame(synchronizeOutlineHeadingLevels);
+      }
+
+      function observeOutline() {
+        const outline = editorElement.querySelector(".vditor-outline");
+        const toggle = editorElement.querySelector(
+          '.vditor-toolbar button[data-type="outline"]');
+        if (!outline || !toggle) return;
+
+        let shouldOpen = false;
+        try { shouldOpen = localStorage.getItem(outlineStorageKey) === "open"; } catch {}
+        if (outlineIsOpen(outline) !== shouldOpen) toggle.click();
+        scheduleOutlineHeadingLevels();
+
+        outlineObserver?.disconnect();
+        outlineObserver = new MutationObserver(records => {
+          if (records.some(record =>
+            record.type === "attributes" && record.target === outline)) {
+            persistOutlineStatus(outline);
+          }
+          if (records.some(record => record.type === "childList")) {
+            scheduleOutlineHeadingLevels();
+          }
+        });
+        outlineObserver.observe(outline, {
+          subtree: true,
+          childList: true,
+          attributes: true,
+          attributeFilter: ["style"]
         });
       }
 
@@ -6777,6 +6891,7 @@
         hideTableExportTools();
         hideImageResizer();
       });
+      editorElement.addEventListener("click", handleOutlineNavigation, true);
       editorElement.addEventListener("scroll", handleSplitViewScroll, true);
       editorElement.addEventListener("keydown", handleEditorViewShortcut, true);
       editorElement.addEventListener("keydown", handleEditorKeydown, true);
@@ -7024,7 +7139,7 @@
         counter: { enable: false },
         outline: { enable: false, position: "right" },
         preview: {
-          actions: ["desktop", "tablet", "mobile"],
+          actions: [],
           theme: {
             current: document.documentElement.dataset.theme === "solarized-dark" ? "dark" : "light"
           },
@@ -7077,12 +7192,15 @@
           updateStatus();
           scheduleAttachmentPreviews();
           scheduleTableWidths();
+          observeOutline();
         }
       });
 
       addEventListener("unload", () => {
         attachmentPreviewObserver?.disconnect();
+        outlineObserver?.disconnect();
         cancelAnimationFrame(irScrollRestoreFrame);
+        cancelAnimationFrame(outlineRefreshFrame);
         cancelAnimationFrame(tableWidthRefreshFrame);
         releaseAttachmentPreviews();
         imageWorker?.terminate();
