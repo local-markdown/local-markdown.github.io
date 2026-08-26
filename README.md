@@ -31,7 +31,6 @@ Open Local Markdown in desktop Chrome or Edge, choose a Markdown file, and start
 - Open-file and unsaved edit recovery after refresh
 - Screenshot and copied image pasting
 - Proportional image resizing and left, centre, or right alignment
-- Completed tasks move below open sibling tasks while keeping nested subtasks together
 - Automatic Markdown links for pasted URLs, using webpage titles or document filenames
 - Editable Excalidraw drawings embedded directly in Markdown files
 - Hover controls for resizing table columns or the whole table, and adding or deleting rows and columns
