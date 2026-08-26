@@ -870,6 +870,29 @@
     .LocalMarkdown-editor .vditor-reset h6 { color: var(--lm-heading-6); }
     .LocalMarkdown-editor .vditor-reset :is(h1, h2) { border-bottom: 0; }
     .LocalMarkdown-editor .vditor-reset pre { background-color: var(--lm-surface); }
+    .LocalMarkdown-editor .vditor-copy .LocalMarkdown-code-wrap {
+      position: absolute; top: .5em; right: 39px;
+      width: 14px; height: 14px; margin: 0; padding: 0;
+      border: 0; color: #586069; background: transparent; cursor: pointer;
+    }
+    .LocalMarkdown-editor .vditor-copy .LocalMarkdown-code-wrap svg {
+      display: block; width: 14px; height: 14px;
+      fill: none; stroke: currentColor; stroke-width: 2;
+      stroke-linecap: round; stroke-linejoin: round;
+    }
+    .LocalMarkdown-editor .vditor-copy .LocalMarkdown-code-wrap:hover,
+    .LocalMarkdown-editor .vditor-copy .LocalMarkdown-code-wrap:focus-visible,
+    .LocalMarkdown-editor .vditor-copy .LocalMarkdown-code-wrap[aria-pressed="true"] {
+      color: var(--lm-accent);
+    }
+    .LocalMarkdown-editor .vditor-copy .LocalMarkdown-code-wrap:focus-visible {
+      outline: 2px solid var(--lm-accent); outline-offset: 2px; border-radius: 2px;
+    }
+    .LocalMarkdown-editor pre.LocalMarkdown-code-wrap-enabled > code {
+      white-space: pre-wrap !important;
+      overflow-wrap: break-word !important;
+      word-break: normal !important;
+    }
     .LocalMarkdown-editor .vditor-reset code:not(.hljs):not(.highlight-chroma) {
       color: var(--lm-text); background-color: var(--lm-surface);
     }
@@ -1473,6 +1496,7 @@
       let tableResizeCell = null;
       let tableResizeSession = null;
       let tableWidthRefreshFrame = null;
+      let codeWrapRefreshFrame = null;
       let selectedImage = null;
       let imageResizeSession = null;
       let imagePreviewTimer = null;
@@ -1514,6 +1538,7 @@
       const attachmentPreviewUrls = new Map();
       const attachmentPreviewReferences = new Map();
       const attachmentImageIds = new WeakMap();
+      const codeWrapStates = new Map();
       const imageWorkerRequests = new Map();
       const documentHistories = new Map();
       const editorHistoryValueWaiters = new Map();
@@ -2620,6 +2645,7 @@
             })),
             ungroupedFileIds: [...session.sidebar.ungroupedFileIds]
           },
+          wrappedCodeBlocks: [...codeWrapStates.keys()],
           fileOrder: session.files
             .filter(file => !file.welcome)
             .map(file => file.id),
@@ -2749,6 +2775,15 @@
             filesById.delete(id);
           }
           session.files = [...orderedFiles, ...filesById.values()];
+          const restoredFileIds = new Set(session.files.map(file => file.id));
+          for (const key of Array.isArray(storedSession.wrappedCodeBlocks)
+            ? storedSession.wrappedCodeBlocks : []) {
+            if (typeof key !== "string") continue;
+            const separator = key.lastIndexOf("\n");
+            if (separator < 0 || !restoredFileIds.has(key.slice(0, separator))
+                || !/^\d+$/.test(key.slice(separator + 1))) continue;
+            codeWrapStates.set(key, true);
+          }
           if (storedSession.version === 2 && storedSession.sidebar
               && typeof storedSession.sidebar === "object") {
             session.sidebar = {
@@ -5199,11 +5234,72 @@
         }, 0);
       }
 
+      function codeWrapKey(pre) {
+        const file = activeFile();
+        const surface = pre.closest(".vditor-ir, .vditor-wysiwyg, .vditor-preview");
+        if (!file || !surface) return null;
+        const blocks = Array.from(surface.querySelectorAll("pre > .vditor-copy"),
+          copy => copy.parentElement);
+        const index = blocks.indexOf(pre);
+        return index < 0 ? null : `${file.id}\n${index}`;
+      }
+
+      function setCodeWrapState(pre, enabled) {
+        pre.classList.toggle("LocalMarkdown-code-wrap-enabled", enabled);
+        const button = pre.querySelector(":scope > .vditor-copy > .LocalMarkdown-code-wrap");
+        if (!button) return;
+        const label = enabled ? "Disable code wrapping" : "Wrap code at word boundaries";
+        button.setAttribute("aria-pressed", String(enabled));
+        button.setAttribute("aria-label", label);
+        button.title = label;
+      }
+
+      function refreshCodeWrapControls() {
+        codeWrapRefreshFrame = null;
+        for (const copy of editorElement.querySelectorAll("pre > .vditor-copy")) {
+          const pre = copy.parentElement;
+          if (!pre?.querySelector(":scope > code")) continue;
+          copy.querySelector(":scope > span.vditor-tooltipped")
+            ?.classList.remove("vditor-tooltipped", "vditor-tooltipped__w");
+          let button = copy.querySelector(":scope > .LocalMarkdown-code-wrap");
+          if (!button) {
+            button = document.createElement("button");
+            button.type = "button";
+            button.className = "LocalMarkdown-code-wrap";
+            button.contentEditable = "false";
+            button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 6h10a4 4 0 0 1 0 8H7m3-3-3 3 3 3M4 10h5"/></svg>';
+            button.addEventListener("pointerdown", event => {
+              event.preventDefault();
+              event.stopPropagation();
+            });
+            button.addEventListener("click", event => {
+              event.preventDefault();
+              event.stopPropagation();
+              const key = codeWrapKey(pre);
+              if (!key) return;
+              const enabled = !pre.classList.contains("LocalMarkdown-code-wrap-enabled");
+              if (enabled) codeWrapStates.set(key, true);
+              else codeWrapStates.delete(key);
+              scheduleSessionSave();
+              refreshCodeWrapControls();
+            });
+            copy.append(button);
+          }
+          setCodeWrapState(pre, codeWrapStates.get(codeWrapKey(pre)) === true);
+        }
+      }
+
+      function scheduleCodeWrapControls() {
+        cancelAnimationFrame(codeWrapRefreshFrame);
+        codeWrapRefreshFrame = requestAnimationFrame(refreshCodeWrapControls);
+      }
+
       function observeAttachmentPreviews() {
         if (attachmentPreviewObserver || typeof MutationObserver !== "function") return;
         attachmentPreviewObserver = new MutationObserver(() => {
           refreshAttachmentPreviews();
           scheduleTableWidths();
+          scheduleCodeWrapControls();
         });
         attachmentPreviewObserver.observe(editorElement, {
           subtree: true,
@@ -6352,6 +6448,9 @@
         cancelAutoSave(file);
         releaseAttachmentPreviews(file.id);
         documentHistories.delete(file.id);
+        for (const key of codeWrapStates.keys()) {
+          if (key.startsWith(`${file.id}\n`)) codeWrapStates.delete(key);
+        }
         removeFileFromSidebarLayout(file.id);
         session.files = session.files.filter(candidate => candidate !== file && !candidate.welcome);
         if (!wasActive) return;
@@ -7192,6 +7291,7 @@
           updateStatus();
           scheduleAttachmentPreviews();
           scheduleTableWidths();
+          scheduleCodeWrapControls();
           observeOutline();
         }
       });
@@ -7202,6 +7302,7 @@
         cancelAnimationFrame(irScrollRestoreFrame);
         cancelAnimationFrame(outlineRefreshFrame);
         cancelAnimationFrame(tableWidthRefreshFrame);
+        cancelAnimationFrame(codeWrapRefreshFrame);
         releaseAttachmentPreviews();
         imageWorker?.terminate();
         if (imageWorkerUrl) URL.revokeObjectURL(imageWorkerUrl);
