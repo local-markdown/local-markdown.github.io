@@ -854,6 +854,10 @@
     .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg) li.vditor-task {
       position: relative; margin-left: -2.5em; padding-left: 2.5em;
     }
+    .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg)
+    li.vditor-task + li.vditor-task { margin-top: .25em; }
+    .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg)
+    li.vditor-task > p { margin-block: 0; }
     .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg) li.vditor-task::before {
       content: ""; position: absolute; top: .25em; left: .05em;
       width: 1em; height: 1.15em; border-radius: var(--lm-radius-control);
