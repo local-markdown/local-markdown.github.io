@@ -63,6 +63,12 @@
       --lm-border: rgba(55, 53, 47, .12);
       --lm-control-border: rgba(55, 53, 47, .16);
       --lm-accent: #37352f;
+      --lm-heading-1: #8c1d18;
+      --lm-heading-2: #9a5700;
+      --lm-heading-3: #357a38;
+      --lm-heading-4: #0969da;
+      --lm-heading-5: #6f42c1;
+      --lm-heading-6: #9b3f73;
       --lm-unsaved: #a15c00;
       --lm-app-background: #fff;
       --lm-document-background: #fff;
@@ -90,6 +96,12 @@
       --lm-border: #d8d1bd;
       --lm-control-border: #c9c2ae;
       --lm-accent: #268bd2;
+      --lm-heading-1: #b52f2b;
+      --lm-heading-2: #a45100;
+      --lm-heading-3: #5f7f00;
+      --lm-heading-4: #1477ad;
+      --lm-heading-5: #6650a4;
+      --lm-heading-6: #9a3f6f;
       --lm-unsaved: #9b6b00;
       --lm-app-background: #eee8d5;
       --lm-document-background: #fdf6e3;
@@ -117,6 +129,12 @@
       --lm-border: #164653;
       --lm-control-border: #315661;
       --lm-accent: #2aa198;
+      --lm-heading-1: #ff7b72;
+      --lm-heading-2: #f2a65a;
+      --lm-heading-3: #c5d86d;
+      --lm-heading-4: #5cc8be;
+      --lm-heading-5: #58a6ff;
+      --lm-heading-6: #c099ff;
       --lm-unsaved: #d6a700;
       --lm-app-background: #001f27;
       --lm-document-background: #073642;
@@ -804,12 +822,21 @@
       font-size: 16px; line-height: var(--lm-line-body);
     }
     .LocalMarkdown-editor .vditor-reset :is(h1, h2, h3, h4, h5, h6) {
-      color: var(--lm-text); border-bottom-color: var(--lm-border);
+      border-bottom-color: var(--lm-border);
       font-weight: 650; line-height: 1.25; letter-spacing: -.018em;
     }
-    .LocalMarkdown-editor .vditor-reset h1 { font-size: 1.875em; margin-top: 1.35em; }
-    .LocalMarkdown-editor .vditor-reset h2 { font-size: 1.5em; margin-top: 1.25em; }
-    .LocalMarkdown-editor .vditor-reset h3 { font-size: 1.25em; margin-top: 1.15em; }
+    .LocalMarkdown-editor .vditor-reset h1 {
+      color: var(--lm-heading-1); font-size: 1.875em; margin-top: 1.35em;
+    }
+    .LocalMarkdown-editor .vditor-reset h2 {
+      color: var(--lm-heading-2); font-size: 1.5em; margin-top: 1.25em;
+    }
+    .LocalMarkdown-editor .vditor-reset h3 {
+      color: var(--lm-heading-3); font-size: 1.25em; margin-top: 1.15em;
+    }
+    .LocalMarkdown-editor .vditor-reset h4 { color: var(--lm-heading-4); }
+    .LocalMarkdown-editor .vditor-reset h5 { color: var(--lm-heading-5); }
+    .LocalMarkdown-editor .vditor-reset h6 { color: var(--lm-heading-6); }
     .LocalMarkdown-editor .vditor-reset :is(h1, h2) { border-bottom: 0; }
     .LocalMarkdown-editor .vditor-reset pre { background-color: var(--lm-surface); }
     .LocalMarkdown-editor .vditor-reset code:not(.hljs):not(.highlight-chroma) {
