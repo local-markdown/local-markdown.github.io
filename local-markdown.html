@@ -844,7 +844,6 @@
     }
     .LocalMarkdown-editor .vditor-reset table { display: table; width: 100%; }
     .LocalMarkdown-editor .vditor-reset table tr { background-color: var(--lm-background); }
-    .LocalMarkdown-editor .vditor-reset table tr:nth-child(2n) { background-color: var(--lm-subtle); }
     .LocalMarkdown-editor .vditor-reset :is(td, th) { border-color: var(--lm-border); }
     .LocalMarkdown-editor .vditor-reset hr { background-color: var(--lm-border); }
     .LocalMarkdown-editor .vditor-reset a { color: var(--lm-accent); }
@@ -943,20 +942,33 @@
     .LocalMarkdown-image-resize-handle:active { color: var(--lm-accent); }
 
     .LocalMarkdown-table-edge-tools {
-      position: fixed; z-index: 24; display: flex; padding: var(--lm-space-1);
-      border: 1px solid var(--lm-control-border); border-radius: var(--lm-radius-surface);
-      color: var(--lm-text); background: var(--lm-background);
-      box-shadow: 0 3px 10px var(--lm-menu-shadow);
+      position: fixed; z-index: 24; display: flex;
+      color: var(--lm-text); background: transparent;
     }
-    .LocalMarkdown-table-edge-tools[data-axis="row"] { flex-direction: column; }
     .LocalMarkdown-table-edge-tools[hidden] { display: none; }
     .LocalMarkdown-table-edge-tool {
-      width: var(--lm-control-height-compact); height: var(--lm-control-height-compact);
+      position: relative; isolation: isolate; width: 32px; height: 32px;
       padding: 0; display: grid; place-items: center;
-      border: 0; border-radius: var(--lm-radius-control); background: transparent;
-      font-size: 17px; line-height: 1;
+      border: 0; border-radius: 999px; color: var(--lm-muted); background: transparent;
+      font-size: 18px; font-weight: 500; line-height: 1;
+      cursor: pointer; user-select: none;
     }
-    .LocalMarkdown-table-edge-tool[data-destructive="true"] { color: var(--lm-muted); }
+    .LocalMarkdown-table-edge-tool::before {
+      content: ""; position: absolute; inset: 6px; z-index: -1;
+      border-radius: 999px; background: transparent;
+    }
+    .LocalMarkdown-table-edge-tool[hidden] { display: none; }
+    .LocalMarkdown-table-edge-tool:hover,
+    .LocalMarkdown-table-edge-tool:focus-visible {
+      color: var(--lm-text); outline: 0;
+    }
+    .LocalMarkdown-table-edge-tool:hover::before,
+    .LocalMarkdown-table-edge-tool:focus-visible::before {
+      background: var(--lm-selected);
+    }
+    .LocalMarkdown-table-edge-tool[aria-disabled="true"] {
+      color: var(--lm-faint); cursor: default;
+    }
     .LocalMarkdown-table-export-tools {
       position: fixed; z-index: 27;
     }
@@ -997,15 +1009,9 @@
     }
     .LocalMarkdown-table-resize-handle {
       position: fixed; z-index: 25; width: 11px; padding: 0;
-      border: 0; background: transparent; cursor: col-resize;
+      border: 0; background: transparent !important; box-shadow: none !important;
+      outline: 0; cursor: col-resize;
       touch-action: none; transform: translateX(-50%);
-    }
-    .LocalMarkdown-table-resize-handle::after {
-      content: ""; position: absolute; inset: 0 auto 0 5px; width: 1px;
-      background: var(--lm-accent); opacity: .55;
-    }
-    .LocalMarkdown-table-resize-handle[data-active="true"]::after {
-      width: 2px; opacity: 1;
     }
     .LocalMarkdown-table-resize-handle[hidden] { display: none; }
     .LocalMarkdown-sized-table {
@@ -1288,14 +1294,14 @@
     </form>
   </dialog>
   <div class="LocalMarkdown-table-edge-tools" id="LocalMarkdown-table-row-tools" data-axis="row" role="toolbar" aria-label="Row edge actions" aria-controls="LocalMarkdown-editor" hidden>
-    <button class="LocalMarkdown-table-edge-tool" type="button" data-table-action="row-above" aria-label="Add row above" title="Add row above">+</button>
-    <button class="LocalMarkdown-table-edge-tool" type="button" data-table-action="delete-row" data-destructive="true" aria-label="Delete row" title="Delete row">−</button>
-    <button class="LocalMarkdown-table-edge-tool" type="button" data-table-action="row-below" aria-label="Add row below" title="Add row below">+</button>
+    <span class="LocalMarkdown-table-edge-tool" role="button" tabindex="0" data-table-action="row-above" aria-label="Add row above" title="Add row above">+</span>
+    <span class="LocalMarkdown-table-edge-tool" role="button" tabindex="0" data-table-action="delete-row" data-destructive="true" aria-label="Delete row" aria-disabled="false" title="Delete row">−</span>
+    <span class="LocalMarkdown-table-edge-tool" role="button" tabindex="0" data-table-action="row-below" aria-label="Add row below" title="Add row below">+</span>
   </div>
   <div class="LocalMarkdown-table-edge-tools" id="LocalMarkdown-table-column-tools" data-axis="column" role="toolbar" aria-label="Column edge actions" aria-controls="LocalMarkdown-editor" hidden>
-    <button class="LocalMarkdown-table-edge-tool" type="button" data-table-action="column-left" aria-label="Add column before" title="Add column before">+</button>
-    <button class="LocalMarkdown-table-edge-tool" type="button" data-table-action="delete-column" data-destructive="true" aria-label="Delete column" title="Delete column">−</button>
-    <button class="LocalMarkdown-table-edge-tool" type="button" data-table-action="column-right" aria-label="Add column after" title="Add column after">+</button>
+    <span class="LocalMarkdown-table-edge-tool" role="button" tabindex="0" data-table-action="column-left" aria-label="Add column before" title="Add column before">+</span>
+    <span class="LocalMarkdown-table-edge-tool" role="button" tabindex="0" data-table-action="delete-column" data-destructive="true" aria-label="Delete column" title="Delete column">−</span>
+    <span class="LocalMarkdown-table-edge-tool" role="button" tabindex="0" data-table-action="column-right" aria-label="Add column after" title="Add column after">+</span>
   </div>
   <div class="LocalMarkdown-table-export-tools" id="LocalMarkdown-table-export-tools" hidden>
     <button class="LocalMarkdown-table-export-toggle" id="LocalMarkdown-table-export-toggle" type="button" aria-label="Export table" aria-haspopup="menu" aria-expanded="false" title="Export table">
@@ -1372,9 +1378,9 @@
       const tableRowTools = document.querySelector("#LocalMarkdown-table-row-tools");
       const tableColumnTools = document.querySelector("#LocalMarkdown-table-column-tools");
       const tableEdgeTools = [tableRowTools, tableColumnTools];
-      const tableToolButtons = tableEdgeTools.flatMap(tools =>
+      const tableEdgeHandles = tableEdgeTools.flatMap(tools =>
         Array.from(tools.querySelectorAll("[data-table-action]")));
-      const deleteTableRowButton = tableRowTools.querySelector('[data-table-action="delete-row"]');
+      const deleteTableRowHandle = tableRowTools.querySelector('[data-table-action="delete-row"]');
       const tableExportTools = document.querySelector("#LocalMarkdown-table-export-tools");
       const tableExportToggle = document.querySelector("#LocalMarkdown-table-export-toggle");
       const tableExportMenu = document.querySelector("#LocalMarkdown-table-export-menu");
@@ -1547,6 +1553,7 @@
         editorElement.style.setProperty("--lm-document-max-width", `${width}px`);
         editorWidthInput.value = String(width);
         editorWidthInput.title = `Editor width: ${width}px`;
+        if (editorReady) scheduleTableWidths();
         if (persist) {
           try { localStorage.setItem(editorWidthStorageKey, String(width)); } catch {}
         }
@@ -1772,6 +1779,7 @@
         mainElement.setAttribute("aria-hidden", String(mainIsBehindDrawer));
         if (focusToggle) sidebarToggle.focus();
         else if (focusDismiss) sidebarDismiss.focus();
+        if (editorReady) setTimeout(scheduleTableWidths, 170);
         if (persist) {
           try { localStorage.setItem(sidebarStorageKey, open ? "open" : "closed"); } catch {}
         }
@@ -3532,8 +3540,18 @@
             ? parseTableWidthsComment(metadataLine.text, header.length)
             : null;
           const hasMetadata = Boolean(metadataMatch);
+          const firstBodyLine = lines[index + 2];
+          const firstBodyCells = firstBodyLine
+            ? markdownTableCells(firstBodyLine.text)
+            : null;
+          const hasFirstBodyRow = firstBodyCells?.length === header.length;
           tables.push({
             start: lines[index].start,
+            headerEnd: lines[index].end,
+            delimiterStart: lines[index + 1].start,
+            delimiterEnd: lines[index + 1].end,
+            firstBodyStart: hasFirstBodyRow ? firstBodyLine.start : null,
+            firstBodyEnd: hasFirstBodyRow ? firstBodyLine.end : null,
             newline: lines[index].newline || (value.includes("\r\n") ? "\r\n" : "\n"),
             indent: line.match(/^[ \t]*/)?.[0] || "",
             columnCount: header.length,
@@ -3571,6 +3589,30 @@
         return table.rows[0]?.cells.length || 0;
       }
 
+      function tableWidthBasisPixels(table) {
+        const container = table.parentElement;
+        if (!container) return table.getBoundingClientRect().width;
+        const style = getComputedStyle(container);
+        const horizontalPadding = Number.parseFloat(style.paddingLeft)
+          + Number.parseFloat(style.paddingRight);
+        const width = container.clientWidth - horizontalPadding;
+        return width > 0 ? width : table.getBoundingClientRect().width;
+      }
+
+      function setTableColumnWidths(table, widths, tableWidth = 100) {
+        const normalized = normalizedTableWidths(widths, tableColumnCount(table));
+        const normalizedWidth = normalizedTableWidth(tableWidth);
+        const widthBasisPixels = tableWidthBasisPixels(table);
+        if (!normalized || !normalizedWidth || !widthBasisPixels) return false;
+        const tablePixels = widthBasisPixels * normalizedWidth / 100;
+        for (const cell of table.rows[0]?.cells || []) {
+          cell.style.setProperty(
+            "--lm-table-column-width",
+            `${tablePixels * normalized[cell.cellIndex] / 100}px`);
+        }
+        return true;
+      }
+
       function clearTableWidths(table) {
         table.classList.remove("LocalMarkdown-sized-table");
         table.style.removeProperty("--lm-table-width");
@@ -3588,11 +3630,7 @@
         }
         table.classList.add("LocalMarkdown-sized-table");
         table.style.setProperty("--lm-table-width", `${normalizedWidth}%`);
-        for (const cell of table.rows[0]?.cells || []) {
-          const width = normalized[cell.cellIndex];
-          if (width) cell.style.setProperty("--lm-table-column-width", `${width}%`);
-        }
-        return true;
+        return setTableColumnWidths(table, normalized, normalizedWidth);
       }
 
       function tableSurface(table) {
@@ -3855,6 +3893,56 @@
         return { tableIndex, block };
       }
 
+      function applyTableStructureUpdate(file, updated, message) {
+        if (!file || !updated || updated === file.text) return false;
+        const before = documentSnapshot(file);
+        file.text = updated;
+        if (!file.builtin) {
+          file.dirty = true;
+          scheduleAutoSave(file);
+          scheduleSessionSave();
+        }
+        hideTableEdgeTools();
+        setEditorValue(file, updated);
+        renderFiles();
+        updateStatus(message);
+        scheduleAttachmentPreviews();
+        scheduleTableWidths();
+        recordDocumentMutation(file, before, { label: message.toLocaleLowerCase() });
+        return true;
+      }
+
+      function updateTableHeaderRow(cell, action) {
+        if (cell?.tagName !== "TH"
+          || !["row-above", "delete-row"].includes(action)) return false;
+        const table = cell.closest("table");
+        const file = activeFile();
+        if (!table || !file || !editorReady) return false;
+        captureEditorValue();
+        const value = canonicalEditorText(editor.getValue(), file);
+        const context = markdownTableContext(table, value);
+        if (!context) return false;
+        const block = context.block;
+        const header = value.slice(block.start, block.headerEnd);
+        const delimiter = value.slice(block.delimiterStart, block.delimiterEnd);
+        let updated;
+        let message;
+        if (action === "row-above") {
+          const emptyHeader = `${block.indent}| ${Array(block.columnCount)
+            .fill("").join(" | ")} |${block.newline}`;
+          updated = value.slice(0, block.start) + emptyHeader + delimiter + header
+            + value.slice(block.delimiterEnd);
+          message = "Header row added";
+        } else {
+          if (block.firstBodyStart === null || block.firstBodyEnd === null) return false;
+          const nextHeader = value.slice(block.firstBodyStart, block.firstBodyEnd);
+          updated = value.slice(0, block.start) + nextHeader + delimiter
+            + value.slice(block.firstBodyEnd);
+          message = "Header row deleted";
+        }
+        return applyTableStructureUpdate(file, updated, message);
+      }
+
       function refreshTableWidths() {
         if (!editorReady) return;
         const file = activeFile();
@@ -3893,7 +3981,8 @@
       function tableCellFromNode(node) {
         const element = node?.nodeType === Node.ELEMENT_NODE ? node : node?.parentElement;
         const cell = element?.closest?.("td, th");
-        if (!cell || !editorElement.contains(cell) || !cell.closest(".vditor-ir")) return null;
+        if (!cell || !editorElement.contains(cell)
+          || !cell.closest(".vditor-ir, .vditor-wysiwyg")) return null;
         return cell;
       }
 
@@ -3905,7 +3994,6 @@
       function hideTableResizeHandle() {
         if (tableResizeSession) return;
         tableResizeHandle.hidden = true;
-        tableResizeHandle.dataset.active = "false";
         tableResizeCell = null;
       }
 
@@ -3940,7 +4028,7 @@
         return true;
       }
 
-      function showTableEdgeTools(axis, cell) {
+      function showTableEdgeTools(axis, cell, action) {
         const surface = editorElement.querySelector(".vditor-ir > .vditor-reset");
         const table = cell.closest("table");
         if (!surface || !table) {
@@ -3953,32 +4041,45 @@
         const tools = axis === "row" ? tableRowTools : tableColumnTools;
         const otherTools = axis === "row" ? tableColumnTools : tableRowTools;
         otherTools.hidden = true;
+        for (const handle of tools.querySelectorAll("[data-table-action]")) {
+          handle.hidden = handle.dataset.tableAction !== action;
+        }
         tools.hidden = false;
 
         const cellRect = cell.getBoundingClientRect();
         const tableRect = table.getBoundingClientRect();
         const surfaceRect = surface.getBoundingClientRect();
         const toolsRect = tools.getBoundingClientRect();
-        const minTop = Math.max(2, surfaceRect.top);
-        const maxTop = Math.min(innerHeight - toolsRect.height - 2,
-          surfaceRect.bottom - toolsRect.height);
         let top;
         let left;
         if (axis === "row") {
           const rowRect = cell.parentElement.getBoundingClientRect();
-          top = rowRect.top + (rowRect.height - toolsRect.height) / 2;
-          left = tableRect.left - toolsRect.width;
-          const headerSelected = cell.tagName === "TH";
-          deleteTableRowButton.disabled = headerSelected;
-          deleteTableRowButton.title = headerSelected
-            ? "The table header row cannot be deleted"
+          const targetY = action === "row-above" ? rowRect.top
+            : action === "row-below" ? rowRect.bottom
+            : rowRect.top + rowRect.height / 2;
+          top = targetY - toolsRect.height / 2;
+          left = tableRect.left - toolsRect.width + 6;
+          const onlyTableRowSelected = cell.tagName === "TH" && table.rows.length <= 1;
+          deleteTableRowHandle.setAttribute("aria-disabled", String(onlyTableRowSelected));
+          deleteTableRowHandle.tabIndex = onlyTableRowSelected ? -1 : 0;
+          deleteTableRowHandle.title = onlyTableRowSelected
+            ? "The table's only row cannot be deleted"
             : "Delete row";
         } else {
-          top = tableRect.top - toolsRect.height;
-          left = cellRect.left + (cellRect.width - toolsRect.width) / 2;
+          top = tableRect.top - toolsRect.height + 6;
+          const targetX = action === "column-left" ? cellRect.left
+            : action === "column-right" ? cellRect.right
+            : cellRect.left + cellRect.width / 2;
+          left = targetX - toolsRect.width / 2;
         }
+        const minTop = Math.max(2, surfaceRect.top - toolsRect.height);
+        const maxTop = Math.min(innerHeight - toolsRect.height - 2,
+          surfaceRect.bottom - toolsRect.height);
+        const minLeft = Math.max(2, surfaceRect.left - toolsRect.width);
+        const maxLeft = Math.min(innerWidth - toolsRect.width - 2,
+          surfaceRect.right - toolsRect.width);
         top = Math.max(minTop, Math.min(top, maxTop));
-        left = Math.max(2, Math.min(left, innerWidth - toolsRect.width - 2));
+        left = Math.max(minLeft, Math.min(left, maxLeft));
         tools.style.top = `${Math.round(top)}px`;
         tools.style.left = `${Math.round(left)}px`;
       }
@@ -4003,7 +4104,8 @@
         const tableRect = table.getBoundingClientRect();
         const cellRect = cell.getBoundingClientRect();
         const rowRect = cell.parentElement.getBoundingClientRect();
-        const edgeSize = 14;
+        const edgeSize = 20;
+        const intersectionSize = 10;
         const resizeEdgeSize = 5;
         const rowDistance = Math.abs(event.clientX - tableRect.left);
         const columnDistance = Math.abs(event.clientY - tableRect.top);
@@ -4020,9 +4122,19 @@
           && event.clientX >= cellRect.left && event.clientX <= cellRect.right;
 
         if (onRowEdge && (!onColumnEdge || rowDistance <= columnDistance)) {
-          showTableEdgeTools("row", cell);
+          const topDistance = Math.abs(event.clientY - rowRect.top);
+          const bottomDistance = Math.abs(event.clientY - rowRect.bottom);
+          const action = Math.min(topDistance, bottomDistance) <= intersectionSize
+            ? (topDistance <= bottomDistance ? "row-above" : "row-below")
+            : "delete-row";
+          showTableEdgeTools("row", cell, action);
         } else if (onColumnEdge) {
-          showTableEdgeTools("column", cell);
+          const leftDistance = Math.abs(event.clientX - cellRect.left);
+          const rightDistance = Math.abs(event.clientX - cellRect.right);
+          const action = Math.min(leftDistance, rightDistance) <= intersectionSize
+            ? (leftDistance <= rightDistance ? "column-left" : "column-right")
+            : "delete-column";
+          showTableEdgeTools("column", cell, action);
         } else if (resizeDistance <= resizeEdgeSize) {
           hideTableEdgeTools();
           positionTableResizeHandle(resizeCell);
@@ -4080,10 +4192,11 @@
 
         event.preventDefault();
         hideTableEdgeTools();
-        applyTableWidths(table, widths, context.block.tableWidth);
         const tablePixels = table.getBoundingClientRect().width;
         const columnPixels = Array.from(firstRow.cells,
           cell => cell.getBoundingClientRect().width);
+        const widthBasisPixels = tableWidthBasisPixels(table);
+        if (!tablePixels || !widthBasisPixels) return;
         const handleLeft = Number.parseFloat(tableResizeHandle.style.left);
         tableResizeSession = {
           table,
@@ -4097,14 +4210,13 @@
           startX: event.clientX,
           columnPixels,
           tablePixels,
-          widthBasisPixels: tablePixels / (context.block.tableWidth / 100),
+          widthBasisPixels,
           handleLeft: Number.isFinite(handleLeft) ? handleLeft : event.clientX,
           pointerX: event.clientX,
           renderedX: event.clientX,
           frameId: null,
           changed: false
         };
-        tableResizeHandle.dataset.active = "true";
         tableResizeHandle.setPointerCapture(event.pointerId);
       }
 
@@ -4117,12 +4229,9 @@
         if (!layout) return;
         resize.widths = layout.widths;
         resize.tableWidth = layout.tableWidth;
+        resize.table.classList.add("LocalMarkdown-sized-table");
         resize.table.style.setProperty("--lm-table-width", `${layout.tableWidth}%`);
-        const firstRow = resize.table.rows[0];
-        for (let columnIndex = 0; columnIndex < layout.widths.length; columnIndex += 1) {
-          firstRow.cells[columnIndex].style.setProperty(
-            "--lm-table-column-width", `${layout.widths[columnIndex]}%`);
-        }
+        setTableColumnWidths(resize.table, layout.widths, layout.tableWidth);
         resize.changed = Math.abs(layout.appliedDelta) >= 1;
         tableResizeHandle.style.left = `${Math.round(
           resize.handleLeft + layout.appliedDelta)}px`;
@@ -4172,7 +4281,6 @@
           renderTableResize(resize, resize.pointerX);
         }
         tableResizeSession = null;
-        tableResizeHandle.dataset.active = "false";
         if (commit && resize.changed && commitTableResize(resize)) {
           hideTableResizeHandle();
           return;
@@ -4212,8 +4320,7 @@
         const context = markdownTableContext(table, value);
         const widths = context?.block.widths || tableColumnWidthsFromLayout(table);
         if (!context || !widths) return null;
-        const tablePixels = table.getBoundingClientRect().width;
-        const widthBasisPixels = tablePixels / (context.block.tableWidth / 100);
+        const widthBasisPixels = tableWidthBasisPixels(table);
         return {
           action,
           file,
@@ -4254,6 +4361,14 @@
       }
 
       function runTableAction(action) {
+        if (["row-above", "delete-row"].includes(action)
+          && tableHoverCell?.tagName === "TH") {
+          if (!updateTableHeaderRow(tableHoverCell, action)) {
+            hideTableEdgeTools();
+            updateStatus("Could not update the table header");
+          }
+          return;
+        }
         const shortcuts = {
           "row-above": { key: "f", code: "KeyF", shiftKey: true, status: "Row added above" },
           "row-below": { key: "=", code: "Equal", shiftKey: false, status: "Row added below" },
@@ -5627,6 +5742,21 @@
         const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.platform);
         const commandKey = isMac ? event.metaKey : event.ctrlKey;
         const key = event.key.toLowerCase();
+        const headerRowAction = editorReady && commandKey && !event.altKey
+          ? (event.shiftKey && key === "f" ? "row-above"
+            : (!event.shiftKey && key === "-" ? "delete-row" : null))
+          : null;
+        const selectedCell = headerRowAction
+          ? tableCellFromNode(getSelection()?.anchorNode)
+          : null;
+        if (headerRowAction && selectedCell?.tagName === "TH") {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          if (!updateTableHeaderRow(selectedCell, headerRowAction)) {
+            updateStatus("Could not update the table header");
+          }
+          return;
+        }
         const undoShortcut = editorReady && commandKey && !event.shiftKey
           && !event.altKey && key === "z";
         const redoShortcut = editorReady && commandKey && !event.altKey
@@ -6440,6 +6570,7 @@
         closeFileContextMenu();
         closeSectionContextMenu();
         positionImageResizer();
+        scheduleTableWidths();
       });
       addEventListener("keydown", event => {
         if (event.key === "Escape" && imagePreviewDialog.open) {
@@ -6564,14 +6695,27 @@
       for (const tools of tableEdgeTools) {
         tools.addEventListener("pointerdown", event => event.preventDefault());
         tools.addEventListener("keydown", event => {
-          if (event.key !== "Escape") return;
-          event.preventDefault();
-          hideTableEdgeTools();
-          editor.focus();
+          const tool = event.target.closest?.("[data-table-action]");
+          if (tool && ["Enter", " "].includes(event.key)) {
+            event.preventDefault();
+            if (tool.getAttribute("aria-disabled") !== "true") {
+              runTableAction(tool.dataset.tableAction);
+            }
+            return;
+          }
+          if (event.key === "Escape") {
+            event.preventDefault();
+            hideTableEdgeTools();
+            editor.focus();
+          }
         });
       }
-      for (const button of tableToolButtons) {
-        button.addEventListener("click", () => runTableAction(button.dataset.tableAction));
+      for (const tool of tableEdgeHandles) {
+        tool.addEventListener("click", () => {
+          if (tool.getAttribute("aria-disabled") !== "true") {
+            runTableAction(tool.dataset.tableAction);
+          }
+        });
       }
       tableExportToggle.addEventListener("click", () => {
         setTableExportMenuOpen(tableExportMenu.hidden);
