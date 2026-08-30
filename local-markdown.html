@@ -13,7 +13,6 @@
     } catch {}
   </script>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3.5' y='6.5' width='25' height='19' rx='3.5' fill='white' stroke='%23111' stroke-width='2'/%3E%3Cpath d='M7.5 21V11.5l4.7 4.7 4.4-4.7V21m6-9.5V21m-3-3 3 3 3-3' fill='none' stroke='%23111' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vditor@3.11.2/dist/index.css">
   <script>
     window.EXCALIDRAW_ASSET_PATH = "https://esm.sh/@excalidraw/excalidraw@0.18.1/dist/prod/";
   </script>
@@ -264,45 +263,19 @@
       min-height: 0; overflow: auto;
       padding: var(--lm-space-1) var(--lm-space-2) var(--lm-space-4);
     }
-    :is(
-      .LocalMarkdown-files,
-      .LocalMarkdown-editor .vditor-outline__content
-    ) {
+    .LocalMarkdown-files {
       scrollbar-width: thin;
       scrollbar-color: var(--lm-scrollbar) transparent;
     }
-    :is(
-      .LocalMarkdown-files,
-      .LocalMarkdown-editor .vditor-outline__content
-    )::-webkit-scrollbar { width: 10px; height: 10px; }
-    :is(
-      .LocalMarkdown-files,
-      .LocalMarkdown-editor .vditor-outline__content
-    )::-webkit-scrollbar-track { background: transparent; }
-    :is(
-      .LocalMarkdown-files,
-      .LocalMarkdown-editor .vditor-outline__content
-    )::-webkit-scrollbar-thumb {
+    .LocalMarkdown-files::-webkit-scrollbar { width: 10px; height: 10px; }
+    .LocalMarkdown-files::-webkit-scrollbar-track { background: transparent; }
+    .LocalMarkdown-files::-webkit-scrollbar-thumb {
       min-height: 28px; border: 3px solid transparent; border-radius: 999px;
       background: var(--lm-scrollbar); background-clip: padding-box;
     }
-    :is(
-      .LocalMarkdown-files,
-      .LocalMarkdown-editor .vditor-outline__content
-    )::-webkit-scrollbar-thumb:hover { background-color: var(--lm-scrollbar-hover); }
-    :is(
-      .LocalMarkdown-editor .vditor-reset,
-      .LocalMarkdown-editor .vditor-sv,
-      .LocalMarkdown-editor .vditor-preview
-    ) {
-      scrollbar-width: none;
-      -ms-overflow-style: none;
+    .LocalMarkdown-files::-webkit-scrollbar-thumb:hover {
+      background-color: var(--lm-scrollbar-hover);
     }
-    :is(
-      .LocalMarkdown-editor .vditor-reset,
-      .LocalMarkdown-editor .vditor-sv,
-      .LocalMarkdown-editor .vditor-preview
-    )::-webkit-scrollbar { display: none; }
     .LocalMarkdown-file-row {
       position: relative; width: 100%; margin: 0 0 1px;
     }
@@ -546,47 +519,6 @@
       width: 96px; height: var(--lm-control-height-compact); margin: 0;
       accent-color: var(--lm-accent); cursor: ew-resize;
     }
-    .LocalMarkdown-view-picker { position: relative; }
-    .LocalMarkdown-view-picker > summary {
-      min-width: 88px; height: var(--lm-control-height); padding: 0 var(--lm-space-2);
-      display: flex; align-items: center; justify-content: space-between; gap: var(--lm-space-2);
-      border-radius: var(--lm-radius-control); color: var(--lm-muted);
-      font-size: var(--lm-type-control-size); font-weight: 500; cursor: pointer;
-      list-style: none;
-    }
-    .LocalMarkdown-view-picker > summary::-webkit-details-marker { display: none; }
-    .LocalMarkdown-view-picker > summary:hover,
-    .LocalMarkdown-view-picker[open] > summary { color: var(--lm-text); background: var(--lm-subtle); }
-    .LocalMarkdown-view-picker > summary:focus-visible {
-      outline: 2px solid var(--lm-accent); outline-offset: 2px;
-    }
-    .LocalMarkdown-view-picker-chevron {
-      width: 6px; height: 6px; border-right: 1.5px solid currentColor;
-      border-bottom: 1.5px solid currentColor; transform: translateY(-2px) rotate(45deg);
-    }
-    .LocalMarkdown-view-switcher {
-      position: absolute; z-index: 24; top: calc(100% + var(--lm-space-1)); right: 0;
-      width: 154px; padding: var(--lm-space-1); display: flex; flex-direction: column;
-      border: 1px solid var(--lm-border); border-radius: var(--lm-radius-surface);
-      background: var(--lm-background); box-shadow: 0 6px 20px var(--lm-menu-shadow);
-    }
-    .LocalMarkdown-view-picker:not([open]) .LocalMarkdown-view-switcher { display: none; }
-    .LocalMarkdown-view {
-      position: relative; width: 100%; height: var(--lm-control-height); padding: 0 28px 0 var(--lm-space-2);
-      border: 0; border-radius: var(--lm-radius-control);
-      color: var(--lm-text); background: transparent;
-      font-size: var(--lm-type-control-size); text-align: left; white-space: nowrap;
-      opacity: .78;
-    }
-    .LocalMarkdown-view:hover:not(:disabled) { opacity: .9; }
-    .LocalMarkdown-view:disabled { opacity: .48; }
-    .LocalMarkdown-view[aria-pressed="true"] {
-      color: var(--lm-text); background: var(--lm-subtle); font-weight: 500; opacity: 1;
-      box-shadow: none;
-    }
-    .LocalMarkdown-view[aria-pressed="true"]::after {
-      content: "✓"; position: absolute; right: var(--lm-space-2); color: var(--lm-muted);
-    }
     .LocalMarkdown-theme-picker {
       position: relative;
     }
@@ -687,52 +619,236 @@
       min-width: 0; min-height: 0; overflow: visible;
     }
 
-    .LocalMarkdown-editor.vditor {
+    .LocalMarkdown-editor.LocalMarkdown-codemirror {
       --lm-document-max-width: 760px;
-      --lm-document-padding-block: 20px;
-      --lm-document-padding-inline: 0;
-      --toolbar-height: var(--lm-control-height);
-      --toolbar-divider-margin-top: var(--lm-space-2);
-      --border-color: var(--lm-border);
-      --second-color: var(--lm-selection);
-      --panel-background-color: var(--lm-background);
-      --panel-shadow: 0 1px 5px var(--lm-menu-shadow);
-      --toolbar-background-color: var(--lm-document-background);
-      --toolbar-icon-color: var(--lm-muted);
-      --toolbar-icon-hover-color: var(--lm-accent);
-      --textarea-background-color: var(--lm-document-background);
-      --textarea-text-color: var(--lm-text);
-      --resize-icon-color: var(--lm-muted);
-      --resize-background-color: var(--lm-surface);
-      --resize-hover-icon-color: var(--lm-background);
-      --resize-hover-background-color: var(--lm-accent);
-      --count-background-color: var(--lm-selection);
-      --heading-border-color: var(--lm-border);
-      --blockquote-color: var(--lm-muted);
-      --ir-heading-color: var(--lm-heading-4);
-      --ir-title-color: var(--lm-muted);
-      --ir-bi-color: #cb4b16;
-      --ir-link-color: #859900;
-      --ir-bracket-color: #268bd2;
-      --ir-paren-color: #2aa198;
-      height: 100% !important; border: 0; border-radius: 0;
+      height: 100%; display: flex; flex-direction: column;
+      overflow: hidden; background: var(--lm-document-background);
     }
-    .LocalMarkdown-editor.vditor--fullscreen {
-      position: fixed; inset: 0; width: 100vw; height: 100vh !important;
-    }
-    .LocalMarkdown-editor .vditor-toolbar {
-      flex-shrink: 0; display: flex; flex-wrap: wrap; justify-content: center;
-      padding: 0 var(--lm-space-2) !important;
-      border: 0; border-top: 1px solid var(--lm-border); border-bottom: 1px solid var(--lm-border);
+    .LocalMarkdown-cm-toolbar {
+      min-height: var(--lm-control-height); padding: 0 var(--lm-space-2);
+      flex: 0 0 auto; display: flex; flex-wrap: wrap; align-items: center;
+      justify-content: center; border-top: 1px solid var(--lm-border);
+      border-bottom: 1px solid var(--lm-border);
       background: var(--lm-document-background);
     }
-    .LocalMarkdown-editor .vditor-toolbar > :is(.vditor-toolbar__item, .vditor-toolbar__divider) {
-      flex: 0 0 auto;
+    .LocalMarkdown-cm-toolbar-group {
+      display: flex; align-items: center;
     }
-    .LocalMarkdown-editor .vditor-toolbar__item .vditor-tooltipped {
+    .LocalMarkdown-cm-toolbar-divider {
+      width: 1px; height: 16px; margin: 0 var(--lm-space-1);
+      background: var(--lm-border);
+    }
+    .LocalMarkdown-cm-tool {
       width: var(--lm-control-height-compact); height: var(--lm-control-height);
-      padding: 7px 3px; border-radius: var(--lm-radius-control);
+      padding: 3px; display: inline-grid; place-items: center;
+      border: 0; border-radius: var(--lm-radius-control);
+      color: var(--lm-muted); background: transparent;
     }
+    .LocalMarkdown-cm-tool:hover,
+    .LocalMarkdown-cm-tool:focus-visible,
+    .LocalMarkdown-cm-tool[aria-pressed="true"] {
+      color: var(--lm-accent); background: var(--lm-subtle);
+    }
+    .LocalMarkdown-cm-tool:disabled { color: var(--lm-faint); background: transparent; }
+    .LocalMarkdown-cm-shell {
+      min-width: 0; min-height: 0; flex: 1; display: flex; overflow: hidden;
+    }
+    .LocalMarkdown-cm-shell > .cm-editor {
+      min-width: 0; flex: 1; height: 100%;
+      color: var(--lm-text); background: var(--lm-document-background);
+      font-family: inherit; font-size: 16px; line-height: var(--lm-line-body);
+    }
+    .LocalMarkdown-cm-shell > .cm-editor.cm-focused { outline: 0; }
+    .LocalMarkdown-cm-shell .cm-scroller {
+      overflow: auto; font-family: inherit; line-height: var(--lm-line-body);
+      scrollbar-color: var(--lm-scrollbar) transparent;
+    }
+    .LocalMarkdown-cm-shell .cm-gutters { display: none; }
+    .LocalMarkdown-cm-shell .cm-content {
+      width: min(100%, var(--lm-document-max-width)); min-height: 100%;
+      margin: 0 auto; padding: 20px 0 96px;
+      flex-grow: 0; flex-shrink: 1;
+      caret-color: var(--lm-text);
+    }
+    .LocalMarkdown-cm-shell .cm-line {
+      min-height: 1.6em; padding: 0; overflow-wrap: anywhere;
+    }
+    .LocalMarkdown-cm-shell .cm-activeLine { background: transparent; }
+    .LocalMarkdown-cm-shell .cm-selectionBackground,
+    .LocalMarkdown-cm-shell .cm-content ::selection {
+      background: var(--lm-selection) !important;
+    }
+    .LocalMarkdown-cm-shell .cm-cursor { border-left-color: var(--lm-text); }
+    .LocalMarkdown-cm-shell .cm-placeholder { color: var(--lm-faint); }
+    .LocalMarkdown-cm-shell .LocalMarkdown-cm-empty .cm-line:first-child::after {
+      content: "Write Markdown…"; color: var(--lm-faint); pointer-events: none;
+    }
+    .LocalMarkdown-cm-line-heading { font-weight: 650; letter-spacing: -.018em; }
+    .LocalMarkdown-cm-line-heading-1 { color: var(--lm-heading-1); font-size: 1.75em; }
+    .LocalMarkdown-cm-line-heading-2 { color: var(--lm-heading-2); font-size: 1.45em; }
+    .LocalMarkdown-cm-line-heading-3 { color: var(--lm-heading-3); font-size: 1.22em; }
+    .LocalMarkdown-cm-line-heading-4 { color: var(--lm-heading-4); font-size: 1.08em; }
+    .LocalMarkdown-cm-line-heading-5 { color: var(--lm-heading-5); }
+    .LocalMarkdown-cm-line-heading-6 { color: var(--lm-heading-6); }
+    .LocalMarkdown-cm-line-quote {
+      padding-left: var(--lm-space-3) !important;
+      border-left: 3px solid var(--lm-border); color: var(--lm-muted);
+    }
+    .LocalMarkdown-cm-line-code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .LocalMarkdown-cm-code-block-line {
+      padding-inline: var(--lm-space-3) !important;
+      background: var(--lm-surface);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .LocalMarkdown-cm-code-fence-hidden,
+    .LocalMarkdown-cm-markup-line-hidden {
+      min-height: 0 !important; height: 0; padding: 0 !important; overflow: hidden;
+    }
+    .LocalMarkdown-cm-list-marker {
+      display: inline-block; min-width: 1.1em; color: var(--lm-muted);
+      font-weight: 650; text-align: center;
+    }
+    .LocalMarkdown-cm-horizontal-rule {
+      display: block; width: 100%; height: 1px; margin: .8em 0;
+      background: var(--lm-border);
+    }
+    .LocalMarkdown-cm-line-task {
+      position: relative;
+    }
+    .LocalMarkdown-cm-line-task::before {
+      content: none;
+    }
+    .LocalMarkdown-cm-line-task[data-task-checked="true"]::before {
+      content: "✓"; display: grid; place-items: center;
+      color: var(--lm-background); border-color: var(--lm-accent);
+      background: var(--lm-accent); font-size: 11px; line-height: 1;
+    }
+    .LocalMarkdown-cm-line-task[data-task-checked="true"] { color: var(--lm-muted); }
+    .LocalMarkdown-cm-task-widget {
+      width: 15px; height: 15px; margin: 0 8px 0 2px;
+      vertical-align: -2px; accent-color: var(--lm-accent); cursor: pointer;
+    }
+    .LocalMarkdown-cm-task-widget-shell {
+      display: inline-flex; align-items: center; vertical-align: middle;
+    }
+    .LocalMarkdown-cm-task-drag-handle {
+      width: 16px; height: 1.6em; margin-right: 1px;
+      display: inline-grid; place-items: center; color: var(--lm-faint);
+      font-size: 12px; line-height: 1; cursor: grab; user-select: none; touch-action: none;
+    }
+    .LocalMarkdown-cm-task-drag-handle:hover { color: var(--lm-muted); }
+    .LocalMarkdown-cm-task-dragging { opacity: .52; }
+    .LocalMarkdown-cm-task-drop-before,
+    .LocalMarkdown-cm-task-drop-after { position: relative; }
+    .LocalMarkdown-cm-task-drop-before::after,
+    .LocalMarkdown-cm-task-drop-after::after {
+      content: ""; position: absolute; z-index: 2; left: 0; right: 0;
+      height: 2px; background: var(--lm-accent); pointer-events: none;
+    }
+    .LocalMarkdown-cm-task-drop-before::after { top: -1px; }
+    .LocalMarkdown-cm-task-drop-after::after { bottom: -1px; }
+    .LocalMarkdown-cm-format-strong { font-weight: 700; }
+    .LocalMarkdown-cm-format-emphasis { font-style: italic; }
+    .LocalMarkdown-cm-format-strike { text-decoration: line-through; color: var(--lm-muted); }
+    .LocalMarkdown-cm-format-code {
+      padding: 1px 4px; border-radius: 3px;
+      color: var(--lm-text); background: var(--lm-surface);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .LocalMarkdown-cm-format-link { color: var(--lm-accent); text-decoration: underline; }
+    .LocalMarkdown-cm-image-widget {
+      display: block; max-width: 100%; height: auto; margin: var(--lm-space-2) 0;
+      border-radius: 3px; cursor: zoom-in;
+    }
+    .LocalMarkdown-cm-image-widget[data-image-align="center"] { margin-inline: auto; }
+    .LocalMarkdown-cm-image-widget[data-image-align="right"] { margin-left: auto; }
+    .LocalMarkdown-cm-table-block {
+      position: relative; width: 100%; padding: var(--lm-space-2) 0;
+      display: block; overflow-x: auto;
+    }
+    .LocalMarkdown-cm-table-widget {
+      width: 100%; border-spacing: 0; border-collapse: collapse;
+      color: var(--lm-text); background: var(--lm-document-background);
+      font: inherit; table-layout: fixed;
+    }
+    .LocalMarkdown-cm-table-widget :is(th, td) {
+      min-width: 56px; padding: 7px 9px; vertical-align: top;
+      border: 1px solid var(--lm-border); overflow-wrap: anywhere;
+    }
+    .LocalMarkdown-cm-table-widget :is(th, td)[contenteditable="true"] {
+      cursor: text; white-space: pre-wrap; outline: none;
+    }
+    .LocalMarkdown-cm-table-widget :is(th, td)[contenteditable="true"]:focus {
+      position: relative; z-index: 1; border-color: var(--lm-accent);
+      box-shadow: inset 0 0 0 1px var(--lm-accent);
+      background: var(--lm-document-background);
+    }
+    .LocalMarkdown-cm-table-widget th {
+      font-weight: 650; background: var(--lm-surface);
+    }
+    .LocalMarkdown-cm-table-widget img { max-width: 100%; height: auto; }
+    .LocalMarkdown-cm-table-widget.LocalMarkdown-sized-table :is(th, td) {
+      width: var(--lm-table-column-width);
+    }
+    .LocalMarkdown-cm-outline {
+      width: min(280px, 34vw); min-width: 180px; height: 100%; flex: 0 0 min(280px, 34vw);
+      overflow: hidden; border-left: 1px solid var(--lm-border);
+      color: var(--lm-text); background: var(--lm-document-background);
+    }
+    .LocalMarkdown-cm-outline[hidden] { display: none; }
+    .LocalMarkdown-cm-outline-header {
+      height: var(--lm-control-height-large); padding: 0 var(--lm-space-3);
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--lm-border); color: var(--lm-muted);
+      font-size: var(--lm-type-control-size); font-weight: 650;
+    }
+    .LocalMarkdown-cm-outline-close {
+      width: var(--lm-control-height-compact); height: var(--lm-control-height-compact);
+      padding: 0; border: 0; border-radius: var(--lm-radius-control);
+      color: inherit; background: transparent; font: inherit; font-size: 18px;
+    }
+    .LocalMarkdown-cm-outline-close:hover { color: var(--lm-text); background: var(--lm-subtle); }
+    .LocalMarkdown-cm-outline-content {
+      height: calc(100% - var(--lm-control-height-large)); padding: var(--lm-space-2);
+      overflow: auto; scrollbar-color: var(--lm-scrollbar) transparent;
+    }
+    .LocalMarkdown-cm-outline button {
+      width: 100%; min-height: var(--lm-control-height); padding: 4px 8px;
+      border: 0; border-radius: var(--lm-radius-control); background: transparent;
+      font-size: var(--lm-type-metadata-size); text-align: left;
+    }
+    .LocalMarkdown-cm-outline-content button:hover { background: var(--lm-subtle); }
+    .LocalMarkdown-cm-outline-content button[aria-current="location"] {
+      background: var(--lm-selected); font-weight: 650;
+    }
+    .LocalMarkdown-cm-outline-content [data-heading-level="1"] { color: var(--lm-heading-1); }
+    .LocalMarkdown-cm-outline-content [data-heading-level="2"] { color: var(--lm-heading-2); }
+    .LocalMarkdown-cm-outline-content [data-heading-level="3"] { color: var(--lm-heading-3); }
+    .LocalMarkdown-cm-outline-content [data-heading-level="4"] { color: var(--lm-heading-4); }
+    .LocalMarkdown-cm-outline-content [data-heading-level="5"] { color: var(--lm-heading-5); }
+    .LocalMarkdown-cm-outline-content [data-heading-level="6"] { color: var(--lm-heading-6); }
+    .LocalMarkdown-cm-emoji-menu {
+      position: absolute; z-index: 8; top: calc(var(--lm-control-height) + 2px);
+      left: 50%; width: min(360px, calc(100vw - 24px)); max-height: 220px;
+      padding: var(--lm-space-2); display: flex; flex-wrap: wrap; gap: 2px;
+      overflow: auto; transform: translateX(-50%);
+      border: 1px solid var(--lm-border); border-radius: var(--lm-radius-surface);
+      background: var(--lm-background); box-shadow: 0 8px 28px var(--lm-menu-shadow);
+    }
+    .LocalMarkdown-cm-emoji-menu[hidden] { display: none; }
+    .LocalMarkdown-cm-emoji-menu button {
+      width: 32px; height: 32px; padding: 0; border: 0; background: transparent;
+      font-size: 18px;
+    }
+    .LocalMarkdown-editor.LocalMarkdown-editor--fullscreen {
+      position: fixed; z-index: 50; inset: 0; width: 100vw; height: 100dvh;
+    }
+    .LocalMarkdown-view-current {
+      min-width: 76px; height: var(--lm-control-height); padding: 0 var(--lm-space-2);
+      display: flex; align-items: center; color: var(--lm-muted);
+      font-size: var(--lm-type-control-size); font-weight: 500;
+    }
+
     .LocalMarkdown-editor svg.LocalMarkdown-toolbar-icon {
       width: 18px; height: 18px; display: block; overflow: visible;
       fill: none !important; stroke: var(--toolbar-icon-color, var(--lm-muted)) !important;
@@ -742,215 +858,10 @@
       fill: none !important; stroke: var(--toolbar-icon-color, var(--lm-muted)) !important;
       stroke-width: 1.75px !important; stroke-linecap: round; stroke-linejoin: round;
     }
-    .LocalMarkdown-editor .vditor-tooltipped:is(:hover, :focus-visible)
+    .LocalMarkdown-editor .LocalMarkdown-cm-tool:is(:hover, :focus-visible)
     svg.LocalMarkdown-toolbar-icon * {
       stroke: var(--toolbar-icon-hover-color, var(--lm-accent)) !important;
     }
-    .vditor-tooltipped::after {
-      color: #fff !important;
-      background: #202124 !important;
-      opacity: 1 !important;
-      filter: none !important;
-      mix-blend-mode: normal !important;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, .24);
-    }
-    .vditor-tooltipped::before {
-      color: #202124 !important; opacity: 1 !important;
-    }
-    :is(
-      .vditor-tooltipped__n, .vditor-tooltipped__ne, .vditor-tooltipped__nw
-    )::before { border-top-color: #202124 !important; }
-    :is(
-      .vditor-tooltipped__s, .vditor-tooltipped__se, .vditor-tooltipped__sw
-    )::before { border-bottom-color: #202124 !important; }
-    .vditor-tooltipped__e::before {
-      border-right-color: #202124 !important;
-    }
-    .vditor-tooltipped__w::before {
-      border-left-color: #202124 !important;
-    }
-    .LocalMarkdown-editor .vditor-toolbar__divider {
-      margin-right: var(--lm-space-1); margin-left: var(--lm-space-1);
-    }
-    .LocalMarkdown-editor .vditor-outline__title {
-      font-size: var(--lm-type-metadata-size); line-height: var(--lm-line-tight);
-    }
-    .LocalMarkdown-editor .vditor-outline__content {
-      font-size: var(--lm-type-control-size); line-height: var(--lm-line-tight);
-    }
-    .LocalMarkdown-editor .vditor-outline__content li > span {
-      padding-block: 3px;
-    }
-    .LocalMarkdown-editor .vditor-outline__content li > span > svg {
-      margin-right: var(--lm-space-1);
-    }
-    .LocalMarkdown-editor .vditor-outline__content [data-heading-level="1"] {
-      color: var(--lm-heading-1);
-    }
-    .LocalMarkdown-editor .vditor-outline__content [data-heading-level="2"] {
-      color: var(--lm-heading-2);
-    }
-    .LocalMarkdown-editor .vditor-outline__content [data-heading-level="3"] {
-      color: var(--lm-heading-3);
-    }
-    .LocalMarkdown-editor .vditor-outline__content [data-heading-level="4"] {
-      color: var(--lm-heading-4);
-    }
-    .LocalMarkdown-editor .vditor-outline__content [data-heading-level="5"] {
-      color: var(--lm-heading-5);
-    }
-    .LocalMarkdown-editor .vditor-outline__content [data-heading-level="6"] {
-      color: var(--lm-heading-6);
-    }
-    .LocalMarkdown-internal-edit-mode { display: none !important; }
-    .LocalMarkdown-editor .vditor-counter,
-    .LocalMarkdown-editor .vditor-resize { display: none !important; }
-    .LocalMarkdown-editor .vditor-content {
-      --lm-editor-edge-margin: var(--lm-space-8);
-      flex: 1; min-height: 0; height: auto !important;
-      padding: 0 0 0 var(--lm-editor-edge-margin); gap: var(--lm-space-6);
-      background: var(--lm-document-background);
-    }
-    .LocalMarkdown-editor .vditor-content:not(
-      :has(> .vditor-preview[style*="display: block"])
-    ):not(:has(> .vditor-outline[style*="display: block"])) {
-      padding-right: var(--lm-editor-edge-margin);
-    }
-    .LocalMarkdown-editor .vditor-ir,
-    .LocalMarkdown-editor .vditor-wysiwyg {
-      width: 100%; margin: 0; padding: 0 !important; background: transparent;
-    }
-    .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg) > .vditor-reset {
-      width: min(100%, var(--lm-document-max-width)); height: 100%; margin: 0 auto;
-      padding: var(--lm-document-padding-block) var(--lm-document-padding-inline) !important;
-      padding-bottom: 96px !important;
-      border: 0; border-radius: 0;
-      background: var(--lm-document-background);
-      box-shadow: none;
-    }
-    .LocalMarkdown-editor .vditor-sv {
-      padding: var(--lm-space-6) 0 96px !important;
-      border: 0; border-radius: 0;
-      background: var(--lm-document-background);
-      box-shadow: none;
-    }
-    .LocalMarkdown-editor .vditor-preview {
-      padding-right: var(--lm-space-6);
-      border-left: 1px solid var(--lm-border) !important; background: transparent;
-    }
-    .LocalMarkdown-editor .vditor-preview[style*="display: block"] {
-      display: grid !important; grid-template-rows: auto minmax(0, 1fr); overflow: hidden;
-    }
-    .LocalMarkdown-editor .vditor-preview > .vditor-reset {
-      min-width: 0; width: 100%; min-height: 0; height: auto;
-      padding: var(--lm-space-6) 0 96px var(--lm-space-6) !important;
-      border: 0; border-radius: 0;
-      background: var(--lm-document-background);
-      box-shadow: none;
-    }
-    .LocalMarkdown-editor .vditor-preview .LocalMarkdown-preview-blank-lines {
-      display: block;
-      block-size: calc(var(--lm-blank-lines) * 1lh);
-      font-size: 16px;
-      line-height: var(--lm-line-body);
-      margin: 0;
-      pointer-events: none;
-    }
-    .LocalMarkdown-editor .vditor-reset {
-      color: var(--lm-text); font-family: inherit;
-      font-size: 16px; line-height: var(--lm-line-body);
-    }
-    .LocalMarkdown-editor .vditor-reset :is(h1, h2, h3, h4, h5, h6) {
-      border-bottom-color: var(--lm-border);
-      font-weight: 650; line-height: 1.25; letter-spacing: -.018em;
-    }
-    .LocalMarkdown-editor .vditor-reset h1 {
-      color: var(--lm-heading-1); font-size: 1.875em; margin-top: 1.35em;
-    }
-    .LocalMarkdown-editor .vditor-reset h2 {
-      color: var(--lm-heading-2); font-size: 1.5em; margin-top: 1.25em;
-    }
-    .LocalMarkdown-editor .vditor-reset h3 {
-      color: var(--lm-heading-3); font-size: 1.25em; margin-top: 1.15em;
-    }
-    .LocalMarkdown-editor .vditor-reset h4 { color: var(--lm-heading-4); }
-    .LocalMarkdown-editor .vditor-reset h5 { color: var(--lm-heading-5); }
-    .LocalMarkdown-editor .vditor-reset h6 { color: var(--lm-heading-6); }
-    .LocalMarkdown-editor .vditor-reset :is(h1, h2) { border-bottom: 0; }
-    .LocalMarkdown-editor .vditor-reset pre { background-color: var(--lm-surface); }
-    .LocalMarkdown-editor .vditor-copy .LocalMarkdown-code-wrap {
-      position: absolute; top: .5em; right: 39px;
-      width: 14px; height: 14px; margin: 0; padding: 0;
-      border: 0; color: #586069; background: transparent; cursor: pointer;
-    }
-    .LocalMarkdown-editor .vditor-copy .LocalMarkdown-code-wrap svg {
-      display: block; width: 14px; height: 14px;
-      fill: none; stroke: currentColor; stroke-width: 2;
-      stroke-linecap: round; stroke-linejoin: round;
-    }
-    .LocalMarkdown-editor .vditor-copy .LocalMarkdown-code-wrap:hover,
-    .LocalMarkdown-editor .vditor-copy .LocalMarkdown-code-wrap:focus-visible,
-    .LocalMarkdown-editor .vditor-copy .LocalMarkdown-code-wrap[aria-pressed="true"] {
-      color: var(--lm-accent);
-    }
-    .LocalMarkdown-editor .vditor-copy .LocalMarkdown-code-wrap:focus-visible {
-      outline: 2px solid var(--lm-accent); outline-offset: 2px; border-radius: 2px;
-    }
-    .LocalMarkdown-editor pre.LocalMarkdown-code-wrap-enabled > code {
-      white-space: pre-wrap !important;
-      overflow-wrap: break-word !important;
-      word-break: normal !important;
-    }
-    .LocalMarkdown-editor .vditor-reset code:not(.hljs):not(.highlight-chroma) {
-      color: var(--lm-text); background-color: var(--lm-surface);
-    }
-    .LocalMarkdown-editor .vditor-reset table { display: table; width: 100%; }
-    .LocalMarkdown-editor .vditor-reset table tr,
-    .LocalMarkdown-editor .vditor-reset table tr:nth-child(2n) {
-      background-color: var(--lm-document-background);
-    }
-    .LocalMarkdown-editor .vditor-reset :is(td, th) { border-color: var(--lm-border); }
-    .LocalMarkdown-editor .vditor-reset hr { background-color: var(--lm-border); }
-    .LocalMarkdown-editor .vditor-reset a { color: var(--lm-accent); }
-    .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg)
-    .vditor-reset > :is(h1, h2, h3, h4, h5, h6)::before { content: none !important; }
-    .LocalMarkdown-editor .vditor-reset img { cursor: zoom-in; }
-    .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg) li.vditor-task {
-      position: relative; margin-left: -2.5em; padding-left: 2.5em;
-    }
-    .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg)
-    li.vditor-task + li.vditor-task { margin-top: .25em; }
-    .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg)
-    li.vditor-task > p { margin-block: 0; }
-    .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg) li.vditor-task::before {
-      content: ""; position: absolute; top: .25em; left: .05em;
-      width: 1em; height: 1.15em; border-radius: var(--lm-radius-control);
-      color: var(--lm-secondary-text); cursor: grab; opacity: 0;
-      background-image: radial-gradient(circle, currentColor 1.2px, transparent 1.35px);
-      background-position: 1px 1px; background-size: 5px 5px;
-      touch-action: none; user-select: none;
-      transition: color 100ms ease, opacity 100ms ease;
-    }
-    .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg)
-    li.vditor-task:is(.LocalMarkdown-task-handle-hover, .LocalMarkdown-task-dragging)::before {
-      opacity: 1;
-    }
-    .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg)
-    li.vditor-task.LocalMarkdown-task-dragging {
-      opacity: .45;
-    }
-    .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg)
-    li.vditor-task.LocalMarkdown-task-dragging::before { cursor: grabbing; }
-    .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg)
-    li.vditor-task:is(.LocalMarkdown-task-drop-before, .LocalMarkdown-task-drop-after)::after {
-      content: ""; position: absolute; z-index: 1; left: 0; right: 0;
-      height: 2px; border-radius: 999px; background: var(--lm-accent); pointer-events: none;
-    }
-    .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg)
-    li.vditor-task.LocalMarkdown-task-drop-before::after { top: -2px; }
-    .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg)
-    li.vditor-task.LocalMarkdown-task-drop-after::after { bottom: -2px; }
-
     .LocalMarkdown-image-preview {
       width: 100vw; height: 100dvh; max-width: none; max-height: none;
       margin: 0; padding: clamp(24px, 5vw, 72px); border: 0;
@@ -1083,17 +994,6 @@
     .LocalMarkdown-sized-table {
       width: var(--lm-table-width, 100%) !important; table-layout: fixed;
     }
-    .LocalMarkdown-editor .vditor-reset table.LocalMarkdown-sized-table :is(td, th) {
-      width: var(--lm-table-column-width); white-space: normal;
-      overflow-wrap: anywhere; word-break: break-word;
-    }
-    .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg)
-    [data-type="html-block"].LocalMarkdown-table-widths-metadata { display: none; }
-    .LocalMarkdown-editor .vditor-reset table
-    [data-type="html-inline"].LocalMarkdown-table-line-break {
-      display: block !important; height: 0; line-height: 0; overflow: hidden;
-    }
-
     .LocalMarkdown-drawing-dialog {
       width: 100vw; height: 100dvh; max-width: none; max-height: none;
       margin: 0; padding: 0; border: 0; border-radius: 0;
@@ -1133,9 +1033,6 @@
     .LocalMarkdown-drawing-loading[hidden] { display: none; }
 
     @media (max-width: 900px) {
-      .LocalMarkdown-editor .vditor-content {
-        --lm-editor-edge-margin: var(--lm-space-6);
-      }
       .LocalMarkdown-editor-width-input { width: 72px; }
     }
 
@@ -1176,15 +1073,8 @@
         padding-inline: var(--lm-space-1); gap: var(--lm-space-1);
       }
       .LocalMarkdown-editor-width-input { width: 64px; }
-      .LocalMarkdown-editor .vditor-toolbar { padding: 0 var(--lm-space-1); }
-      .LocalMarkdown-editor .vditor-content { gap: var(--lm-space-6); }
-      .LocalMarkdown-editor.vditor {
-        --lm-document-padding-block: var(--lm-space-6);
-        --lm-document-padding-inline: var(--lm-space-6);
-      }
-      .LocalMarkdown-editor .vditor-sv { padding: var(--lm-space-6) !important; }
-      .LocalMarkdown-editor .vditor-preview > .vditor-reset {
-        padding: var(--lm-space-6) 0 var(--lm-space-6) var(--lm-space-6) !important;
+      .LocalMarkdown-cm-outline {
+        width: min(220px, 44vw); min-width: 150px; flex-basis: min(220px, 44vw);
       }
       .LocalMarkdown-drawing-header { padding-left: var(--lm-space-2); }
       .LocalMarkdown-drawing-status { display: none; }
@@ -1193,9 +1083,6 @@
     @media (max-width: 360px) {
       .LocalMarkdown-toolbar { padding: 0 var(--lm-space-1); gap: var(--lm-space-1); }
       .LocalMarkdown-editor-width-input { width: 48px; }
-      .LocalMarkdown-editor .vditor-content {
-        --lm-editor-edge-margin: var(--lm-space-4);
-      }
       .LocalMarkdown-theme-toggle { width: var(--lm-control-height-compact); }
     }
 
@@ -1277,17 +1164,11 @@
             </button>
             <input class="LocalMarkdown-editor-width-input" id="LocalMarkdown-editor-width" type="range" min="480" max="1600" step="20" value="760" aria-label="Editor width">
           </div>
-          <details class="LocalMarkdown-view-picker" id="LocalMarkdown-view-picker">
-            <summary id="LocalMarkdown-view-toggle" aria-label="Editor view: Markdown">
+          <div class="LocalMarkdown-view-current" id="LocalMarkdown-view-picker">
+            <span id="LocalMarkdown-view-toggle" aria-label="Editor view: Markdown">
               <span id="LocalMarkdown-view-label">Markdown</span>
-              <span class="LocalMarkdown-view-picker-chevron" aria-hidden="true"></span>
-            </summary>
-            <div class="LocalMarkdown-view-switcher" role="group" aria-label="Editor view">
-              <button class="LocalMarkdown-view" type="button" data-mode="wysiwyg" aria-pressed="false" title="Edit the rendered document" disabled>Visual</button>
-              <button class="LocalMarkdown-view" type="button" data-mode="ir" aria-pressed="true" title="Edit Markdown with inline formatting" disabled>Markdown</button>
-              <button class="LocalMarkdown-view" type="button" data-mode="sv" aria-pressed="false" title="Edit source beside a live preview" disabled>Split</button>
-            </div>
-          </details>
+            </span>
+          </div>
           <div class="LocalMarkdown-theme-picker">
             <button class="LocalMarkdown-theme-toggle" id="LocalMarkdown-theme-toggle" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="LocalMarkdown-theme-menu">
               <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
@@ -1401,7 +1282,7 @@
         <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M15.5 3v12M3.5 5.5h9v7h-9z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"></path></svg>
       </button>
     </div>
-    <button class="LocalMarkdown-image-resize-handle" type="button" data-corner="se" tabindex="-1" aria-label="Resize image from bottom right"></button>
+    <button class="LocalMarkdown-image-resize-handle" type="button" data-corner="se" aria-label="Resize image; use arrow keys for 10 pixel steps"></button>
   </div>
   <dialog class="LocalMarkdown-image-preview" id="LocalMarkdown-image-preview" aria-label="Full-screen image preview">
     <button class="LocalMarkdown-image-preview-close" id="LocalMarkdown-image-preview-close" type="button" aria-label="Close full-screen image preview" title="Close">×</button>
@@ -1421,12 +1302,18 @@
       </div>
     </div>
   </dialog>
-  <script src="https://cdn.jsdelivr.net/npm/vditor@3.11.2/dist/index.min.js"></script>
   <script>
     (async () => {
       "use strict";
 
-      const vditorCdn = "https://cdn.jsdelivr.net/npm/vditor@3.11.2";
+      const codeMirrorViewModuleUrl =
+        "https://cdn.jsdelivr.net/npm/@codemirror/view@6.43.8/+esm";
+      const codeMirrorStateModuleUrl =
+        "https://cdn.jsdelivr.net/npm/@codemirror/state@6.7.1/+esm";
+      const codeMirrorCommandsModuleUrl =
+        "https://cdn.jsdelivr.net/npm/@codemirror/commands@6.11.0/+esm";
+      const codeMirrorMarkdownModuleUrl =
+        "https://cdn.jsdelivr.net/npm/@lezer/markdown@1.7.2/+esm";
       const filesElement = document.querySelector("#LocalMarkdown-files");
       const appElement = document.querySelector(".LocalMarkdown-app");
       const sidebarElement = document.querySelector("#LocalMarkdown-sidebar");
@@ -1465,10 +1352,6 @@
       const imagePreviewDialog = document.querySelector("#LocalMarkdown-image-preview");
       const imagePreviewContent = document.querySelector("#LocalMarkdown-image-preview-content");
       const imagePreviewClose = document.querySelector("#LocalMarkdown-image-preview-close");
-      const viewButtons = document.querySelectorAll(".LocalMarkdown-view");
-      const viewPicker = document.querySelector("#LocalMarkdown-view-picker");
-      const viewToggle = document.querySelector("#LocalMarkdown-view-toggle");
-      const viewLabel = document.querySelector("#LocalMarkdown-view-label");
       const editorWidthReset = document.querySelector("#LocalMarkdown-editor-width-reset");
       const editorWidthInput = document.querySelector("#LocalMarkdown-editor-width");
       const themeToggle = document.querySelector("#LocalMarkdown-theme-toggle");
@@ -1496,27 +1379,24 @@
       const drawingCancelButton = document.querySelector("#LocalMarkdown-drawing-cancel");
       let editor = null;
       let editorReady = false;
-      let originalSplitViewRenderer = null;
-      let originalPreviewRenderer = null;
-      let irScrollTopBeforeInput = null;
+      let codeMirrorView = null;
+      let codeMirrorInputSuppression = 0;
+      let codeMirrorLineDecorationFrame = null;
+      let codeMirrorOutline = null;
+      let codeMirrorMarkdownParser = null;
+      let codeMirrorEmojiMenu = null;
+      let codeMirrorTaskDragSession = null;
       let irScrollRestoreFrame = null;
-      let taskLayoutNormalizationFrame = null;
-      let taskLayoutObserver = null;
-      let splitScrollFollower = null;
-      let splitScrollFollowerTop = null;
       let tableHoverCell = null;
       let tableExportTarget = null;
       let tableResizeCell = null;
       let tableResizeSession = null;
       let tableWidthRefreshFrame = null;
-      let codeWrapRefreshFrame = null;
       let selectedImage = null;
       let imageResizeSession = null;
       let imagePreviewTimer = null;
       let attachmentPreviewTimer = null;
       let attachmentPreviewObserver = null;
-      let outlineObserver = null;
-      let outlineRefreshFrame = null;
       let imageWorker = null;
       let imageWorkerUrl = null;
       let imageWorkerRequestId = 0;
@@ -1526,10 +1406,6 @@
       let sessionNeedsSave = false;
       let sessionRestored = false;
       let draggedSidebarItem = null;
-      let taskDragHandleItem = null;
-      let taskPointerDragSession = null;
-      let taskDropTarget = null;
-      let taskDropAfter = false;
       let excalidrawStylesPromise = null;
       let excalidrawModulesPromise = null;
       let drawingRoot = null;
@@ -1551,7 +1427,6 @@
       const attachmentPreviewUrls = new Map();
       const attachmentPreviewReferences = new Map();
       const attachmentImageIds = new WeakMap();
-      const codeWrapStates = new Map();
       const imageWorkerRequests = new Map();
       const documentHistories = new Map();
       const editorHistoryValueWaiters = new Map();
@@ -1559,14 +1434,9 @@
       const documentHistoryLimit = 100;
       const documentHistoryByteLimit = 24 * 1024 * 1024;
       const documentHistoryCoalesceDelay = 900;
-      const outlineScrollOffset = 16;
       const attachmentBlockStart = "<!-- LocalMarkdown attachments:v1";
       const attachmentBlockEnd = "-->";
       const attachmentPathPrefix = "lmd/";
-      const blankLinePlaceholderPrefix = `LOCALMARKDOWN__PRESERVED_BLANK_LINE__${
-        Date.now().toString(36)}_${Math.random().toString(36).slice(2)}__`;
-      const splitViewNewlineHtml =
-        '<span data-type="newline"><br /><span style="display: none">\n</span></span>';
       const supportedAttachmentPathPrefixes = [
         attachmentPathPrefix,
         "local-markdown-attachment/"
@@ -1607,19 +1477,12 @@
       const outlineStorageKey = "LocalMarkdown:outline:v1";
       const themeStorageKey = "LocalMarkdown:theme:v1";
       const editorWidthStorageKey = "LocalMarkdown:editor-width:v1";
-      const editorModeStorageKey = "LocalMarkdown:editor-mode:v1";
       const defaultEditorWidth = 760;
       const themeNames = {
         white: "White",
         "solarized-light": "Solarized Light",
         "solarized-dark": "Solarized Dark"
       };
-      const viewNames = { wysiwyg: "Visual", ir: "Markdown", sv: "Split" };
-      let initialEditorMode = "ir";
-      try {
-        const storedEditorMode = localStorage.getItem(editorModeStorageKey);
-        if (Object.hasOwn(viewNames, storedEditorMode)) initialEditorMode = storedEditorMode;
-      } catch {}
       const markdownPickerId = "LocalMarkdownFile";
       const markdownFilePattern = /\.(?:md|markdown)$/i;
       const markdownPickerTypes = [{
@@ -1934,33 +1797,9 @@
         "| Toggle a task item | `⌘ + Shift + J` | `Ctrl + Shift + J` |",
         "| Indent a list item | `Tab` | `Tab` |",
         "| Outdent a list item | `Shift + Tab` | `Shift + Tab` |",
-        "| Select the current code block | `⌘ + A` | `Ctrl + A` |",
-        "",
-        "### Editor views",
-        "| View | Mac | Windows |",
-        "| --- | --- | --- |",
-        "| Visual | `⌘ + Option + 7` | `Ctrl + Alt + 7` |",
-        "| Markdown (current) | `⌘ + Option + 8` | `Ctrl + Alt + 8` |",
-        "| Split | `⌘ + Option + 9` | `Ctrl + Alt + 9` |",
         "",
         "### Tables",
-        "Drag a divider between columns to resize them, or drag the right edge to resize the whole table. Hover the left edge of a row or the top edge of a column to show + and − controls. Hover the upper-left cell to copy the table for Excel or download a CSV. The same editing actions are also available with these shortcuts.",
-        "",
-        "| Action | Mac | Windows |",
-        "| --- | --- | --- |",
-        "| New line inside the current cell | `Enter` | `Enter` |",
-        "| Next cell | `Tab` | `Tab` |",
-        "| Previous cell | `Shift + Tab` | `Shift + Tab` |",
-        "| Cell above or below | `↑` or `↓` | `↑` or `↓` |",
-        "| Add row above | `⌘ + Shift + F` | `Ctrl + Shift + F` |",
-        "| Add row below | `⌘ + =` | `Ctrl + =` |",
-        "| Add column to the left | `⌘ + Shift + G` | `Ctrl + Shift + G` |",
-        "| Add column to the right | `⌘ + Shift + =` | `Ctrl + Shift + =` |",
-        "| Delete current row | `⌘ + -` | `Ctrl + -` |",
-        "| Delete current column | `⌘ + Shift + -` | `Ctrl + Shift + -` |",
-        "| Align current column left | `⌘ + Shift + L` | `Ctrl + Shift + L` |",
-        "| Align current column center | `⌘ + Shift + C` | `Ctrl + Shift + C` |",
-        "| Align current column right | `⌘ + Shift + R` | `Ctrl + Shift + R` |",
+        "Tables render inline. Click any cell and type directly, including multiline text. Use the table controls to add or remove rows and columns, resize a column, insert an image, copy the table for Excel, or download a CSV.",
         "",
         "## Image",
         "### Screenshot or clipboard image",
@@ -2000,8 +1839,7 @@
       }
 
       function activeEditorSurface() {
-        if (!editorReady) return null;
-        return editor.vditor?.[editor.getCurrentMode()]?.element || null;
+        return editorReady ? codeMirrorView?.contentDOM || null : null;
       }
 
       function selectionNodePath(root, node) {
@@ -2020,6 +1858,14 @@
 
       function editorSelectionSnapshot(file) {
         if (activeFile() !== file) return null;
+        if (editor?.kind === "codemirror" && codeMirrorView) {
+          const selection = codeMirrorView.state.selection.main;
+          return {
+            mode: "ir",
+            anchor: selection.anchor,
+            head: selection.head
+          };
+        }
         const surface = activeEditorSurface();
         const selection = getSelection();
         if (!surface || !selection?.rangeCount) return null;
@@ -2041,7 +1887,8 @@
 
       function editorScrollSnapshot(file) {
         if (activeFile() !== file) return null;
-        const surface = activeEditorSurface();
+        const surface = editor?.kind === "codemirror"
+          ? codeMirrorView?.scrollDOM : activeEditorSurface();
         if (!surface) return null;
         return {
           mode: editor.getCurrentMode(),
@@ -2059,6 +1906,10 @@
 
       function currentEditorRange(file) {
         if (activeFile() !== file) return null;
+        if (editor?.kind === "codemirror" && codeMirrorView) {
+          const selection = codeMirrorView.state.selection.main;
+          return { codeMirror: true, anchor: selection.anchor, head: selection.head };
+        }
         const surface = activeEditorSurface();
         const selection = getSelection();
         if (!surface || !selection?.rangeCount) return null;
@@ -2073,6 +1924,14 @@
       }
 
       function restoreEditorRange(range) {
+        if (editor?.kind === "codemirror" && codeMirrorView) {
+          const length = codeMirrorView.state.doc.length;
+          const anchor = Math.max(0, Math.min(length, range?.anchor ?? length));
+          const head = Math.max(0, Math.min(length, range?.head ?? anchor));
+          codeMirrorView.dispatch({ selection: { anchor, head }, scrollIntoView: true });
+          codeMirrorView.focus();
+          return;
+        }
         const surface = activeEditorSurface();
         if (!surface) return;
         const selection = getSelection();
@@ -2107,7 +1966,8 @@
         irScrollRestoreFrame = requestAnimationFrame(() => {
           irScrollRestoreFrame = null;
           if (activeFile() !== file || !editorReady) return;
-          const surface = activeEditorSurface();
+          const surface = editor?.kind === "codemirror"
+            ? codeMirrorView?.scrollDOM : activeEditorSurface();
           if (!surface) return;
           const mode = editor.getCurrentMode();
           const restoreScroll = () => {
@@ -2115,6 +1975,15 @@
             surface.scrollTop = scrollBookmark.top;
             surface.scrollLeft = scrollBookmark.left;
           };
+          if (editor?.kind === "codemirror") {
+            const length = codeMirrorView.state.doc.length;
+            const anchor = Math.max(0, Math.min(length, bookmark?.anchor ?? length));
+            const head = Math.max(0, Math.min(length, bookmark?.head ?? anchor));
+            codeMirrorView.dispatch({ selection: { anchor, head } });
+            codeMirrorView.focus();
+            restoreScroll();
+            return;
+          }
           if (bookmark?.mode !== mode) {
             surface.focus({ preventScroll: true });
             restoreScroll();
@@ -2240,7 +2109,7 @@
           ["history-undo", history.past.length > 0],
           ["history-redo", history.future.length > 0]
         ]) {
-          const button = editor.vditor?.toolbar?.elements?.[name]?.querySelector("button");
+          const button = editor.toolbarElements?.[name]?.querySelector("button");
           if (!button) continue;
           button.disabled = !enabled;
           button.setAttribute("aria-disabled", String(!enabled));
@@ -2697,7 +2566,6 @@
             })),
             ungroupedFileIds: [...session.sidebar.ungroupedFileIds]
           },
-          wrappedCodeBlocks: [...codeWrapStates.keys()],
           fileOrder: session.files
             .filter(file => !file.welcome)
             .map(file => file.id),
@@ -2827,15 +2695,6 @@
             filesById.delete(id);
           }
           session.files = [...orderedFiles, ...filesById.values()];
-          const restoredFileIds = new Set(session.files.map(file => file.id));
-          for (const key of Array.isArray(storedSession.wrappedCodeBlocks)
-            ? storedSession.wrappedCodeBlocks : []) {
-            if (typeof key !== "string") continue;
-            const separator = key.lastIndexOf("\n");
-            if (separator < 0 || !restoredFileIds.has(key.slice(0, separator))
-                || !/^\d+$/.test(key.slice(separator + 1))) continue;
-            codeWrapStates.set(key, true);
-          }
           if (storedSession.version === 2 && storedSession.sidebar
               && typeof storedSession.sidebar === "object") {
             session.sidebar = {
@@ -3242,34 +3101,15 @@
       }
 
       function revealSearchMatch(query, occurrence) {
-        if (!editorReady) return false;
-        const mode = editor.getCurrentMode();
-        const root = editor.vditor?.[mode]?.element;
-        if (!root) return false;
-
-        const textNodes = [];
-        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-        let node;
-        let text = "";
-        while ((node = walker.nextNode())) {
-          textNodes.push({ node, start: text.length, end: text.length + node.data.length });
-          text += node.data;
-        }
+        if (!editorReady || !codeMirrorView) return false;
+        const text = codeMirrorView.state.doc.toString();
         const matchIndex = nthTextIndex(text, query, occurrence);
         if (matchIndex === -1) return false;
-        const matchEnd = matchIndex + query.length;
-        const start = textNodes.find(item => matchIndex >= item.start && matchIndex < item.end);
-        const end = textNodes.find(item => matchEnd > item.start && matchEnd <= item.end);
-        if (!start || !end) return false;
-
-        const range = document.createRange();
-        range.setStart(start.node, matchIndex - start.start);
-        range.setEnd(end.node, matchEnd - end.start);
-        const selection = getSelection();
-        selection.removeAllRanges();
-        selection.addRange(range);
-        root.focus({ preventScroll: true });
-        start.node.parentElement?.scrollIntoView({ block: "center", behavior: "smooth" });
+        codeMirrorView.dispatch({
+          selection: { anchor: matchIndex, head: matchIndex + query.length },
+          scrollIntoView: true
+        });
+        codeMirrorView.focus();
         return true;
       }
 
@@ -3421,169 +3261,6 @@
         example.attachments.clear();
         resetDocumentHistory(example);
         activateFile(example);
-      }
-
-      function updateViewButtons(mode = "ir") {
-        for (const button of viewButtons) {
-          button.setAttribute("aria-pressed", String(button.dataset.mode === mode));
-        }
-        const label = viewNames[mode] || viewNames.ir;
-        viewLabel.textContent = label;
-        viewToggle.setAttribute("aria-label", `Editor view: ${label}`);
-      }
-
-      function rememberEditorMode(mode) {
-        if (!Object.hasOwn(viewNames, mode)) return;
-        try { localStorage.setItem(editorModeStorageKey, mode); } catch {}
-      }
-
-      function rememberIrScrollPosition() {
-        if (!editorReady || editor.getCurrentMode() !== "ir") return;
-        const anchor = document.getSelection()?.anchorNode;
-        const element = anchor?.nodeType === 1 ? anchor : anchor?.parentElement;
-        if (!element?.closest?.('.vditor-ir [data-type="code-block"]')) return;
-        const scroller = editorElement.querySelector(".vditor-ir > .vditor-reset");
-        irScrollTopBeforeInput = scroller?.scrollTop ?? null;
-      }
-
-      function restoreIrScrollPosition() {
-        if (irScrollTopBeforeInput === null) return;
-        const scrollTop = irScrollTopBeforeInput;
-        irScrollTopBeforeInput = null;
-        cancelAnimationFrame(irScrollRestoreFrame);
-        irScrollRestoreFrame = requestAnimationFrame(() => {
-          irScrollRestoreFrame = null;
-          const scroller = editorElement.querySelector(".vditor-ir > .vditor-reset");
-          if (scroller) scroller.scrollTop = scrollTop;
-        });
-      }
-
-      function handleOutlineNavigation(event) {
-        const item = event.target.closest?.(
-          ".vditor-outline__content [data-target-id]");
-        if (!item || event.target.closest?.(".vditor-outline__action")) return;
-        const target = document.getElementById(item.dataset.targetId);
-        if (!target) return;
-        const scroller = target.closest(".vditor-reset, .vditor-sv");
-        if (!scroller) return;
-        requestAnimationFrame(() => {
-          const targetTop = target.getBoundingClientRect().top;
-          const scrollerTop = scroller.getBoundingClientRect().top;
-          scroller.scrollTop += targetTop - scrollerTop - outlineScrollOffset;
-        });
-      }
-
-      function outlineIsOpen(outline = editorElement.querySelector(".vditor-outline")) {
-        return Boolean(outline && getComputedStyle(outline).display !== "none");
-      }
-
-      function persistOutlineStatus(outline) {
-        try {
-          localStorage.setItem(outlineStorageKey,
-            outlineIsOpen(outline) ? "open" : "closed");
-        } catch {}
-      }
-
-      function synchronizeOutlineHeadingLevels() {
-        outlineRefreshFrame = null;
-        const items = editorElement.querySelectorAll(
-          ".vditor-outline__content [data-target-id]");
-        for (const item of items) {
-          const target = document.getElementById(item.dataset.targetId);
-          const match = target?.tagName.match(/^H([1-6])$/);
-          if (match) item.dataset.headingLevel = match[1];
-          else delete item.dataset.headingLevel;
-        }
-      }
-
-      function scheduleOutlineHeadingLevels() {
-        cancelAnimationFrame(outlineRefreshFrame);
-        outlineRefreshFrame = requestAnimationFrame(synchronizeOutlineHeadingLevels);
-      }
-
-      function observeOutline() {
-        const outline = editorElement.querySelector(".vditor-outline");
-        const toggle = editorElement.querySelector(
-          '.vditor-toolbar button[data-type="outline"]');
-        if (!outline || !toggle) return;
-
-        let shouldOpen = false;
-        try { shouldOpen = localStorage.getItem(outlineStorageKey) === "open"; } catch {}
-        if (outlineIsOpen(outline) !== shouldOpen) toggle.click();
-        scheduleOutlineHeadingLevels();
-
-        outlineObserver?.disconnect();
-        outlineObserver = new MutationObserver(records => {
-          if (records.some(record =>
-            record.type === "attributes" && record.target === outline)) {
-            persistOutlineStatus(outline);
-          }
-          if (records.some(record => record.type === "childList")) {
-            scheduleOutlineHeadingLevels();
-          }
-        });
-        outlineObserver.observe(outline, {
-          subtree: true,
-          childList: true,
-          attributes: true,
-          attributeFilter: ["style"]
-        });
-      }
-
-      function handleSplitViewScroll(event) {
-        if (!editorReady || editor.getCurrentMode() !== "sv") return;
-        const sourcePane = editorElement.querySelector(".vditor-sv");
-        const previewPane = editorElement.querySelector(".vditor-preview > .vditor-reset");
-        const leader = event.target;
-        if (!sourcePane || !previewPane || (leader !== sourcePane && leader !== previewPane)) return;
-
-        if (leader === splitScrollFollower
-            && Math.abs(leader.scrollTop - splitScrollFollowerTop) <= 1) {
-          splitScrollFollower = null;
-          splitScrollFollowerTop = null;
-          return;
-        }
-
-        splitScrollFollower = null;
-        splitScrollFollowerTop = null;
-        const follower = leader === sourcePane ? previewPane : sourcePane;
-        const leaderRange = Math.max(0, leader.scrollHeight - leader.clientHeight);
-        const followerRange = Math.max(0, follower.scrollHeight - follower.clientHeight);
-        const nextScrollTop = leaderRange
-          ? (leader.scrollTop / leaderRange) * followerRange
-          : 0;
-        if (Math.abs(follower.scrollTop - nextScrollTop) <= 1) return;
-
-        splitScrollFollower = follower;
-        splitScrollFollowerTop = nextScrollTop;
-        follower.scrollTop = nextScrollTop;
-      }
-
-      function switchEditorMode(mode) {
-        if (!editorReady || editor.getCurrentMode() === mode) return;
-        captureEditorValue();
-        hideTableEdgeTools();
-        hideTableResizeHandle();
-        hideImageResizer();
-        const editModeElement = editor.vditor?.toolbar?.elements?.["edit-mode"];
-        const modeButton = editModeElement?.querySelector(`button[data-mode="${mode}"]`);
-        if (!modeButton) {
-          updateStatus("Could not change editor view");
-          return;
-        }
-
-        modeButton.click();
-        const currentMode = editor.getCurrentMode();
-        updateViewButtons(currentMode);
-        if (currentMode !== mode) {
-          updateStatus("Could not change editor view");
-          return;
-        }
-        setEditorValue(activeFile());
-        rememberEditorMode(currentMode);
-        scheduleAttachmentPreviews();
-        scheduleTableWidths();
-        editor.focus();
       }
 
       function markdownLineRecords(value) {
@@ -3768,6 +3445,35 @@
         return tables;
       }
 
+      function markdownTableRenderBlocks(value) {
+        const records = markdownLineRecords(value);
+        return markdownTableBlocks(value).map((table, tableIndex) => {
+          const headerIndex = records.findIndex(line => line.start === table.start);
+          if (headerIndex < 0) return null;
+          const header = markdownTableCells(records[headerIndex].text);
+          const delimiter = markdownTableCells(records[headerIndex + 1]?.text || "");
+          if (!header || !delimiter) return null;
+          const rows = [header];
+          let lastIndex = headerIndex + 1;
+          for (let index = headerIndex + 2; index < records.length; index += 1) {
+            const cells = markdownTableCells(records[index].text);
+            if (!cells || cells.length !== table.columnCount) break;
+            rows.push(cells);
+            lastIndex = index;
+          }
+          const last = records[lastIndex];
+          return {
+            ...table,
+            tableIndex,
+            renderStart: table.metadataStart ?? table.start,
+            end: last.end - last.newline.length,
+            rows,
+            alignments: delimiter.map(cell => cell.startsWith(":") && cell.endsWith(":")
+              ? "center" : cell.endsWith(":") ? "right" : "left")
+          };
+        }).filter(Boolean);
+      }
+
       function formattedTableWidth(width) {
         return Number(width.toFixed(2)).toString();
       }
@@ -3797,7 +3503,9 @@
         const style = getComputedStyle(container);
         const horizontalPadding = Number.parseFloat(style.paddingLeft)
           + Number.parseFloat(style.paddingRight);
-        const width = container.clientWidth - horizontalPadding;
+        const containerWidth = container.clientWidth
+          || container.getBoundingClientRect().width;
+        const width = containerWidth - horizontalPadding;
         return width > 0 ? width : table.getBoundingClientRect().width;
       }
 
@@ -3836,7 +3544,7 @@
       }
 
       function tableSurface(table) {
-        return table?.closest?.(".vditor-ir, .vditor-wysiwyg, .vditor-preview") || null;
+        return table?.closest?.(".cm-editor") || null;
       }
 
       function tablesInSurface(surface) {
@@ -3862,8 +3570,7 @@
           "br, .LocalMarkdown-table-line-break")) {
           lineBreak.replaceWith(document.createTextNode("\n"));
         }
-        for (const marker of clone.querySelectorAll(
-          ".vditor-ir__marker, .vditor-wysiwyg__marker, script, style")) {
+        for (const marker of clone.querySelectorAll("script, style")) {
           marker.remove();
         }
         return clone.textContent
@@ -4088,9 +3795,13 @@
 
       function markdownTableContext(table, value) {
         const surface = tableSurface(table);
-        const tableIndex = tablesInSurface(surface).indexOf(table);
+        const directStart = Number(table?.dataset.markdownTableStart);
+        const blocks = markdownTableBlocks(value);
+        const tableIndex = Number.isInteger(directStart)
+          ? blocks.findIndex(block => block.start === directStart)
+          : tablesInSurface(surface).indexOf(table);
         if (tableIndex < 0) return null;
-        const block = markdownTableBlocks(value)[tableIndex];
+        const block = blocks[tableIndex];
         if (!block || block.columnCount !== tableColumnCount(table)) return null;
         return { tableIndex, block };
       }
@@ -4146,30 +3857,7 @@
       }
 
       function refreshTableWidths() {
-        if (!editorReady) return;
-        const file = activeFile();
-        if (!file) return;
-        const blocks = markdownTableBlocks(file.text);
-        for (const metadata of editorElement.querySelectorAll(
-          '.vditor-ir [data-type="html-block"], .vditor-wysiwyg [data-type="html-block"]')) {
-          metadata.classList.toggle("LocalMarkdown-table-widths-metadata",
-            /^<!--\s*local-markdown:table-widths\s*=/i.test(metadata.textContent.trim()));
-        }
-        for (const inlineHtml of editorElement.querySelectorAll(
-          '.vditor-ir table [data-type="html-inline"], .vditor-wysiwyg table [data-type="html-inline"]')) {
-          inlineHtml.classList.toggle("LocalMarkdown-table-line-break",
-            /^<br\s*\/?>$/i.test(inlineHtml.textContent.trim()));
-        }
-        const surfaces = editorElement.querySelectorAll(".vditor-ir, .vditor-wysiwyg, .vditor-preview");
-        for (const surface of surfaces) {
-          const tables = tablesInSurface(surface);
-          tables.forEach((table, index) => {
-            if (tableResizeSession?.table === table) return;
-            const block = blocks[index];
-            if (!block?.widths || block.columnCount !== tableColumnCount(table)) clearTableWidths(table);
-            else applyTableWidths(table, block.widths, block.tableWidth);
-          });
-        }
+        codeMirrorView?.requestMeasure();
       }
 
       function scheduleTableWidths() {
@@ -4184,7 +3872,7 @@
         const element = node?.nodeType === Node.ELEMENT_NODE ? node : node?.parentElement;
         const cell = element?.closest?.("td, th");
         if (!cell || !editorElement.contains(cell)
-          || !cell.closest(".vditor-ir, .vditor-wysiwyg")) return null;
+          || !cell.closest(".cm-editor")) return null;
         return cell;
       }
 
@@ -4201,7 +3889,7 @@
 
       function positionTableResizeHandle(cell) {
         const table = cell?.closest("table");
-        const surface = table?.closest(".vditor-ir")?.querySelector(":scope > .vditor-reset");
+        const surface = table?.closest(".cm-editor") ? codeMirrorView?.scrollDOM : null;
         const columnIndex = cell?.cellIndex ?? -1;
         const columnCount = tableColumnCount(table);
         if (!table || !surface || columnIndex < 0 || columnIndex >= columnCount) {
@@ -4231,8 +3919,8 @@
       }
 
       function showTableEdgeTools(axis, cell, action) {
-        const surface = editorElement.querySelector(".vditor-ir > .vditor-reset");
         const table = cell.closest("table");
+        const surface = table?.closest(".cm-editor") ? codeMirrorView?.scrollDOM : null;
         if (!surface || !table) {
           hideTableEdgeTools();
           return;
@@ -4435,8 +4123,12 @@
         resize.table.style.setProperty("--lm-table-width", `${layout.tableWidth}%`);
         setTableColumnWidths(resize.table, layout.widths, layout.tableWidth);
         resize.changed = Math.abs(layout.appliedDelta) >= 1;
+        const resizedCell = resize.table.rows[0]?.cells[resize.columnIndex];
+        const boundary = resizedCell?.getBoundingClientRect().right;
         tableResizeHandle.style.left = `${Math.round(
-          resize.handleLeft + layout.appliedDelta)}px`;
+          Number.isFinite(boundary)
+            ? boundary
+            : resize.handleLeft + layout.appliedDelta)}px`;
       }
 
       function continueTableResize(event) {
@@ -4463,7 +4155,8 @@
         const updated = replaceTableWidthsMetadata(
           value, table, widths, tableWidth);
         const committed = applyTableWidthTextUpdate(
-          file, value, updated, "Column width updated", { rerender: false });
+          file, value, updated, "Column width updated",
+          { rerender: editor?.kind === "codemirror" });
         if (committed && resize.table.isConnected) {
           applyTableWidths(resize.table, widths, tableWidth);
         }
@@ -4495,19 +4188,6 @@
         }
         hideTableResizeHandle();
         if (commit && resize.changed) updateStatus("Could not resize this table");
-      }
-
-      function selectHoveredTableCell() {
-        const surface = editorElement.querySelector(".vditor-ir > .vditor-reset");
-        if (!surface || !tableHoverCell?.isConnected) return null;
-        surface.focus({ preventScroll: true });
-        const range = document.createRange();
-        range.selectNodeContents(tableHoverCell);
-        range.collapse(true);
-        const selection = getSelection();
-        selection.removeAllRanges();
-        selection.addRange(range);
-        return surface;
       }
 
       function tableActionWidthContext(action) {
@@ -4562,69 +4242,82 @@
           context.file, value, updated, message, { mergeHistory: true });
       }
 
-      function runTableAction(action) {
-        if (["row-above", "delete-row"].includes(action)
-          && tableHoverCell?.tagName === "TH") {
-          if (!updateTableHeaderRow(tableHoverCell, action)) {
-            hideTableEdgeTools();
-            updateStatus("Could not update the table header");
-          }
-          return;
-        }
-        const shortcuts = {
-          "row-above": { key: "f", code: "KeyF", shiftKey: true, status: "Row added above" },
-          "row-below": { key: "=", code: "Equal", shiftKey: false, status: "Row added below" },
-          "column-left": { key: "g", code: "KeyG", shiftKey: true, status: "Column added before" },
-          "column-right": { key: "=", code: "Equal", shiftKey: true, status: "Column added after" },
-          "delete-row": { key: "-", code: "Minus", shiftKey: false, status: "Row deleted" },
-          "delete-column": { key: "-", code: "Minus", shiftKey: true, status: "Column deleted" }
-        };
-        const shortcut = shortcuts[action];
-        const widthContext = tableActionWidthContext(action);
-        const surface = shortcut && selectHoveredTableCell();
-        if (!surface) {
-          hideTableEdgeTools();
-          return;
+      function codeMirrorTableDelimiter(alignments) {
+        return alignments.map(alignment => alignment === "center" ? ":---:"
+          : alignment === "right" ? "---:" : "---");
+      }
+
+      function serializeCodeMirrorTableRow(cells, indent = "") {
+        return `${indent}| ${cells.join(" | ")} |`;
+      }
+
+      function updateCodeMirrorTableStructure(action, cell) {
+        const file = activeFile();
+        const table = cell?.closest("table");
+        if (!file || !table) return false;
+        captureEditorValue();
+        const value = canonicalEditorText(currentEditorMarkdown(), file);
+        const directStart = Number(table.dataset.markdownTableStart);
+        const block = markdownTableRenderBlocks(value)
+          .find(candidate => candidate.start === directStart);
+        if (!block) return false;
+        const rowIndex = cell.parentElement?.rowIndex ?? -1;
+        const columnIndex = cell.cellIndex;
+        if (rowIndex < 0 || columnIndex < 0) return false;
+
+        if (rowIndex === 0 && ["row-above", "delete-row"].includes(action)) {
+          return updateTableHeaderRow(cell, action);
         }
 
-        const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.platform);
-        // Vditor matches shifted punctuation differently on macOS and other platforms.
-        const shiftedKey = shortcut.key === "=" ? "+"
-          : shortcut.key === "-" ? "_"
-          : shortcut.key.toUpperCase();
-        const keyVariants = shortcut.shiftKey
-          ? [shiftedKey, shortcut.key]
-          : [shortcut.key];
-        const handled = keyVariants.some(key => {
-          const event = new KeyboardEvent("keydown", {
-            key,
-            code: shortcut.code,
-            metaKey: isMac,
-            ctrlKey: !isMac,
-            shiftKey: shortcut.shiftKey,
-            bubbles: true,
-            cancelable: true
-          });
-          surface.dispatchEvent(event);
-          return event.defaultPrevented;
-        });
-        if (handled) {
-          updateStatus(shortcut.status);
-          if (widthContext) {
-            setTimeout(() => synchronizeTableWidthsAfterAction(
-              widthContext, shortcut.status), 0);
-          } else {
-            scheduleTableWidths();
-          }
+        const widthContext = tableActionWidthContext(action);
+        const rows = block.rows.map(row => [...row]);
+        let message;
+        if (["row-above", "row-below"].includes(action)) {
+          const insertionIndex = action === "row-above" ? rowIndex : rowIndex + 1;
+          rows.splice(insertionIndex, 0, Array(block.columnCount).fill(""));
+          message = action === "row-above" ? "Row added above" : "Row added below";
+        } else if (action === "delete-row") {
+          if (rowIndex === 0 || rowIndex >= rows.length) return false;
+          rows.splice(rowIndex, 1);
+          message = "Row deleted";
+        } else if (["column-left", "column-right"].includes(action)) {
+          const insertionIndex = action === "column-left" ? columnIndex : columnIndex + 1;
+          for (const row of rows) row.splice(insertionIndex, 0, "");
+          block.alignments.splice(insertionIndex, 0, "left");
+          message = action === "column-left" ? "Column added before" : "Column added after";
+        } else if (action === "delete-column") {
+          if (block.columnCount <= 1) return false;
+          for (const row of rows) row.splice(columnIndex, 1);
+          block.alignments.splice(columnIndex, 1);
+          message = "Column deleted";
+        } else {
+          return false;
         }
-        hideTableEdgeTools();
+
+        const serializedRows = [
+          serializeCodeMirrorTableRow(rows[0], block.indent),
+          serializeCodeMirrorTableRow(codeMirrorTableDelimiter(block.alignments), block.indent),
+          ...rows.slice(1).map(row => serializeCodeMirrorTableRow(row, block.indent))
+        ];
+        const updated = value.slice(0, block.start)
+          + serializedRows.join(block.newline) + value.slice(block.end);
+        if (!applyTableStructureUpdate(file, updated, message)) return false;
+        if (widthContext) synchronizeTableWidthsAfterAction(widthContext, message);
+        return true;
+      }
+
+      function runTableAction(action) {
+        if (!updateCodeMirrorTableStructure(action, tableHoverCell)) {
+          hideTableEdgeTools();
+          updateStatus("Could not update the table");
+        }
       }
 
       function editableImageFromNode(node) {
         const element = node?.nodeType === Node.ELEMENT_NODE ? node : node?.parentElement;
         const image = element?.closest?.("img");
         if (!image || !editorElement.contains(image)) return null;
-        const surface = image.closest(".vditor-ir, .vditor-wysiwyg, .vditor-preview");
+        const surface = image.closest(".cm-editor");
         if (!surface || getComputedStyle(surface).display === "none") return null;
         return image;
       }
@@ -4646,6 +4339,9 @@
       }
 
       function imageAlignment(image) {
+        if (["left", "center", "right"].includes(image?.dataset.imageAlign)) {
+          return image.dataset.imageAlign;
+        }
         if (image.style.display !== "block") return null;
         const left = image.style.marginLeft;
         const right = image.style.marginRight;
@@ -4738,33 +4434,6 @@
         return value.slice(0, index) + replacement + value.slice(index + search.length);
       }
 
-      function directMarkdownImageReplacement(image, value, tag) {
-        const imageNode = image.closest('.vditor-ir [data-type="img"]');
-        if (!imageNode?.contains(image)) return null;
-        const linkNode = imageNode.parentElement?.matches('[data-type="a"]')
-          ? imageNode.parentElement
-          : null;
-        const targetNode = linkNode || imageNode;
-        const raw = targetNode.textContent;
-        if (!raw) return null;
-
-        const root = image.closest(".vditor-ir");
-        const selector = linkNode ? '[data-type="a"]' : '[data-type="img"]';
-        const matches = Array.from(root.querySelectorAll(selector))
-          .filter(node => node.textContent === raw);
-        const occurrence = matches.indexOf(targetNode);
-        if (occurrence < 0) return null;
-
-        let replacement = tag;
-        if (linkNode) {
-          const href = Array.from(linkNode.children)
-            .find(child => child.matches(".vditor-ir__marker--link"))?.textContent;
-          if (href) replacement = `<a href="${escapeHtmlAttribute(href)}">${tag}</a>`;
-        }
-        const updated = replaceOccurrence(value, raw, replacement, occurrence);
-        return updated === value ? null : updated;
-      }
-
       function decodedHtmlAttribute(value) {
         const textarea = document.createElement("textarea");
         textarea.innerHTML = value;
@@ -4812,9 +4481,17 @@
       }
 
       function imageMarkupCandidate(image, value, file) {
+        const directStart = Number(image.dataset.markdownStart);
+        const directEnd = Number(image.dataset.markdownEnd);
+        if (Number.isInteger(directStart) && Number.isInteger(directEnd)) {
+          const candidate = imageMarkupCandidates(value)
+            .find(item => item.start === directStart && item.end === directEnd);
+          if (candidate) return { candidate, source: candidate.source };
+        }
         const source = imageSourceReference(image, file);
         if (!source) return null;
-        const root = image.closest(".vditor-ir, .vditor-wysiwyg, .vditor-preview");
+        const root = image.closest(".cm-editor");
+        if (!root) return null;
         const occurrence = Array.from(root.querySelectorAll("img"))
           .filter(candidate => imageSourceReference(candidate, file) === source)
           .indexOf(image);
@@ -4923,12 +4600,7 @@
         const file = activeFile();
         if (!file || !editorReady) return false;
         const value = canonicalEditorText(currentEditorMarkdown(), file);
-        const source = imageSourceReference(image, file);
-        const tag = source
-          ? imageHtml(source, image.getAttribute("alt"), image.getAttribute("title"), width)
-          : null;
-        const updated = (tag && directMarkdownImageReplacement(image, value, tag))
-          || genericImageResize(image, value, width, file);
+        const updated = genericImageResize(image, value, width, file);
         return applyImageUpdate(file, value, updated, `Image resized to ${width}px`);
       }
 
@@ -4937,18 +4609,7 @@
         const file = activeFile();
         if (!file || !editorReady) return false;
         const value = canonicalEditorText(currentEditorMarkdown(), file);
-        const source = imageSourceReference(image, file);
-        const tag = source
-          ? imageHtml(
-            source,
-            image.getAttribute("alt"),
-            image.getAttribute("title"),
-            null,
-            alignment
-          )
-          : null;
-        const updated = (tag && directMarkdownImageReplacement(image, value, tag))
-          || genericImageAlignment(image, value, alignment, file);
+        const updated = genericImageAlignment(image, value, alignment, file);
         const label = alignment === "center" ? "centre" : alignment;
         return applyImageUpdate(file, value, updated, `Image aligned ${label}`);
       }
@@ -5012,6 +4673,30 @@
         resize.image.style.height = resize.inlineHeight;
         hideImageResizer();
         if (commit) updateStatus("Could not resize this image");
+      }
+
+      function resizeImageFromKeyboard(event) {
+        if (!selectedImage?.isConnected
+          || !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) {
+          return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        const image = selectedImage;
+        const rect = image.getBoundingClientRect();
+        const container = image.closest("td, th, [data-block]") || image.parentElement;
+        const maximumWidth = Math.max(
+          minimumImageWidth,
+          Math.floor((container?.getBoundingClientRect().width || innerWidth) - 8)
+        );
+        const direction = ["ArrowRight", "ArrowDown"].includes(event.key) ? 1 : -1;
+        const step = event.shiftKey ? 50 : 10;
+        const width = Math.round(Math.max(
+          minimumImageWidth,
+          Math.min(maximumWidth, rect.width + direction * step)
+        ));
+        if (width === Math.round(rect.width)) return;
+        if (!commitImageResize(image, width)) updateStatus("Could not resize this image");
       }
 
       function noteTitle(file) {
@@ -5160,255 +4845,22 @@
           canonical = canonical.split(url).join(attachmentPath(id));
         }
         if (file.tableWidthsOutOfSync) {
-          if (editor?.getCurrentMode() === "sv") {
-            file.tableWidthsOutOfSync = false;
-          } else {
-            const merged = preserveStoredTableWidths(canonical, file.text);
-            if (merged === canonical) file.tableWidthsOutOfSync = false;
-            canonical = merged;
-          }
+          const merged = preserveStoredTableWidths(canonical, file.text);
+          if (merged === canonical) file.tableWidthsOutOfSync = false;
+          canonical = merged;
         }
         return canonical;
       }
 
-      function blankLinePlaceholder(contribution) {
-        return `${blankLinePlaceholderPrefix}${contribution}`;
-      }
-
-      function blankLinePlaceholderContribution(value) {
-        const match = value.match(new RegExp(
-          `^${blankLinePlaceholderPrefix}([12])$`));
-        return match ? Number(match[1]) : null;
-      }
-
-      function preservedBlankLineContributions(
-        count, hasContentBefore, hasContentAfter) {
-        if (!hasContentBefore) return Array(count).fill(1);
-        if (!hasContentAfter) return Array(Math.max(0, count - 1)).fill(1);
-        if (count <= 2) return [];
-        const contributions = [];
-        let additional = count - 2;
-        if (additional % 2) {
-          contributions.push(1);
-          additional -= 1;
-        }
-        contributions.push(...Array(additional / 2).fill(2));
-        return contributions;
-      }
-
-      // Vditor's visual parsers collapse excess blank lines. These markers exist
-      // only while rebuilding editor DOM; file and history text remain unchanged.
-      function markdownTextWithBlankLinePlaceholders(value) {
-        if (!value.includes("\n")) return value;
-        return value.replace(/\n+/g, (newlines, offset) => {
-          const count = newlines.length;
-          const hasContentBefore = offset > 0;
-          const hasContentAfter = offset + count < value.length;
-          const contributions = preservedBlankLineContributions(
-            count, hasContentBefore, hasContentAfter);
-          if (!contributions.length) return newlines;
-
-          const placeholders = contributions
-            .map(blankLinePlaceholder).join("\n\n");
-          if (!hasContentBefore && !hasContentAfter) return placeholders;
-          if (!hasContentBefore) return `${placeholders}\n\n`;
-          if (!hasContentAfter) return `\n\n${placeholders}\n`;
-          return `\n\n${placeholders}\n\n`;
-        });
-      }
-
-      function markdownTextWithoutBlankLinePlaceholders(value) {
-        if (!value.includes(blankLinePlaceholderPrefix)) return value;
-        const markerPattern = new RegExp(
-          `^${blankLinePlaceholderPrefix}([12])$`, "gm");
-        const marked = value.replace(markerPattern,
-          (_, contribution) => "\u0000".repeat(Number(contribution)));
-        return marked.replace(/[\n\u0000]+/g, (run, offset) => {
-          if (!run.includes("\u0000")) return run;
-          const contribution = run.replace(/\n/g, "").length;
-          const hasContentBefore = offset > 0;
-          const hasContentAfter = offset + run.length < marked.length;
-          const structuralNewlines = hasContentBefore
-            ? (hasContentAfter ? 2 : 1)
-            : 0;
-          return "\n".repeat(structuralNewlines + contribution);
-        });
-      }
-
-      function splitViewDomWithPreservedBlankLines(render, value) {
-        const encoded = markdownTextWithBlankLinePlaceholders(value);
-        let dom = render(encoded);
-        for (const contribution of [1, 2]) {
-          const marker = `<span data-type="text">${
-            blankLinePlaceholder(contribution)}</span>`;
-          if (contribution === 1) {
-            dom = dom.split(`${marker}${splitViewNewlineHtml}`).join("");
-          }
-          dom = dom.split(marker).join("");
-        }
-
-        const trailingNewlines = value.match(/\n*$/)?.[0].length || 0;
-        while (dom.endsWith(splitViewNewlineHtml)) {
-          dom = dom.slice(0, -splitViewNewlineHtml.length);
-        }
-        return dom + splitViewNewlineHtml.repeat(trailingNewlines);
-      }
-
-      function installSplitViewBlankLinePreservation() {
-        const lute = editor?.vditor?.lute;
-        if (!lute || originalSplitViewRenderer) return;
-        originalSplitViewRenderer = lute.SpinVditorSVDOM.bind(lute);
-        lute.SpinVditorSVDOM = value =>
-          splitViewDomWithPreservedBlankLines(originalSplitViewRenderer, value);
-      }
-
-      function previewBlankLineMarker(contribution, ownLine = false) {
-        return ownLine
-          ? `${blankLinePlaceholderPrefix}BLOCK_${contribution}`
-          : blankLinePlaceholder(contribution);
-      }
-
-      function previewMarkerNeedsOwnLine(value, offset) {
-        const lineStart = value.lastIndexOf("\n", offset - 1) + 1;
-        const line = value.slice(lineStart, offset);
-        return /^(?: {0,3}(?:`{3,}|~{3,}|#{1,6}(?:\s|$))| {0,3}(?:=+|-+)\s*$| {0,3}\[[^\]]+\]:| {0,3}\|.*\|\s*$)/
-          .test(line);
-      }
-
-      // Inline markers retain the original Markdown block structure. The
-      // generated preview HTML replaces them with visual blank-line spans.
-      function markdownTextWithPreviewBlankLineMarkers(value) {
-        if (!value.includes("\n")) return value;
-        return value.replace(/\n+/g, (newlines, offset) => {
-          const hasContentBefore = offset > 0;
-          const hasContentAfter = offset + newlines.length < value.length;
-          const contributions = preservedBlankLineContributions(
-            newlines.length, hasContentBefore, hasContentAfter);
-          if (!contributions.length) return newlines;
-          const inlineMarkers = contributions.map(contribution =>
-            previewBlankLineMarker(contribution)).join("");
-          if (!hasContentBefore) {
-            const blockMarkers = contributions.map(contribution =>
-              previewBlankLineMarker(contribution, true)).join("");
-            return `${blockMarkers}\n\n${newlines}`;
-          }
-          if (!previewMarkerNeedsOwnLine(value, offset)) {
-            return `${inlineMarkers}${newlines}`;
-          }
-          const blockMarkers = contributions.map(contribution =>
-            previewBlankLineMarker(contribution, true)).join("");
-          const markerOffset = Math.min(2, newlines.length);
-          return `${newlines.slice(0, markerOffset)}${blockMarkers}\n\n${
-            newlines.slice(markerOffset)}`;
-        });
-      }
-
-      function previewHtmlWithPreservedBlankLines(render, value) {
-        const encoded = markdownTextWithPreviewBlankLineMarkers(value);
-        let html = render(encoded);
-        const inlineMarkers = [1, 2].map(contribution =>
-          previewBlankLineMarker(contribution));
-        const blockMarkers = [1, 2].map(contribution =>
-          previewBlankLineMarker(contribution, true));
-        const literalBlockMarkerPattern = blockMarkers
-          .map(marker => marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
-          .join("|");
-        html = html.replace(/<pre\b[\s\S]*?<\/pre>/g, literalBlock => {
-          let cleaned = literalBlock.replace(
-            new RegExp(`(?:${literalBlockMarkerPattern})+\\n\\n`, "g"), "");
-          for (const marker of [...inlineMarkers, ...blockMarkers]) {
-            cleaned = cleaned.split(marker).join("");
-          }
-          return cleaned;
-        });
-        for (const contribution of [1, 2]) {
-          const blankLines = '<span class="LocalMarkdown-preview-blank-lines" '
-            + `style="--lm-blank-lines: ${contribution}" `
-            + 'aria-hidden="true"></span>';
-          html = html.split(previewBlankLineMarker(contribution, true))
-            .join(blankLines);
-          html = html.split(previewBlankLineMarker(contribution))
-            .join(blankLines);
-        }
-        html = html.replace(/<p>((?:<span class="LocalMarkdown-preview-blank-lines" [^>]+><\/span>)+)<\/p>/g,
-          "$1");
-        return html;
-      }
-
-      function installPreviewBlankLinePreservation() {
-        const lute = editor?.vditor?.lute;
-        if (!lute || originalPreviewRenderer) return;
-        originalPreviewRenderer = lute.Md2HTML.bind(lute);
-      }
-
-      function transformPreviewHtml(html) {
-        if (!editorReady || !originalPreviewRenderer) return html;
-        return previewHtmlWithPreservedBlankLines(
-          originalPreviewRenderer, currentEditorMarkdown());
-      }
-
-      function isBlankEditorParagraph(element) {
-        return element?.tagName === "P" && element.dataset.block === "0"
-          && !element.textContent.replace(/\u200b/g, "").trim();
-      }
-
-      function restoreEditorBlankLinePlaceholders() {
-        if (!editorReady || editor.getCurrentMode() === "sv") return;
-        const surface = activeEditorSurface();
-        if (!surface) return;
-        for (const block of surface.children) {
-          const contribution = blankLinePlaceholderContribution(
-            block.textContent.replace(/\u200b/g, "").trim());
-          if (!contribution || block.tagName !== "P") continue;
-          const caret = document.createElement("wbr");
-          const lineBreak = document.createElement("br");
-          block.replaceChildren(caret, lineBreak);
-          block.dataset.localMarkdownBlankLines = String(contribution);
-        }
-      }
-
-      function currentEditorMarkdown(fallback = editor.getValue()) {
-        if (!editorReady) return fallback;
-        const surface = activeEditorSurface();
-        if (!surface) return fallback;
-        if (editor.getCurrentMode() === "sv") {
-          return surface.textContent.replace(/\u00a0/g, " ");
-        }
-        const blocks = Array.from(surface.children);
-        const blankIndexes = blocks
-          .map((block, index) => isBlankEditorParagraph(block) ? index : -1)
-          .filter(index => index >= 0);
-        if (!blankIndexes.length) return fallback;
-
-        const clone = surface.cloneNode(true);
-        const clonedBlocks = Array.from(clone.children);
-        for (const index of blankIndexes) {
-          const block = blocks[index];
-          let contribution = Number(block.dataset.localMarkdownBlankLines);
-          if (![1, 2].includes(contribution)) {
-            const hasContentBefore = blocks
-              .slice(0, index).some(candidate => !isBlankEditorParagraph(candidate));
-            const hasContentAfter = blocks
-              .slice(index + 1).some(candidate => !isBlankEditorParagraph(candidate));
-            contribution = hasContentBefore && hasContentAfter ? 2 : 1;
-          }
-          clonedBlocks[index].replaceChildren(
-            document.createTextNode(blankLinePlaceholder(contribution)));
-        }
-
-        const encoded = editor.getCurrentMode() === "wysiwyg"
-          ? editor.vditor.lute.VditorDOM2Md(clone.innerHTML)
-          : editor.vditor.lute.VditorIRDOM2Md(clone.innerHTML);
-        return markdownTextWithoutBlankLinePlaceholders(encoded);
+      function currentEditorMarkdown(fallback = "") {
+        return editorReady ? editor.getValue() : fallback;
       }
 
       function setEditorValue(file, value = file.text) {
-        const editorValue = editor.getCurrentMode() === "sv"
-          ? value
-          : markdownTextWithBlankLinePlaceholders(value);
-        editor.setValue(editorValue, true);
-        restoreEditorBlankLinePlaceholders();
+        editor.setValue(value, true);
         file.tableWidthsOutOfSync = false;
+        scheduleCodeMirrorLineDecorations();
+        renderCodeMirrorOutline();
       }
 
       function pruneUnusedAttachments(file) {
@@ -5487,9 +4939,7 @@
         if (!editorReady) return;
         const file = activeFile();
         if (!file || file.builtin || !file.attachments.size) return;
-        const images = editorElement.querySelectorAll(
-          ".vditor-ir img[src], .vditor-wysiwyg img[src], .vditor-preview img[src]"
-        );
+        const images = editorElement.querySelectorAll(".cm-editor img[src]");
         for (const image of images) {
           const id = attachmentIdForImage(image, file);
           const attachment = id ? file.attachments.get(id) : null;
@@ -5522,72 +4972,11 @@
         }, 0);
       }
 
-      function codeWrapKey(pre) {
-        const file = activeFile();
-        const surface = pre.closest(".vditor-ir, .vditor-wysiwyg, .vditor-preview");
-        if (!file || !surface) return null;
-        const blocks = Array.from(surface.querySelectorAll("pre > .vditor-copy"),
-          copy => copy.parentElement);
-        const index = blocks.indexOf(pre);
-        return index < 0 ? null : `${file.id}\n${index}`;
-      }
-
-      function setCodeWrapState(pre, enabled) {
-        pre.classList.toggle("LocalMarkdown-code-wrap-enabled", enabled);
-        const button = pre.querySelector(":scope > .vditor-copy > .LocalMarkdown-code-wrap");
-        if (!button) return;
-        const label = enabled ? "Disable code wrapping" : "Wrap code at word boundaries";
-        button.setAttribute("aria-pressed", String(enabled));
-        button.setAttribute("aria-label", label);
-        button.title = label;
-      }
-
-      function refreshCodeWrapControls() {
-        codeWrapRefreshFrame = null;
-        for (const copy of editorElement.querySelectorAll("pre > .vditor-copy")) {
-          const pre = copy.parentElement;
-          if (!pre?.querySelector(":scope > code")) continue;
-          copy.querySelector(":scope > span.vditor-tooltipped")
-            ?.classList.remove("vditor-tooltipped", "vditor-tooltipped__w");
-          let button = copy.querySelector(":scope > .LocalMarkdown-code-wrap");
-          if (!button) {
-            button = document.createElement("button");
-            button.type = "button";
-            button.className = "LocalMarkdown-code-wrap";
-            button.contentEditable = "false";
-            button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 6h10a4 4 0 0 1 0 8H7m3-3-3 3 3 3M4 10h5"/></svg>';
-            button.addEventListener("pointerdown", event => {
-              event.preventDefault();
-              event.stopPropagation();
-            });
-            button.addEventListener("click", event => {
-              event.preventDefault();
-              event.stopPropagation();
-              const key = codeWrapKey(pre);
-              if (!key) return;
-              const enabled = !pre.classList.contains("LocalMarkdown-code-wrap-enabled");
-              if (enabled) codeWrapStates.set(key, true);
-              else codeWrapStates.delete(key);
-              scheduleSessionSave();
-              refreshCodeWrapControls();
-            });
-            copy.append(button);
-          }
-          setCodeWrapState(pre, codeWrapStates.get(codeWrapKey(pre)) === true);
-        }
-      }
-
-      function scheduleCodeWrapControls() {
-        cancelAnimationFrame(codeWrapRefreshFrame);
-        codeWrapRefreshFrame = requestAnimationFrame(refreshCodeWrapControls);
-      }
-
       function observeAttachmentPreviews() {
         if (attachmentPreviewObserver || typeof MutationObserver !== "function") return;
         attachmentPreviewObserver = new MutationObserver(() => {
           refreshAttachmentPreviews();
           scheduleTableWidths();
-          scheduleCodeWrapControls();
         });
         attachmentPreviewObserver.observe(editorElement, {
           subtree: true,
@@ -5803,8 +5192,15 @@
               if (drawingDialog.open) drawingDialog.close();
               restoreEditorRange(current.editorRange);
               editorValuePromise = waitForEditorHistoryValue(current.file, before.text);
-              editor.insertEmptyBlock("afterend");
-              editor.insertMD(`\n\n![Excalidraw drawing](${attachmentPath(id)})\n\n`);
+              const markdown = `![Excalidraw drawing](${attachmentPath(id)})`;
+              if (editor?.kind === "codemirror") {
+                if (!insertCodeMirrorBlock(markdown)) {
+                  throw new Error("Could not insert the drawing into CodeMirror");
+                }
+              } else {
+                editor.insertEmptyBlock("afterend");
+                editor.insertMD(`\n\n${markdown}\n\n`);
+              }
               drawingDialog.showModal();
             }
           } finally {
@@ -6051,6 +5447,111 @@
         return null;
       }
 
+      function insertImagesIntoTableCell(cell, attachments) {
+        if (!cell?.isConnected) return false;
+        const selection = getSelection();
+        const range = document.createRange();
+        if (selection?.rangeCount && cell.contains(selection.anchorNode)) {
+          range.setStart(selection.getRangeAt(0).startContainer,
+            selection.getRangeAt(0).startOffset);
+          range.setEnd(selection.getRangeAt(0).endContainer,
+            selection.getRangeAt(0).endOffset);
+          range.deleteContents();
+        } else {
+          range.selectNodeContents(cell);
+          range.collapse(false);
+        }
+        const fragment = document.createDocumentFragment();
+        let lastNode = null;
+        attachments.forEach(({ attachment }, index) => {
+          if (index) {
+            lastNode = document.createElement("br");
+            fragment.append(lastNode);
+          }
+          const image = document.createElement("img");
+          const markdown = `![Pasted image](${attachmentPath(attachment.id)})`;
+          image.src = attachmentPath(attachment.id);
+          image.alt = "Pasted image";
+          image.dataset.localMarkdownAttachment = attachment.id;
+          image.dataset.markdownImage = markdown;
+          image.contentEditable = "false";
+          image.draggable = false;
+          image.tabIndex = 0;
+          image.setAttribute("role", "button");
+          image.setAttribute("aria-label", "Preview image: Pasted image");
+          lastNode = image;
+          fragment.append(image);
+        });
+        if (!lastNode) return false;
+        range.insertNode(fragment);
+        range.setStartAfter(lastNode);
+        range.collapse(true);
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+        cell.dispatchEvent(new InputEvent("input", {
+          bubbles: true,
+          inputType: "insertFromPaste"
+        }));
+        return true;
+      }
+
+      async function pasteEmbeddedImagesIntoTableCell(files, cell) {
+        const images = Array.from(files || []).filter(file => file?.type?.startsWith("image/"));
+        if (!images.length || !editorReady || !cell?.isConnected) return null;
+        const file = activeFile();
+        if (!file || file.builtin || file.welcome) {
+          updateStatus("Create or open a Markdown file before inserting images");
+          return "Create or open a Markdown file before inserting images";
+        }
+
+        const before = documentSnapshot(file);
+        let attachments;
+        documentHistoryRecordingDepth += 1;
+        try {
+          attachments = images.map(image => {
+            const id = createAttachmentId(file);
+            const attachment = {
+              id,
+              type: image.type || "image/png",
+              data: null,
+              blob: image,
+              pending: null,
+              error: false
+            };
+            file.attachments.set(id, attachment);
+            return { attachment, image };
+          });
+          if (!insertImagesIntoTableCell(cell, attachments)) {
+            for (const { attachment } of attachments) file.attachments.delete(attachment.id);
+            return "Could not insert images into the table cell";
+          }
+        } finally {
+          documentHistoryRecordingDepth -= 1;
+        }
+        file.dirty = true;
+        renderFiles();
+        scheduleAttachmentPreviews();
+        scheduleAutoSave(file);
+        scheduleSessionSave();
+        recordDocumentMutation(file, before, {
+          label: images.length === 1 ? "table image insertion" : "table image insertion batch"
+        });
+        updateStatus(images.length === 1
+          ? "Embedding table image…" : `Embedding ${images.length} table images…`);
+
+        const results = await Promise.all(attachments.map(({ attachment, image }) =>
+          processPastedAttachment(file, attachment, image)));
+        if (activeFile() === file && results.every(Boolean)) {
+          updateStatus(images.length === 1
+            ? "Image embedded in table cell"
+            : `${images.length} images embedded in table cell`);
+        }
+        renderFiles();
+        scheduleAutoSave(file);
+        scheduleSessionSave();
+        return null;
+      }
+
       function pastedUrlFromText(text) {
         const candidate = String(text || "").trim();
         if (!candidate || /\s/.test(candidate)) return null;
@@ -6240,6 +5741,66 @@
         const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.platform);
         const commandKey = isMac ? event.metaKey : event.ctrlKey;
         const key = event.key.toLowerCase();
+        if (event.defaultPrevented) {
+          if (commandKey || event.altKey || [
+            "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown",
+            "Home", "End", "PageUp", "PageDown", "Escape"
+          ].includes(event.key)) breakDocumentHistoryCoalescing();
+          return;
+        }
+        if (editor?.kind === "codemirror" && event.key === "Enter"
+          && commandKey && !event.altKey && !event.shiftKey) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          toggleCodeMirrorTask();
+          return;
+        }
+        if (editor?.kind === "codemirror" && event.key === "Enter"
+          && !commandKey && !event.altKey) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          if (!event.shiftKey && continueCodeMirrorMarkup()) return;
+          insertCodeMirrorNewline();
+          return;
+        }
+        if (editor?.kind === "codemirror" && event.key === "Tab" && !commandKey) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          if (event.shiftKey) runCodeMirrorToolbarCommand("outdent");
+          else runCodeMirrorToolbarCommand("indent");
+          return;
+        }
+        const formatCommand = editor?.kind === "codemirror" && commandKey
+          && !event.altKey && !event.shiftKey
+          ? ({ b: "bold", i: "italic", e: "inline-code" })[key]
+          : null;
+        if (formatCommand) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          runCodeMirrorToolbarCommand(formatCommand);
+          return;
+        }
+        if (editor?.kind === "codemirror" && commandKey && event.altKey
+          && !event.shiftKey && /^[1-6]$/.test(key)) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          setCodeMirrorHeadingLevel(Number(key));
+          return;
+        }
+        if (editor?.kind === "codemirror" && commandKey && event.shiftKey
+          && !event.altKey && key === "j") {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          toggleCodeMirrorTask();
+          return;
+        }
+        if (editor?.kind === "codemirror" && commandKey && !event.altKey
+          && !event.shiftKey && ["=", "+", "-"].includes(key)) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          adjustCodeMirrorHeading(key === "-" ? -1 : 1);
+          return;
+        }
         const headerRowAction = editorReady && commandKey && !event.altKey
           ? (event.shiftKey && key === "f" ? "row-above"
             : (!event.shiftKey && key === "-" ? "delete-row" : null))
@@ -6280,213 +5841,118 @@
         ].includes(event.key)) breakDocumentHistoryCoalescing();
       }
 
-      function taskItemCheckbox(item) {
-        return Array.from(item.children).find(child =>
-          child.matches('input[type="checkbox"]')) || null;
-      }
-
-      function taskItemNeedsLayoutNormalization(item) {
-        const text = item.textContent || "";
-        return (!taskItemCheckbox(item) && !text.trim())
-          || /(?:\r?\n[\t ]*){2,}$/.test(text);
-      }
-
-      function normalizeTaskItemLayout(item) {
-        if (!taskItemCheckbox(item) && !item.textContent.trim()) {
-          if (item.parentElement?.children.length > 1) {
-            item.remove();
-            return true;
-          }
-          return false;
+      function clearCodeMirrorTaskDropTarget() {
+        for (const line of editorElement.querySelectorAll(
+          ".LocalMarkdown-cm-task-dragging, .LocalMarkdown-cm-task-drop-before, .LocalMarkdown-cm-task-drop-after")) {
+          line.classList.remove("LocalMarkdown-cm-task-dragging",
+            "LocalMarkdown-cm-task-drop-before", "LocalMarkdown-cm-task-drop-after");
         }
-        for (let node = item.lastChild; node; node = node.previousSibling) {
-          if (node.nodeType !== Node.TEXT_NODE) {
-            if (node.textContent?.trim()) break;
-            continue;
-          }
-          const normalized = node.data.replace(/(?:\r?\n[\t ]*){2,}$/, "\n");
-          if (normalized === node.data) {
-            if (node.data.trim()) break;
-            continue;
-          }
-          node.data = normalized;
-          return true;
-        }
-        return false;
       }
 
-      function scheduleTaskListLayoutNormalization() {
-        cancelAnimationFrame(taskLayoutNormalizationFrame);
-        taskLayoutNormalizationFrame = requestAnimationFrame(() => {
-          taskLayoutNormalizationFrame = requestAnimationFrame(() => {
-            taskLayoutNormalizationFrame = null;
-            if (!editorReady
-                || !["ir", "wysiwyg"].includes(editor.getCurrentMode())) return;
-            const surface = activeEditorSurface();
-            const items = surface
-              ? Array.from(surface.querySelectorAll("li.vditor-task")) : [];
-            if (!items.some(taskItemNeedsLayoutNormalization)) return;
-
-            const file = activeFile();
-            const selection = editorSelectionSnapshot(file);
-            const scroll = editorScrollSnapshot(file);
-            let changed = false;
-            for (const item of items) changed = normalizeTaskItemLayout(item) || changed;
-            if (!changed) return;
-            restoreEditorSelection(file, selection, scroll);
-          });
-        });
-      }
-
-      function taskItemFromEvent(event) {
-        return event.target instanceof Element
-          ? event.target.closest("li.vditor-task")
-          : null;
-      }
-
-      function taskItemFromPoint(x, y) {
-        const target = document.elementFromPoint(x, y);
-        return target instanceof Element ? target.closest("li.vditor-task") : null;
-      }
-
-      function isTaskDragHandlePoint(item, event) {
-        if (!taskItemCheckbox(item)) return false;
-        const itemRect = item.getBoundingClientRect();
-        const handleStyle = getComputedStyle(item, "::before");
-        const left = itemRect.left + Number.parseFloat(handleStyle.left);
-        const top = itemRect.top + Number.parseFloat(handleStyle.top);
-        const width = Number.parseFloat(handleStyle.width);
-        const height = Number.parseFloat(handleStyle.height);
-        if (![left, top, width, height].every(Number.isFinite)) return false;
-        const hitSlop = 2;
-        return event.clientX >= left - hitSlop
-          && event.clientX <= left + width + hitSlop
-          && event.clientY >= top - hitSlop
-          && event.clientY <= top + height + hitSlop;
-      }
-
-      function clearTaskDropTarget() {
-        taskDropTarget?.classList.remove(
-          "LocalMarkdown-task-drop-before", "LocalMarkdown-task-drop-after");
-        taskDropTarget = null;
-        taskDropAfter = false;
-      }
-
-      function markTaskDropTarget(item, dropAfter) {
-        if (taskDropTarget === item && taskDropAfter === dropAfter) return;
-        clearTaskDropTarget();
-        taskDropTarget = item;
-        taskDropAfter = dropAfter;
-        item.classList.add(dropAfter
-          ? "LocalMarkdown-task-drop-after"
-            : "LocalMarkdown-task-drop-before");
-      }
-
-      function setTaskDragHandleItem(item) {
-        if (taskDragHandleItem === item) return;
-        taskDragHandleItem?.classList.remove("LocalMarkdown-task-handle-hover");
-        taskDragHandleItem = item;
-        taskDragHandleItem?.classList.add("LocalMarkdown-task-handle-hover");
-      }
-
-      function resetTaskDrag() {
-        const session = taskPointerDragSession;
-        clearTaskDropTarget();
-        session?.item.classList.remove("LocalMarkdown-task-dragging");
-        if (session?.item.hasPointerCapture?.(session.pointerId)) {
-          session.item.releasePointerCapture(session.pointerId);
-        }
-        taskPointerDragSession = null;
-        setTaskDragHandleItem(null);
-      }
-
-      function updateTaskDragHandle(event) {
-        if (taskPointerDragSession) return;
-        const item = taskItemFromEvent(event);
-        setTaskDragHandleItem(item?.closest(".vditor-ir, .vditor-wysiwyg")
-            && isTaskDragHandlePoint(item, event) ? item : null);
-      }
-
-      function startTaskPointerDrag(event) {
-        if (event.button !== 0 || taskPointerDragSession) return;
-        const item = taskItemFromEvent(event);
-        if (!item?.closest(".vditor-ir, .vditor-wysiwyg")
-            || !isTaskDragHandlePoint(item, event)) return;
+      function startCodeMirrorTaskDrag(event, lineFrom) {
+        if (event.button !== 0 || !codeMirrorView) return;
         event.preventDefault();
         event.stopPropagation();
-        taskPointerDragSession = {
-          item,
+        breakDocumentHistoryCoalescing();
+        const line = codeMirrorView.state.doc.lineAt(lineFrom);
+        codeMirrorTaskDragSession = {
           pointerId: event.pointerId,
           startX: event.clientX,
           startY: event.clientY,
-          started: false
+          sourceFrom: line.from,
+          targetFrom: null,
+          dropAfter: false,
+          dragging: false
         };
-        setTaskDragHandleItem(item);
-        item.setPointerCapture?.(event.pointerId);
+        event.currentTarget?.setPointerCapture?.(event.pointerId);
       }
 
-      function moveTaskPointerDrag(event) {
-        const session = taskPointerDragSession;
-        if (!session) {
-          updateTaskDragHandle(event);
-          return;
-        }
-        if (event.pointerId !== session.pointerId) return;
-        event.preventDefault();
-        event.stopPropagation();
-        if (!session.started) {
-          const distance = Math.hypot(
-            event.clientX - session.startX, event.clientY - session.startY);
-          if (distance < 4) return;
-          session.started = true;
-          session.item.classList.add("LocalMarkdown-task-dragging");
-        }
-
-        const target = taskItemFromPoint(event.clientX, event.clientY);
-        if (!target || target === session.item
-            || target.parentElement !== session.item.parentElement) {
-          clearTaskDropTarget();
-          return;
-        }
-        const checkbox = taskItemCheckbox(target);
-        if (!checkbox) return;
-        const checkboxRect = checkbox.getBoundingClientRect();
-        markTaskDropTarget(target, event.clientY >= checkboxRect.top + checkboxRect.height / 2);
-      }
-
-      function finishTaskPointerDrag(event, commit = true) {
-        const session = taskPointerDragSession;
+      function moveCodeMirrorTaskDrag(event) {
+        const session = codeMirrorTaskDragSession;
         if (!session || event.pointerId !== session.pointerId) return;
+        if (!session.dragging) {
+          if (Math.hypot(event.clientX - session.startX,
+            event.clientY - session.startY) < 5) return;
+          session.dragging = true;
+          const sourceWidget = editorElement.querySelector(
+            `.LocalMarkdown-cm-task-widget-shell[data-line-from="${session.sourceFrom}"]`);
+          sourceWidget?.closest(".cm-line")?.classList.add("LocalMarkdown-cm-task-dragging");
+        }
         event.preventDefault();
-        event.stopPropagation();
-        const item = session.item;
-        const target = taskDropTarget;
-        const dropAfter = taskDropAfter;
-        const list = item.parentElement;
-        const shouldReorder = commit && session.started && target
-          && target.parentElement === list;
-        resetTaskDrag();
-        if (!shouldReorder) return;
-
-        const beforeOrder = Array.from(list.children);
-        const reference = dropAfter ? target.nextSibling : target;
-        list.insertBefore(item, reference);
-        if (beforeOrder.every((child, index) => child === list.children[index])) return;
-
-        captureEditorValue({ label: "task reorder" });
-        renderFiles();
-        updateStatus("Task reordered");
+        const pointElement = document.elementFromPoint(event.clientX, event.clientY);
+        const target = pointElement?.closest?.(".LocalMarkdown-cm-task-widget-shell")
+          || pointElement?.closest?.(".cm-line")
+            ?.querySelector?.(".LocalMarkdown-cm-task-widget-shell");
+        const targetFrom = Number(target?.dataset.lineFrom);
+        clearCodeMirrorTaskDropTarget();
+        const sourceWidget = editorElement.querySelector(
+          `.LocalMarkdown-cm-task-widget-shell[data-line-from="${session.sourceFrom}"]`);
+        sourceWidget?.closest(".cm-line")?.classList.add("LocalMarkdown-cm-task-dragging");
+        if (!Number.isInteger(targetFrom) || targetFrom === session.sourceFrom) {
+          session.targetFrom = null;
+          return;
+        }
+        const targetLine = target.closest(".cm-line");
+        const rect = targetLine.getBoundingClientRect();
+        session.targetFrom = targetFrom;
+        session.dropAfter = event.clientY >= rect.top + rect.height / 2;
+        targetLine.classList.add(session.dropAfter
+          ? "LocalMarkdown-cm-task-drop-after" : "LocalMarkdown-cm-task-drop-before");
       }
 
-      function handleEditorViewShortcut(event) {
-        const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.platform);
-        const commandKey = isMac ? event.metaKey : event.ctrlKey;
-        if (!editorReady || !commandKey || !event.altKey || event.shiftKey) return;
-        const mode = ({ Digit7: "wysiwyg", Digit8: "ir", Digit9: "sv" })[event.code];
-        if (!mode) return;
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        switchEditorMode(mode);
+      function markdownIndentWidth(line) {
+        const whitespace = line.match(/^[\t ]*/)?.[0] || "";
+        let width = 0;
+        for (const character of whitespace) {
+          width = character === "\t" ? width + (4 - width % 4) : width + 1;
+        }
+        return width;
+      }
+
+      function codeMirrorTaskSubtree(lines, rootIndex) {
+        const rootIndent = markdownIndentWidth(lines[rootIndex] || "");
+        let end = rootIndex + 1;
+        while (end < lines.length) {
+          if (lines[end].trim()) {
+            if (markdownIndentWidth(lines[end]) <= rootIndent) break;
+            end += 1;
+            continue;
+          }
+          let nextContent = end + 1;
+          while (nextContent < lines.length && !lines[nextContent].trim()) nextContent += 1;
+          if (nextContent >= lines.length
+            || markdownIndentWidth(lines[nextContent]) <= rootIndent) break;
+          end += 1;
+        }
+        return { from: rootIndex, to: end };
+      }
+
+      function finishCodeMirrorTaskDrag(event, commit = true) {
+        const session = codeMirrorTaskDragSession;
+        if (!session || (event?.pointerId !== undefined
+          && event.pointerId !== session.pointerId)) return;
+        codeMirrorTaskDragSession = null;
+        clearCodeMirrorTaskDropTarget();
+        if (!commit || !session.dragging || session.targetFrom === null || !codeMirrorView) return;
+        const doc = codeMirrorView.state.doc;
+        const sourceNumber = doc.lineAt(session.sourceFrom).number;
+        const targetNumber = doc.lineAt(session.targetFrom).number;
+        if (sourceNumber === targetNumber) return;
+        const lines = Array.from({ length: doc.lines }, (_, index) => doc.line(index + 1).text);
+        const source = codeMirrorTaskSubtree(lines, sourceNumber - 1);
+        if (targetNumber - 1 >= source.from && targetNumber - 1 < source.to) return;
+        const target = codeMirrorTaskSubtree(lines, targetNumber - 1);
+        const moved = lines.splice(source.from, source.to - source.from);
+        let insertionIndex = session.dropAfter ? target.to : target.from;
+        if (source.from < insertionIndex) insertionIndex -= moved.length;
+        insertionIndex = Math.max(0, Math.min(lines.length, insertionIndex));
+        lines.splice(insertionIndex, 0, ...moved);
+        const updated = lines.join("\n");
+        const anchor = lines.slice(0, insertionIndex)
+          .reduce((length, line) => length + line.length + 1, 0);
+        dispatchCodeMirrorChange(
+          { from: 0, to: doc.length, insert: updated }, { anchor });
+        updateStatus(moved.length > 1 ? "Task group reordered" : "Task reordered");
       }
 
       async function writeText(handle, text) {
@@ -6797,9 +6263,6 @@
         cancelAutoSave(file);
         releaseAttachmentPreviews(file.id);
         documentHistories.delete(file.id);
-        for (const key of codeWrapStates.keys()) {
-          if (key.startsWith(`${file.id}\n`)) codeWrapStates.delete(key);
-        }
         removeFileFromSidebarLayout(file.id);
         session.files = session.files.filter(candidate => candidate !== file && !candidate.welcome);
         if (!wasActive) return;
@@ -6900,7 +6363,6 @@
         closeFileContextMenu();
         closeSectionContextMenu();
         setThemeMenuOpen(false);
-        viewPicker.open = false;
         setNewMenuOpen(newToggle.getAttribute("aria-expanded") !== "true", { focus: true });
       });
       newFileButton.addEventListener("click", () => {
@@ -6935,7 +6397,6 @@
         closeFileContextMenu();
         closeSectionContextMenu();
         setNewMenuOpen(false);
-        viewPicker.open = false;
         setThemeMenuOpen(themeToggle.getAttribute("aria-expanded") !== "true", { focus: true });
       });
       editorWidthReset.addEventListener("click", () => {
@@ -7081,10 +6542,6 @@
         setThemeMenuOpen(false);
       });
       document.addEventListener("pointerdown", event => {
-        if (!viewPicker.open || viewPicker.contains(event.target)) return;
-        viewPicker.open = false;
-      });
-      document.addEventListener("pointerdown", event => {
         if (fileContextMenu.hidden || fileContextMenu.contains(event.target)) return;
         closeFileContextMenu();
       });
@@ -7109,6 +6566,7 @@
         hideTableExportTools();
       });
       document.addEventListener("pointerdown", event => {
+        if (imagePreviewDialog.open) return;
         if (imageResizer.contains(event.target) || editableImageFromNode(event.target)) return;
         hideImageResizer();
       });
@@ -7221,39 +6679,8 @@
         closeSectionContextMenu();
         setNewMenuOpen(false);
         setThemeMenuOpen(false);
-        viewPicker.open = false;
         void openLocalFile();
       });
-      viewPicker.addEventListener("toggle", () => {
-        if (!viewPicker.open) return;
-        closeFileContextMenu();
-        closeSectionContextMenu();
-        setNewMenuOpen(false);
-        setThemeMenuOpen(false);
-      });
-      viewPicker.addEventListener("keydown", event => {
-        if (event.key === "Escape") {
-          event.preventDefault();
-          viewPicker.open = false;
-          viewToggle.focus();
-          return;
-        }
-        if (!viewPicker.open || !["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
-        event.preventDefault();
-        const buttons = Array.from(viewButtons).filter(button => !button.disabled);
-        const currentIndex = Math.max(0, buttons.indexOf(document.activeElement));
-        const nextIndex = event.key === "Home" ? 0
-          : event.key === "End" ? buttons.length - 1
-          : (currentIndex + (event.key === "ArrowDown" ? 1 : -1) + buttons.length)
-            % buttons.length;
-        buttons[nextIndex]?.focus();
-      });
-      for (const button of viewButtons) {
-        button.addEventListener("click", () => {
-          viewPicker.open = false;
-          switchEditorMode(button.dataset.mode);
-        });
-      }
       for (const tools of tableEdgeTools) {
         tools.addEventListener("pointerdown", event => event.preventDefault());
         tools.addEventListener("keydown", event => {
@@ -7328,30 +6755,33 @@
         handle.addEventListener("pointermove", continueImageResize);
         handle.addEventListener("pointerup", event => finishImageResize(event));
         handle.addEventListener("pointercancel", event => finishImageResize(event, false));
+        handle.addEventListener("keydown", resizeImageFromKeyboard);
       }
-      editorElement.addEventListener("beforeinput", event => {
-        if (prepareEditorHistoryInput(event)) rememberIrScrollPosition();
-      }, true);
+      editorElement.addEventListener("beforeinput", prepareEditorHistoryInput, true);
       editorElement.addEventListener("input", () => {
-        restoreIrScrollPosition();
         hideTableEdgeTools();
         hideTableResizeHandle();
         hideTableExportTools();
         hideImageResizer();
       });
-      editorElement.addEventListener("click", handleOutlineNavigation, true);
-      editorElement.addEventListener("scroll", handleSplitViewScroll, true);
-      editorElement.addEventListener("keydown", handleEditorViewShortcut, true);
-      editorElement.addEventListener("keydown", handleEditorKeydown, true);
-      editorElement.addEventListener("pointermove", moveTaskPointerDrag, true);
-      editorElement.addEventListener("pointerdown", startTaskPointerDrag, true);
-      window.addEventListener("pointerup", finishTaskPointerDrag, true);
+      editorElement.addEventListener("keydown", handleEditorKeydown);
+      editorElement.addEventListener("pointermove", moveCodeMirrorTaskDrag, true);
+      window.addEventListener("pointerup", event =>
+        finishCodeMirrorTaskDrag(event), true);
       window.addEventListener("pointercancel", event =>
-        finishTaskPointerDrag(event, false), true);
-      editorElement.addEventListener("pointerleave", () => {
-        if (!taskPointerDragSession) setTaskDragHandleItem(null);
-      });
+        finishCodeMirrorTaskDrag(event, false), true);
       editorElement.addEventListener("copy", handleTableCopy, true);
+      editorElement.addEventListener("paste", event => {
+        const images = Array.from(event.clipboardData?.files || [])
+          .filter(file => file.type?.startsWith("image/"));
+        if (!images.length) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        const tableCell = event.target.closest?.(
+          ".LocalMarkdown-cm-table-widget td, .LocalMarkdown-cm-table-widget th");
+        if (tableCell) void pasteEmbeddedImagesIntoTableCell(images, tableCell);
+        else void pasteEmbeddedImages(images);
+      }, true);
       editorElement.addEventListener("paste", event => void pasteFormattedLink(event), true);
       editorElement.addEventListener("pointerover", event => {
         const image = editableImageFromNode(event.target);
@@ -7366,11 +6796,6 @@
       imageResizer.addEventListener("pointerleave", hideImageResizerAfterHover);
       editorElement.addEventListener("pointerdown", event => {
         breakDocumentHistoryCoalescing();
-        const toolbarType = event.target.closest?.(".vditor-toolbar button")?.dataset.type;
-        if (toolbarType && ![
-          "history-undo", "history-redo", "draw", "fullscreen",
-          "outline", "export", "edit-mode"
-        ].includes(toolbarType)) markEditorHistoryPending("", "command");
         if (event.button !== 0) return;
         const image = editableImageFromNode(event.target);
         if (image) showImageResizer(image, true);
@@ -7384,6 +6809,7 @@
         const image = editableImageFromNode(event.target);
         if (!image || event.metaKey || event.ctrlKey || event.shiftKey) return;
         event.preventDefault();
+        showImageResizer(image, true);
         if (image.classList.contains("LocalMarkdown-excalidraw-image")) {
           clearTimeout(imagePreviewTimer);
           imagePreviewTimer = setTimeout(() => openImagePreview(image), 220);
@@ -7559,110 +6985,1325 @@
         rocket: "🚀", airplane: "✈️", car: "🚗", house: "🏠"
       };
 
-      updateViewButtons(initialEditorMode);
-      editor = new Vditor("LocalMarkdown-editor", {
-        cdn: vditorCdn,
-        mode: initialEditorMode,
-        value: activeFile().text,
-        height: "100%",
-        minHeight: 200,
-        hint: { emoji: emojiMap },
-        toolbar: [
-          toolbarControl("emoji", "ne"), toolbarControl("headings", "ne"),
-          toolbarControl("bold", "ne"), toolbarControl("italic", "ne"),
-          toolbarControl("strike", "ne"), toolbarControl("link"), "|",
-          toolbarControl("list"), toolbarControl("ordered-list"), toolbarControl("check"),
-          toolbarControl("outdent"), toolbarControl("indent"), "|",
-          toolbarControl("quote"), toolbarControl("line"), toolbarControl("code"),
-          toolbarControl("inline-code"), toolbarControl("insert-before"),
-          toolbarControl("insert-after"), "|", toolbarControl("upload"),
-          toolbarControl("table"), drawingToolbarControl(), "|",
-          historyToolbarControl("undo"), historyToolbarControl("redo"), "|",
-          toolbarControl("fullscreen", "nw"),
-          toolbarControl("outline", "nw"), toolbarControl("export", "nw"),
-          { name: "edit-mode", className: "LocalMarkdown-internal-edit-mode" }
-        ],
-        customWysiwygToolbar() {},
-        cache: { enable: false },
-        counter: { enable: false },
-        outline: { enable: false, position: "right" },
-        preview: {
-          actions: [],
-          transform: transformPreviewHtml,
-          theme: {
-            current: document.documentElement.dataset.theme === "solarized-dark" ? "dark" : "light"
-          },
-          hljs: {
-            style: document.documentElement.dataset.theme === "white"
-              ? "github"
-              : `base16/${document.documentElement.dataset.theme}`
-          }
-        },
-        resize: { enable: false },
-        upload: {
-          multiple: true,
-          handler: pasteEmbeddedImages
-        },
-        theme: "classic",
-        lang: "en_US",
-        placeholder: "Write Markdown…",
-        input(value) {
-          const file = activeFile();
-          const canonical = canonicalEditorText(currentEditorMarkdown(value), file);
-          const transactionInput = resolveEditorHistoryValue(file, canonical);
-          const synchronizeHistory = !transactionInput
-            && consumeEditorHistorySynchronization(file);
-          if (canonical === file.text) return;
-          const before = documentSnapshot(file, { captureSelection: false });
-          const wasDirty = file.dirty;
-          file.text = canonical;
-          if (!file.builtin) {
-            file.dirty = true;
-            scheduleAutoSave(file);
-            scheduleSessionSave();
-          }
-          if (transactionInput) {
-            if (pendingEditorHistoryInput?.fileId === file.id) pendingEditorHistoryInput = null;
-          } else if (synchronizeHistory) synchronizeDocumentHistoryPresent(file, canonical);
-          else recordDocumentMutation(file, before, editorHistoryDetails(file));
-          if (!wasDirty && file.dirty) renderFiles();
-          updateStatus();
-          scheduleAttachmentPreviews();
-        },
-        after() {
-          editorReady = true;
-          setTheme(document.documentElement.dataset.theme, { persist: false });
-          for (const button of viewButtons) button.disabled = false;
-          updateViewButtons(editor.getCurrentMode());
-          observeAttachmentPreviews();
-          installSplitViewBlankLinePreservation();
-          installPreviewBlankLinePreservation();
-          setEditorValue(activeFile());
-          documentHistoryFor(activeFile());
-          updateDocumentHistoryControls();
-          updateStatus();
-          taskLayoutObserver = new MutationObserver(scheduleTaskListLayoutNormalization);
-          taskLayoutObserver.observe(editorElement, {
-            subtree: true,
-            childList: true,
-            characterData: true
-          });
-          scheduleAttachmentPreviews();
-          scheduleTableWidths();
-          scheduleCodeWrapControls();
-          observeOutline();
+      function handleCodeMirrorInput(value) {
+        const file = activeFile();
+        if (!file || codeMirrorInputSuppression) return;
+        const canonical = canonicalEditorText(value, file);
+        const transactionInput = resolveEditorHistoryValue(file, canonical);
+        const synchronizeHistory = !transactionInput
+          && consumeEditorHistorySynchronization(file);
+        if (canonical === file.text) return;
+        const before = documentSnapshot(file, { captureSelection: false });
+        const wasDirty = file.dirty;
+        file.text = canonical;
+        if (!file.builtin) {
+          file.dirty = true;
+          scheduleAutoSave(file);
+          scheduleSessionSave();
         }
-      });
+        if (transactionInput) {
+          if (pendingEditorHistoryInput?.fileId === file.id) pendingEditorHistoryInput = null;
+        } else if (synchronizeHistory) synchronizeDocumentHistoryPresent(file, canonical);
+        else recordDocumentMutation(file, before, editorHistoryDetails(file));
+        if (!wasDirty && file.dirty) renderFiles();
+        updateStatus();
+        renderCodeMirrorOutline();
+        scheduleAttachmentPreviews();
+      }
+
+      function scheduleCodeMirrorLineDecorations() {
+        cancelAnimationFrame(codeMirrorLineDecorationFrame);
+        codeMirrorLineDecorationFrame = requestAnimationFrame(() => {
+          codeMirrorLineDecorationFrame = null;
+          if (!codeMirrorView) return;
+          codeMirrorView.dom.classList.toggle(
+            "LocalMarkdown-cm-empty", codeMirrorView.state.doc.length === 0);
+        });
+      }
+
+      function createCodeMirrorLivePreview({
+        Decoration, EditorView, StateField, ViewPlugin, WidgetType
+      }) {
+        class TaskWidget extends WidgetType {
+          constructor(markerFrom, checked, lineFrom) {
+            super();
+            this.markerFrom = markerFrom;
+            this.checked = checked;
+            this.lineFrom = lineFrom;
+          }
+          eq(other) {
+            return other.markerFrom === this.markerFrom && other.checked === this.checked
+              && other.lineFrom === this.lineFrom;
+          }
+          toDOM(view) {
+            const shell = document.createElement("span");
+            shell.className = "LocalMarkdown-cm-task-widget-shell";
+            shell.dataset.lineFrom = String(this.lineFrom);
+            const handle = document.createElement("span");
+            handle.className = "LocalMarkdown-cm-task-drag-handle";
+            handle.textContent = "⠿";
+            handle.setAttribute("aria-hidden", "true");
+            handle.addEventListener("pointerdown", event =>
+              startCodeMirrorTaskDrag(event, this.lineFrom));
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.className = "LocalMarkdown-cm-task-widget";
+            checkbox.checked = this.checked;
+            checkbox.setAttribute("aria-label", this.checked ? "Mark task incomplete" : "Mark task complete");
+            checkbox.addEventListener("mousedown", event => event.preventDefault());
+            checkbox.addEventListener("click", event => {
+              event.preventDefault();
+              event.stopPropagation();
+              markEditorHistoryPending("", "command");
+              view.dispatch({
+                changes: {
+                  from: this.markerFrom + 1,
+                  to: this.markerFrom + 2,
+                  insert: this.checked ? " " : "x"
+                }
+              });
+              view.focus();
+            });
+            shell.append(handle, checkbox);
+            return shell;
+          }
+          ignoreEvent() { return true; }
+        }
+
+        class ImageWidget extends WidgetType {
+          constructor(from, to, source, alt = "", title = "", width = null, alignment = null) {
+            super();
+            this.from = from;
+            this.to = to;
+            this.source = source;
+            this.alt = alt;
+            this.title = title;
+            this.width = width;
+            this.alignment = alignment;
+          }
+          eq(other) {
+            return other.from === this.from && other.to === this.to
+              && other.source === this.source && other.alt === this.alt
+              && other.title === this.title && other.width === this.width
+              && other.alignment === this.alignment;
+          }
+          toDOM() {
+            const image = document.createElement("img");
+            image.className = "LocalMarkdown-cm-image-widget";
+            image.src = this.source;
+            image.alt = this.alt;
+            if (this.title) image.title = this.title;
+            if (this.width) image.style.width = `${this.width}px`;
+            if (this.alignment) image.dataset.imageAlign = this.alignment;
+            image.dataset.markdownStart = String(this.from);
+            image.dataset.markdownEnd = String(this.to);
+            const attachmentId = attachmentIdFromSource(this.source);
+            if (attachmentId) image.dataset.localMarkdownAttachment = attachmentId;
+            return image;
+          }
+          ignoreEvent() { return true; }
+        }
+
+        class ListMarkerWidget extends WidgetType {
+          constructor(marker) {
+            super();
+            this.marker = marker;
+          }
+          eq(other) { return other.marker === this.marker; }
+          toDOM() {
+            const marker = document.createElement("span");
+            marker.className = "LocalMarkdown-cm-list-marker";
+            marker.textContent = /^\d/.test(this.marker)
+              ? this.marker.replace(/\)$/, ".") : "•";
+            return marker;
+          }
+          ignoreEvent() { return true; }
+        }
+
+        class HorizontalRuleWidget extends WidgetType {
+          toDOM() {
+            const rule = document.createElement("span");
+            rule.className = "LocalMarkdown-cm-horizontal-rule";
+            rule.setAttribute("role", "separator");
+            return rule;
+          }
+          ignoreEvent() { return true; }
+        }
+
+        let previewSyntaxDocument = null;
+        let previewCodeBlocks = [];
+        let previewSetextHeadings = [];
+        function codeMirrorPreviewCodeBlocks(doc) {
+          if (previewSyntaxDocument === doc) return previewCodeBlocks;
+          previewSyntaxDocument = doc;
+          previewCodeBlocks = [];
+          previewSetextHeadings = [];
+          codeMirrorMarkdownParser?.parse(doc.toString()).iterate({
+            enter(node) {
+              if (/^(?:FencedCode|CodeBlock)$/.test(node.name)) {
+                previewCodeBlocks.push({ from: node.from, to: node.to, type: node.name });
+                return;
+              }
+              const setext = node.name.match(/^SetextHeading([12])$/);
+              if (setext) {
+                previewSetextHeadings.push({
+                  from: node.from,
+                  to: node.to,
+                  level: Number(setext[1])
+                });
+              }
+            }
+          });
+          return previewCodeBlocks;
+        }
+
+        function codeMirrorPreviewSetextHeadings(doc) {
+          codeMirrorPreviewCodeBlocks(doc);
+          return previewSetextHeadings;
+        }
+
+        function configureCodeMirrorTableImage(image) {
+          image.contentEditable = "false";
+          image.draggable = false;
+          image.tabIndex = 0;
+          image.setAttribute("role", "button");
+          image.setAttribute("aria-label", image.alt
+            ? `Preview image: ${image.alt}` : "Preview table image");
+          if (image.dataset.localMarkdownInteractive === "true") return;
+          image.dataset.localMarkdownInteractive = "true";
+          const open = event => {
+            event?.preventDefault();
+            event?.stopPropagation();
+            showImageResizer(image, true);
+            if (image.classList.contains("LocalMarkdown-excalidraw-image")) {
+              clearTimeout(imagePreviewTimer);
+              imagePreviewTimer = setTimeout(() => openImagePreview(image), 220);
+            } else {
+              openImagePreview(image);
+            }
+          };
+          image.addEventListener("focus", () => showImageResizer(image, true));
+          image.addEventListener("click", open);
+          image.addEventListener("keydown", event => {
+            if (!["Enter", " "].includes(event.key)) return;
+            open(event);
+          });
+        }
+
+        function appendTableCellText(cell, value) {
+          cell.append(document.createTextNode(value.replace(/\\\|/g, "|")));
+        }
+
+        function appendTableCellContent(cell, value) {
+          const tokenPattern = /!\[([^\]\n]*)\]\(\s*(<[^>\n]+>|[^\s)\n]+)(?:\s+(["'])(.*?)\3)?\s*\)|<img\b[^>]*>|<br\s*\/?\s*>/gi;
+          let cursor = 0;
+          for (const match of value.matchAll(tokenPattern)) {
+            if (match.index > cursor) {
+              appendTableCellText(cell, value.slice(cursor, match.index));
+            }
+            if (/^<br/i.test(match[0])) {
+              cell.append(document.createElement("br"));
+            } else {
+              const image = document.createElement("img");
+              if (/^<img/i.test(match[0])) {
+                const source = htmlAttribute(match[0], "src");
+                if (!source) {
+                  cell.append(document.createTextNode(match[0]));
+                  cursor = match.index + match[0].length;
+                  continue;
+                }
+                image.src = source;
+                image.alt = htmlAttribute(match[0], "alt");
+                const title = htmlAttribute(match[0], "title");
+                const width = Number.parseInt(htmlAttribute(match[0], "width"), 10);
+                const style = htmlAttribute(match[0], "style");
+                const alignment = /margin-left\s*:\s*auto/i.test(style)
+                  ? (/margin-right\s*:\s*0/i.test(style) ? "right" : "center")
+                  : (/margin-right\s*:\s*auto/i.test(style) ? "left" : null);
+                if (title) image.title = title;
+                if (Number.isFinite(width)) image.style.width = `${width}px`;
+                if (alignment) {
+                  image.dataset.imageAlign = alignment;
+                  image.style.display = "block";
+                  image.style.marginLeft = alignment === "left" ? "0" : "auto";
+                  image.style.marginRight = alignment === "right" ? "0" : "auto";
+                }
+              } else {
+                image.src = match[2].replace(/^<|>$/g, "");
+                image.alt = match[1];
+                if (match[4]) image.title = match[4];
+              }
+              const attachmentId = attachmentIdFromSource(image.getAttribute("src"));
+              if (attachmentId) image.dataset.localMarkdownAttachment = attachmentId;
+              image.dataset.markdownImage = match[0];
+              configureCodeMirrorTableImage(image);
+              cell.append(image);
+            }
+            cursor = match.index + match[0].length;
+          }
+          if (cursor < value.length) appendTableCellText(cell, value.slice(cursor));
+        }
+
+        function tableTextNodeMarkdown(value) {
+          return value
+            .replace(/\u200b/g, "")
+            .replace(/\r\n?|\n/g, "<br>")
+            .replace(/\\*\|/g, match => {
+              const slashes = match.length - 1;
+              const escaped = slashes % 2 === 0 ? slashes + 1 : slashes;
+              return `${"\\".repeat(escaped)}|`;
+            });
+        }
+
+        function tableImageMarkdown(image) {
+          const stored = image.dataset.markdownImage;
+          const source = imageSourceReference(image, activeFile());
+          if (!source) return stored || "";
+          const width = Number.parseInt(image.style.width || image.getAttribute("width"), 10);
+          const alignment = imageAlignment(image);
+          if (Number.isFinite(width) || alignment) {
+            return imageHtml(
+              source,
+              image.getAttribute("alt"),
+              image.getAttribute("title"),
+              Number.isFinite(width) ? width : null,
+              alignment
+            );
+          }
+          if (stored) return stored;
+          const target = /[\s()]/.test(source) ? `<${source}>` : source;
+          const title = image.getAttribute("title");
+          const suffix = title ? ` "${title.replace(/"/g, "\\\"")}"` : "";
+          return `![${(image.getAttribute("alt") || "").replace(/\]/g, "\\]")}](${target}${suffix})`;
+        }
+
+        function tableCellNodeMarkdown(node) {
+          if (node.nodeType === Node.TEXT_NODE) return tableTextNodeMarkdown(node.nodeValue || "");
+          if (node.nodeType !== Node.ELEMENT_NODE) return "";
+          if (node.tagName === "BR") return "<br>";
+          if (node.tagName === "IMG") return tableImageMarkdown(node);
+          const content = Array.from(node.childNodes, tableCellNodeMarkdown).join("");
+          return /^(?:DIV|P|LI)$/i.test(node.tagName) && node.nextSibling
+            ? `${content}<br>` : content;
+        }
+
+        function tableCellMarkdown(cell) {
+          const value = Array.from(cell.childNodes, tableCellNodeMarkdown).join("");
+          if (!cell.querySelector("img") && !cell.textContent.replace(/\u200b/g, "").trim()
+            && /^(?:<br>)*$/.test(value)) return "";
+          return value;
+        }
+
+        function serializedCodeMirrorTable(block, table) {
+          const rows = Array.from(table.rows, row =>
+            Array.from(row.cells, tableCellMarkdown));
+          if (rows.length !== block.rows.length
+            || rows.some(row => row.length !== block.columnCount)) return null;
+          return [
+            serializeCodeMirrorTableRow(rows[0], block.indent),
+            serializeCodeMirrorTableRow(codeMirrorTableDelimiter(block.alignments), block.indent),
+            ...rows.slice(1).map(row => serializeCodeMirrorTableRow(row, block.indent))
+          ].join(block.newline);
+        }
+
+        function commitCodeMirrorTableEdit(view, table) {
+          const value = view.state.doc.toString();
+          const start = Number(table.dataset.markdownTableStart);
+          const block = markdownTableRenderBlocks(value)
+            .find(candidate => candidate.start === start);
+          if (!block) return false;
+          const replacement = serializedCodeMirrorTable(block, table);
+          if (replacement === null) return false;
+          const current = value.slice(block.start, block.end);
+          if (replacement === current) return true;
+          view.dispatch({ changes: { from: block.start, to: block.end, insert: replacement } });
+          return true;
+        }
+
+        function focusCodeMirrorTableCell(cell, atEnd = true) {
+          if (!cell) return;
+          cell.focus({ preventScroll: true });
+          const range = document.createRange();
+          range.selectNodeContents(cell);
+          range.collapse(!atEnd);
+          const selection = getSelection();
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+
+        function insertCodeMirrorTableCellText(cell, text) {
+          const selection = getSelection();
+          if (!selection?.rangeCount || !cell.contains(selection.anchorNode)) return false;
+          const range = selection.getRangeAt(0);
+          range.deleteContents();
+          const fragment = document.createDocumentFragment();
+          let lastNode = null;
+          text.split(/\r\n?|\n/).forEach((part, index) => {
+            if (index) {
+              lastNode = document.createElement("br");
+              fragment.append(lastNode);
+            }
+            if (part) {
+              lastNode = document.createTextNode(part);
+              fragment.append(lastNode);
+            }
+          });
+          if (!lastNode) {
+            lastNode = document.createElement("br");
+            fragment.append(lastNode);
+          }
+          range.insertNode(fragment);
+          range.setStartAfter(lastNode);
+          range.collapse(true);
+          selection.removeAllRanges();
+          selection.addRange(range);
+          return true;
+        }
+
+        function tableCellAt(table, rowIndex, columnIndex) {
+          return table?.rows[rowIndex]?.cells[columnIndex] || null;
+        }
+
+        function configureCodeMirrorTableCell(cell, value, rowIndex, columnIndex, alignment) {
+          cell.dataset.markdownRow = String(rowIndex);
+          cell.dataset.markdownColumn = String(columnIndex);
+          cell.dataset.markdownValue = value;
+          cell.style.textAlign = alignment || "left";
+          cell.contentEditable = "true";
+          cell.spellcheck = true;
+          cell.setAttribute("role", "textbox");
+          cell.setAttribute("aria-multiline", "true");
+          cell.setAttribute("aria-label", `Table row ${rowIndex + 1}, column ${columnIndex + 1}`);
+        }
+
+        function applyCodeMirrorTableLayout(table, block) {
+          table.dataset.markdownTableStart = String(block.start);
+          table.dataset.markdownTableEnd = String(block.end);
+          table.dataset.markdownTableIndex = String(block.tableIndex);
+          table.classList.toggle("LocalMarkdown-sized-table", Boolean(block.widths));
+          if (block.widths) {
+            table.style.setProperty("--lm-table-width", `${block.tableWidth}%`);
+            table.style.width = `${block.tableWidth}%`;
+          } else {
+            table.style.removeProperty("--lm-table-width");
+            table.style.width = "100%";
+          }
+          for (const cell of table.rows[0]?.cells || []) {
+            if (block.widths) {
+              cell.style.setProperty("--lm-table-column-width",
+                `${block.widths[cell.cellIndex]}%`);
+            } else {
+              cell.style.removeProperty("--lm-table-column-width");
+            }
+          }
+        }
+
+        function handleCodeMirrorTableKeydown(event, view, table) {
+          const cell = event.target.closest?.("td, th");
+          if (!cell) return;
+          const modifier = event.metaKey || event.ctrlKey;
+          if (modifier && event.key.toLowerCase() === "z") {
+            event.preventDefault();
+            event.stopPropagation();
+            const tableIndex = Number(table.dataset.markdownTableIndex);
+            const rowIndex = cell.parentElement.rowIndex;
+            const columnIndex = cell.cellIndex;
+            if (event.shiftKey) redoDocumentChange();
+            else undoDocumentChange();
+            requestAnimationFrame(() => {
+              const nextTable = editorElement.querySelector(
+                `.LocalMarkdown-cm-table-widget[data-markdown-table-index="${tableIndex}"]`);
+              focusCodeMirrorTableCell(tableCellAt(nextTable, rowIndex, columnIndex));
+            });
+            return;
+          }
+          if (event.key === "Enter") {
+            event.preventDefault();
+            event.stopPropagation();
+            if (insertCodeMirrorTableCellText(cell, "\n")) {
+              markEditorHistoryPending("insertLineBreak", "beforeinput");
+              commitCodeMirrorTableEdit(view, table);
+            }
+            return;
+          }
+          if (event.key !== "Tab") return;
+          event.preventDefault();
+          event.stopPropagation();
+          const cells = Array.from(table.querySelectorAll("th, td"));
+          const index = cells.indexOf(cell);
+          const nextIndex = index + (event.shiftKey ? -1 : 1);
+          if (nextIndex >= 0 && nextIndex < cells.length) {
+            focusCodeMirrorTableCell(cells[nextIndex]);
+            return;
+          }
+          if (event.shiftKey) {
+            focusCodeMirrorTableCell(cells[0], false);
+            return;
+          }
+          const tableIndex = Number(table.dataset.markdownTableIndex);
+          const rowIndex = table.rows.length;
+          tableHoverCell = cell;
+          if (!updateCodeMirrorTableStructure("row-below", cell)) return;
+          requestAnimationFrame(() => {
+            const nextTable = editorElement.querySelector(
+              `.LocalMarkdown-cm-table-widget[data-markdown-table-index="${tableIndex}"]`);
+            focusCodeMirrorTableCell(tableCellAt(nextTable, rowIndex, 0), false);
+          });
+        }
+
+        class TableWidget extends WidgetType {
+          constructor(block) {
+            super();
+            this.block = block;
+          }
+          eq(other) {
+            return other.block.renderStart === this.block.renderStart
+              && other.block.end === this.block.end
+              && JSON.stringify(other.block.rows) === JSON.stringify(this.block.rows)
+              && JSON.stringify(other.block.widths) === JSON.stringify(this.block.widths)
+              && other.block.tableWidth === this.block.tableWidth;
+          }
+          toDOM(view) {
+            const wrapper = document.createElement("span");
+            wrapper.className = "LocalMarkdown-cm-table-block";
+            const table = document.createElement("table");
+            table.className = "LocalMarkdown-cm-table-widget";
+            table.dataset.markdownTableStart = String(this.block.start);
+            table.dataset.markdownTableEnd = String(this.block.end);
+            table.dataset.markdownTableIndex = String(this.block.tableIndex);
+            const body = document.createElement("tbody");
+            this.block.rows.forEach((row, rowIndex) => {
+              const tr = document.createElement("tr");
+              row.forEach((value, columnIndex) => {
+                const cell = document.createElement(rowIndex === 0 ? "th" : "td");
+                configureCodeMirrorTableCell(cell, value, rowIndex, columnIndex,
+                  this.block.alignments[columnIndex]);
+                appendTableCellContent(cell, value);
+                tr.append(cell);
+              });
+              body.append(tr);
+            });
+            table.append(body);
+            applyCodeMirrorTableLayout(table, this.block);
+            table.addEventListener("input", event => {
+              const cell = event.target.closest?.("td, th");
+              if (cell && !commitCodeMirrorTableEdit(view, table)) {
+                updateStatus("Could not update the table cell");
+              }
+            });
+            table.addEventListener("keydown", event =>
+              handleCodeMirrorTableKeydown(event, view, table));
+            table.addEventListener("paste", event => {
+              const cell = event.target.closest?.("td, th");
+              if (!cell) return;
+              const text = event.clipboardData?.getData("text/plain");
+              if (text === undefined) return;
+              event.preventDefault();
+              event.stopPropagation();
+              markEditorHistoryPending("insertFromPaste", "beforeinput");
+              if (insertCodeMirrorTableCellText(cell, text)
+                && !commitCodeMirrorTableEdit(view, table)) {
+                updateStatus("Could not paste into the table cell");
+              }
+            });
+            table.addEventListener("focusin", event => {
+              const cell = event.target.closest?.("td, th");
+              if (!cell) return;
+              table.dataset.activeRow = String(cell.parentElement.rowIndex);
+              table.dataset.activeColumn = String(cell.cellIndex);
+              tableHoverCell = cell;
+            });
+            table.addEventListener("pointerup", event => {
+              const image = event.target.closest?.("img");
+              if (!image || event.button !== 0) return;
+              event.preventDefault();
+              event.stopPropagation();
+              showImageResizer(image, true);
+              if (image.classList.contains("LocalMarkdown-excalidraw-image")) {
+                clearTimeout(imagePreviewTimer);
+                imagePreviewTimer = setTimeout(() => openImagePreview(image), 220);
+              } else {
+                openImagePreview(image);
+              }
+            });
+            table.addEventListener("dblclick", event => {
+              const attachment = excalidrawAttachmentFromEvent(event);
+              if (!attachment) return;
+              clearTimeout(imagePreviewTimer);
+              imagePreviewTimer = null;
+              event.preventDefault();
+              event.stopPropagation();
+              void openDrawingDialog(attachment.id);
+            });
+            wrapper.append(table);
+            return wrapper;
+          }
+          updateDOM(wrapper) {
+            const table = wrapper.querySelector("table");
+            if (!table || table.rows.length !== this.block.rows.length
+              || this.block.rows.some((row, rowIndex) =>
+                table.rows[rowIndex]?.cells.length !== row.length)) return false;
+            this.block.rows.forEach((row, rowIndex) => {
+              row.forEach((value, columnIndex) => {
+                const cell = table.rows[rowIndex].cells[columnIndex];
+                const currentValue = tableCellMarkdown(cell);
+                configureCodeMirrorTableCell(cell, value, rowIndex, columnIndex,
+                  this.block.alignments[columnIndex]);
+                if (currentValue !== value) {
+                  cell.replaceChildren();
+                  appendTableCellContent(cell, value);
+                }
+                for (const image of cell.querySelectorAll("img")) {
+                  configureCodeMirrorTableImage(image);
+                }
+              });
+            });
+            applyCodeMirrorTableLayout(table, this.block);
+            return true;
+          }
+          ignoreEvent() { return true; }
+        }
+
+        function inlinePreviewDecorations(line, decorations) {
+          const text = line.text;
+          const occupied = [];
+          const addImage = (start, end, source, alt, title, width = null, alignment = null) => {
+            occupied.push([start, end]);
+            decorations.push(Decoration.replace({
+              widget: new ImageWidget(line.from + start, line.from + end,
+                source, alt, title, width, alignment)
+            }).range(line.from + start, line.from + end));
+          };
+          for (const match of text.matchAll(
+            /!\[([^\]\n]*)\]\(\s*(<[^>\n]+>|[^\s)\n]+)(?:\s+(["'])(.*?)\3)?\s*\)/g
+          )) {
+            addImage(match.index, match.index + match[0].length,
+              match[2].replace(/^<|>$/g, ""), match[1], match[4] || "");
+          }
+          for (const match of text.matchAll(/<img\b[^>]*>/gi)) {
+            const source = htmlAttribute(match[0], "src");
+            if (!source) continue;
+            const width = Number.parseInt(htmlAttribute(match[0], "width"), 10) || null;
+            const style = htmlAttribute(match[0], "style");
+            const alignment = /margin-left\s*:\s*auto/i.test(style)
+              ? (/margin-right\s*:\s*0/i.test(style) ? "right" : "center")
+              : (/margin-right\s*:\s*auto/i.test(style) ? "left" : null);
+            addImage(match.index, match.index + match[0].length, source,
+              htmlAttribute(match[0], "alt"), htmlAttribute(match[0], "title"),
+              width, alignment);
+          }
+          const overlapsImage = (from, to) =>
+            occupied.some(([start, end]) => from < end && to > start);
+          const paired = [
+            { pattern: /\*\*([^*\n]+?)\*\*/g, marker: 2, className: "LocalMarkdown-cm-format-strong" },
+            { pattern: /(?<!\*)\*([^*\n]+?)\*(?!\*)/g, marker: 1, className: "LocalMarkdown-cm-format-emphasis" },
+            { pattern: /~~([^~\n]+?)~~/g, marker: 2, className: "LocalMarkdown-cm-format-strike" },
+            { pattern: /`([^`\n]+?)`/g, marker: 1, className: "LocalMarkdown-cm-format-code" }
+          ];
+          for (const format of paired) {
+            for (const match of text.matchAll(format.pattern)) {
+              if (overlapsImage(match.index, match.index + match[0].length)) continue;
+              const from = line.from + match.index;
+              const contentFrom = from + format.marker;
+              const contentTo = from + match[0].length - format.marker;
+              decorations.push(
+                Decoration.replace({}).range(from, contentFrom),
+                Decoration.mark({ class: format.className }).range(contentFrom, contentTo),
+                Decoration.replace({}).range(contentTo, from + match[0].length)
+              );
+            }
+          }
+          for (const match of text.matchAll(/(?<!!)\[([^\]\n]+?)\]\(([^)\n]+?)\)/g)) {
+            if (overlapsImage(match.index, match.index + match[0].length)) continue;
+            const from = line.from + match.index;
+            const labelFrom = from + 1;
+            const labelTo = labelFrom + match[1].length;
+            decorations.push(
+              Decoration.replace({}).range(from, labelFrom),
+              Decoration.mark({ class: "LocalMarkdown-cm-format-link" }).range(labelFrom, labelTo),
+              Decoration.replace({}).range(labelTo, from + match[0].length)
+            );
+          }
+        }
+
+        function buildDecorations(view) {
+          const decorations = [];
+          const doc = view.state.doc;
+          const activeLine = doc.lineAt(view.state.selection.main.head).number;
+          const activePosition = view.state.selection.main.head;
+          const codeBlocks = codeMirrorPreviewCodeBlocks(doc);
+          const setextHeadings = codeMirrorPreviewSetextHeadings(doc);
+          const activeCodeBlock = codeBlocks.find(block =>
+            activePosition >= block.from && activePosition <= block.to);
+          const tableBlocks = markdownTableRenderBlocks(doc.toString());
+          const renderedTables = tableBlocks;
+          for (const visible of view.visibleRanges) {
+            let line = doc.lineAt(visible.from);
+            while (line.from <= visible.to) {
+              if (renderedTables.some(block =>
+                line.from >= block.renderStart && line.from <= block.end)) {
+                if (line.to >= doc.length) break;
+                line = doc.line(line.number + 1);
+                continue;
+              }
+              const classes = [];
+              const codeBlock = codeBlocks.find(block =>
+                line.from < block.to && line.to >= block.from);
+              if (codeBlock) {
+                classes.push("LocalMarkdown-cm-line-code", "LocalMarkdown-cm-code-block-line");
+                const fence = codeBlock.type === "FencedCode"
+                  && /^\s{0,3}(?:`{3,}|~{3,})/.test(line.text);
+                if (fence && codeBlock !== activeCodeBlock) {
+                  classes.push("LocalMarkdown-cm-code-fence-hidden");
+                  if (line.to > line.from) {
+                    decorations.push(Decoration.replace({}).range(line.from, line.to));
+                  }
+                }
+                decorations.push(Decoration.line({ class: classes.join(" ") }).range(line.from));
+                if (line.to >= doc.length) break;
+                line = doc.line(line.number + 1);
+                continue;
+              }
+              const setextHeading = setextHeadings.find(heading =>
+                line.from < heading.to && line.to >= heading.from);
+              const setextUnderline = setextHeading
+                && /^\s{0,3}(?:=+|-+)\s*$/.test(line.text);
+              if (setextHeading && !setextUnderline) {
+                classes.push("LocalMarkdown-cm-line-heading",
+                  `LocalMarkdown-cm-line-heading-${setextHeading.level}`);
+              } else if (setextUnderline
+                && !(activePosition >= setextHeading.from
+                  && activePosition <= setextHeading.to)) {
+                classes.push("LocalMarkdown-cm-markup-line-hidden");
+                if (line.to > line.from) {
+                  decorations.push(Decoration.replace({}).range(line.from, line.to));
+                }
+              }
+              const heading = line.text.match(/^\s{0,3}(#{1,6})\s+/);
+              if (heading) {
+                classes.push("LocalMarkdown-cm-line-heading",
+                  `LocalMarkdown-cm-line-heading-${heading[1].length}`);
+                if (line.number !== activeLine) {
+                  decorations.push(Decoration.replace({})
+                    .range(line.from, line.from + heading[0].length));
+                }
+              }
+              const quote = line.text.match(/^(\s*(?:>\s*)+)/);
+              if (quote) {
+                classes.push("LocalMarkdown-cm-line-quote");
+                if (line.number !== activeLine) {
+                  decorations.push(Decoration.replace({})
+                    .range(line.from, line.from + quote[0].length));
+                }
+              }
+              const previousText = line.number > 1 ? doc.line(line.number - 1).text : "";
+              const horizontalRule = /^\s{0,3}([-*_])(?:\s*\1){2,}\s*$/.test(line.text)
+                && !setextHeading
+                && !(/^\s{0,3}(?:=+|-+)\s*$/.test(line.text) && previousText.trim());
+              if (horizontalRule && line.number !== activeLine) {
+                decorations.push(Decoration.replace({
+                  widget: new HorizontalRuleWidget()
+                }).range(line.from, line.to));
+              }
+              const task = line.text.match(/^(\s*)(?:[-+*]|\d+[.)])\s+\[([ xX])\]\s?/);
+              if (task) {
+                const markerIndex = task[0].indexOf("[");
+                const markerFrom = line.from + markerIndex;
+                classes.push("LocalMarkdown-cm-line-task");
+                decorations.push(Decoration.replace({
+                  widget: new TaskWidget(
+                    markerFrom, task[2].toLowerCase() === "x", line.from)
+                }).range(line.from + task[1].length, line.from + task[0].length));
+              } else if (line.number !== activeLine) {
+                const list = line.text.match(/^(\s*)([-+*]|\d+[.)])(\s+)/);
+                if (list && !horizontalRule) {
+                  const markerFrom = line.from + list[1].length;
+                  decorations.push(Decoration.replace({
+                    widget: new ListMarkerWidget(list[2])
+                  }).range(markerFrom, markerFrom + list[2].length + list[3].length));
+                }
+                inlinePreviewDecorations(line, decorations);
+              }
+              if (classes.length) {
+                decorations.push(Decoration.line({ class: classes.join(" ") }).range(line.from));
+              }
+              if (line.to >= doc.length) break;
+              line = doc.line(line.number + 1);
+            }
+          }
+          return Decoration.set(decorations, true);
+        }
+
+        const inlinePreview = ViewPlugin.fromClass(class {
+          constructor(view) { this.decorations = buildDecorations(view); }
+          update(update) {
+            if (update.docChanged || update.selectionSet || update.viewportChanged) {
+              this.decorations = buildDecorations(update.view);
+            }
+          }
+        }, { decorations: value => value.decorations });
+
+        function buildTableDecorations(state) {
+          const decorations = markdownTableRenderBlocks(state.doc.toString())
+            .map(block => Decoration.replace({
+              widget: new TableWidget(block), block: true
+            }).range(block.renderStart, block.end));
+          return Decoration.set(decorations, true);
+        }
+
+        const tablePreview = StateField.define({
+          create: buildTableDecorations,
+          update(value, transaction) {
+            return transaction.docChanged || transaction.selection
+              ? buildTableDecorations(transaction.state) : value;
+          },
+          provide: field => EditorView.decorations.from(field)
+        });
+        return [inlinePreview, tablePreview];
+      }
+
+      function codeMirrorSelection() {
+        return codeMirrorView?.state.selection.main || null;
+      }
+
+      function dispatchCodeMirrorChange(changes, selection = null) {
+        if (!codeMirrorView) return false;
+        markEditorHistoryPending("", "command");
+        codeMirrorView.dispatch({
+          changes,
+          ...(selection ? { selection } : {}),
+          scrollIntoView: true
+        });
+        codeMirrorView.focus();
+        return true;
+      }
+
+      function wrapCodeMirrorSelection(open, close = open, placeholder = "text") {
+        const selection = codeMirrorSelection();
+        if (!selection) return false;
+        const selected = codeMirrorView.state.doc.sliceString(selection.from, selection.to);
+        if (selected && selected.startsWith(open) && selected.endsWith(close)
+          && selected.length >= open.length + close.length) {
+          const inner = selected.slice(open.length, selected.length - close.length);
+          return dispatchCodeMirrorChange(
+            { from: selection.from, to: selection.to, insert: inner },
+            { anchor: selection.from, head: selection.from + inner.length });
+        }
+        const content = selected || placeholder;
+        const insert = `${open}${content}${close}`;
+        const from = selection.from + open.length;
+        return dispatchCodeMirrorChange(
+          { from: selection.from, to: selection.to, insert },
+          { anchor: from, head: from + content.length });
+      }
+
+      function transformCodeMirrorLines(transform) {
+        const selection = codeMirrorSelection();
+        if (!selection) return false;
+        const doc = codeMirrorView.state.doc;
+        const first = doc.lineAt(selection.from);
+        const lastPosition = selection.to > selection.from && selection.to === doc.lineAt(selection.to).from
+          ? selection.to - 1 : selection.to;
+        const last = doc.lineAt(Math.max(selection.from, lastPosition));
+        const source = doc.sliceString(first.from, last.to);
+        const output = source.split("\n").map(transform).join("\n");
+        const lineEnd = first.from + output.length;
+        return dispatchCodeMirrorChange(
+          { from: first.from, to: last.to, insert: output },
+          { anchor: lineEnd });
+      }
+
+      function toggleCodeMirrorLinePrefix(prefix, matcher) {
+        const selection = codeMirrorSelection();
+        if (!selection) return false;
+        const doc = codeMirrorView.state.doc;
+        const first = doc.lineAt(selection.from);
+        const last = doc.lineAt(selection.to);
+        const lines = [];
+        for (let number = first.number; number <= last.number; number += 1) {
+          lines.push(doc.line(number).text);
+        }
+        const remove = lines.every(line => matcher.test(line));
+        return transformCodeMirrorLines((line, index) => remove
+          ? line.replace(matcher, "")
+          : typeof prefix === "function" ? prefix(index, line) : `${prefix}${line}`);
+      }
+
+      function cycleCodeMirrorHeading() {
+        return transformCodeMirrorLines(line => {
+          const match = line.match(/^(\s{0,3})(#{1,6})\s+(.*)$/);
+          if (!match) return `# ${line}`;
+          if (match[2].length === 6) return `${match[1]}${match[3]}`;
+          return `${match[1]}${"#".repeat(match[2].length + 1)} ${match[3]}`;
+        });
+      }
+
+      function setCodeMirrorHeadingLevel(level) {
+        return transformCodeMirrorLines(line => {
+          const content = line.replace(/^\s{0,3}#{1,6}\s+/, "");
+          return level ? `${"#".repeat(level)} ${content}` : content;
+        });
+      }
+
+      function adjustCodeMirrorHeading(delta) {
+        return transformCodeMirrorLines(line => {
+          const match = line.match(/^\s{0,3}(#{1,6})\s+(.*)$/);
+          const level = Math.max(0, Math.min(6, (match?.[1].length || 0) + delta));
+          const content = match?.[2] ?? line;
+          return level ? `${"#".repeat(level)} ${content}` : content;
+        });
+      }
+
+      function toggleCodeMirrorTask() {
+        return transformCodeMirrorLines(line => {
+          if (/^\s*(?:[-+*]|\d+[.)])\s+\[[ xX]\]\s+/.test(line)) {
+            return line.replace(/\[([ xX])\]/, (_, mark) =>
+              mark.toLowerCase() === "x" ? "[ ]" : "[x]");
+          }
+          return `- [ ] ${line}`;
+        });
+      }
+
+      function continueCodeMirrorMarkup() {
+        const selection = codeMirrorSelection();
+        if (!selection || !selection.empty) return false;
+        const doc = codeMirrorView.state.doc;
+        const line = doc.lineAt(selection.head);
+        const beforeCursor = line.text.slice(0, selection.head - line.from);
+        const list = beforeCursor.match(/^(\s*)([-+*]|\d+[.)])(\s+)(\[[ xX]\]\s+)?/);
+        const quote = beforeCursor.match(/^(\s*(?:>\s*)+)/);
+        const prefix = list
+          ? `${list[1]}${/^\d/.test(list[2]) ? `${Number.parseInt(list[2], 10) + 1}${list[2].slice(-1)}` : list[2]}${list[3]}${list[4] ? "[ ] " : ""}`
+          : quote?.[1];
+        if (!prefix) return false;
+        const currentPrefixLength = list ? list[0].length : quote[0].length;
+        if (!line.text.slice(currentPrefixLength).trim()) {
+          return dispatchCodeMirrorChange({
+            from: line.from,
+            to: line.from + currentPrefixLength,
+            insert: ""
+          }, { anchor: line.from });
+        }
+        return dispatchCodeMirrorChange(
+          { from: selection.head, insert: `\n${prefix}` },
+          { anchor: selection.head + prefix.length + 1 });
+      }
+
+      function insertCodeMirrorNewline() {
+        const selection = codeMirrorSelection();
+        if (!selection || !codeMirrorView) return false;
+        const line = codeMirrorView.state.doc.lineAt(selection.from);
+        const indent = line.text.match(/^[\t ]*/)?.[0] || "";
+        const insert = `\n${indent}`;
+        return dispatchCodeMirrorChange(
+          { from: selection.from, to: selection.to, insert },
+          { anchor: selection.from + insert.length });
+      }
+
+      function insertCodeMirrorBlock(text, caretOffset = text.length) {
+        const selection = codeMirrorSelection();
+        if (!selection) return false;
+        const doc = codeMirrorView.state.doc;
+        const before = selection.from > 0 && doc.sliceString(selection.from - 1, selection.from) !== "\n"
+          ? "\n" : "";
+        const after = selection.to < doc.length && doc.sliceString(selection.to, selection.to + 1) !== "\n"
+          ? "\n" : "";
+        const insert = `${before}${text}${after}`;
+        const caret = selection.from + before.length + caretOffset;
+        return dispatchCodeMirrorChange(
+          { from: selection.from, to: selection.to, insert },
+          { anchor: caret });
+      }
+
+      function insertCodeMirrorCodeBlock() {
+        const selection = codeMirrorSelection();
+        if (!selection || !codeMirrorView) return false;
+        const doc = codeMirrorView.state.doc;
+        const line = doc.lineAt(selection.head);
+        const from = selection.empty ? line.from : selection.from;
+        const to = selection.empty ? line.to : selection.to;
+        const content = doc.sliceString(from, to);
+        const before = from > 0 && doc.sliceString(from - 1, from) !== "\n" ? "\n" : "";
+        const after = to < doc.length && doc.sliceString(to, to + 1) !== "\n" ? "\n" : "";
+        const opening = "```\n";
+        const insert = `${before}${opening}${content}\n\`\`\`${after}`;
+        const contentEnd = from + before.length + opening.length + content.length;
+        return dispatchCodeMirrorChange(
+          { from, to, insert },
+          { anchor: contentEnd });
+      }
+
+      function toggleCodeMirrorOutline(force = null) {
+        if (!codeMirrorOutline) return;
+        const open = force ?? codeMirrorOutline.hidden;
+        codeMirrorOutline.hidden = !open;
+        const button = editor?.toolbarElements?.outline?.querySelector("button");
+        button?.setAttribute("aria-pressed", String(open));
+        if (open) renderCodeMirrorOutline();
+        requestAnimationFrame(() => codeMirrorView?.requestMeasure());
+        try { localStorage.setItem(outlineStorageKey, open ? "open" : "closed"); } catch {}
+      }
+
+      function outlineHeadingLabel(source, level, setext = false) {
+        let label = source.split(/\r?\n/)[0].trim();
+        if (!setext) {
+          label = label
+            .replace(new RegExp(`^#{${level}}\\s*`), "")
+            .replace(/\s+#+\s*$/, "");
+        }
+        return label
+          .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
+          .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+          .replace(/`([^`]+)`/g, "$1")
+          .replace(/[*_~]/g, "")
+          .replace(/<[^>]+>/g, "")
+          .trim() || "Untitled heading";
+      }
+
+      function codeMirrorOutlineHeadings() {
+        if (!codeMirrorView || !codeMirrorMarkdownParser) return [];
+        const source = codeMirrorView.state.doc.toString();
+        const headings = [];
+        codeMirrorMarkdownParser.parse(source).iterate({
+          enter(node) {
+            const match = node.name.match(/^(ATX|Setext)Heading([1-6])$/);
+            if (!match) return;
+            const level = Number(match[2]);
+            headings.push({
+              from: node.from,
+              level,
+              label: outlineHeadingLabel(
+                source.slice(node.from, node.to), level, match[1] === "Setext")
+            });
+          }
+        });
+        return headings;
+      }
+
+      function updateCodeMirrorOutlineCurrent(position = codeMirrorSelection()?.head) {
+        if (!codeMirrorOutline || codeMirrorOutline.hidden || !Number.isFinite(position)) return;
+        const buttons = Array.from(codeMirrorOutline.querySelectorAll(
+          ".LocalMarkdown-cm-outline-content button[data-markdown-from]"));
+        let current = null;
+        for (const button of buttons) {
+          if (Number(button.dataset.markdownFrom) > position) break;
+          current = button;
+        }
+        for (const button of buttons) {
+          if (button === current) button.setAttribute("aria-current", "location");
+          else button.removeAttribute("aria-current");
+        }
+        current?.scrollIntoView({ block: "nearest" });
+      }
+
+      function renderCodeMirrorOutline() {
+        if (!codeMirrorOutline || codeMirrorOutline.hidden || !codeMirrorView) return;
+        codeMirrorOutline.replaceChildren();
+        const header = document.createElement("header");
+        header.className = "LocalMarkdown-cm-outline-header";
+        const title = document.createElement("span");
+        title.textContent = "Outline";
+        const close = document.createElement("button");
+        close.type = "button";
+        close.className = "LocalMarkdown-cm-outline-close";
+        close.textContent = "×";
+        close.title = "Close outline";
+        close.setAttribute("aria-label", "Close outline");
+        close.addEventListener("click", () => toggleCodeMirrorOutline(false));
+        header.append(title, close);
+        const content = document.createElement("nav");
+        content.className = "LocalMarkdown-cm-outline-content";
+        content.setAttribute("aria-label", "Document headings");
+        const headings = codeMirrorOutlineHeadings();
+        for (const heading of headings) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = heading.label;
+          button.dataset.headingLevel = String(heading.level);
+          button.dataset.markdownFrom = String(heading.from);
+          button.style.paddingLeft = `${8 + (heading.level - 1) * 14}px`;
+          button.addEventListener("click", () => {
+            codeMirrorView.dispatch({
+              selection: { anchor: heading.from },
+              scrollIntoView: true
+            });
+            codeMirrorView.focus();
+          });
+          content.append(button);
+        }
+        if (!headings.length) {
+          const empty = document.createElement("span");
+          empty.className = "LocalMarkdown-status";
+          empty.textContent = "No headings";
+          content.append(empty);
+        }
+        codeMirrorOutline.append(header, content);
+        updateCodeMirrorOutlineCurrent();
+      }
+
+      function toggleCodeMirrorEmojiMenu(force = null) {
+        if (!codeMirrorEmojiMenu) return;
+        codeMirrorEmojiMenu.hidden = !(force ?? codeMirrorEmojiMenu.hidden);
+      }
+
+      function openCodeMirrorImagePicker() {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "image/*";
+        input.multiple = true;
+        input.addEventListener("change", () => void pasteEmbeddedImages(input.files), { once: true });
+        input.click();
+      }
+
+      function runCodeMirrorToolbarCommand(name) {
+        if (!codeMirrorView) return;
+        if (name !== "emoji") toggleCodeMirrorEmojiMenu(false);
+        switch (name) {
+          case "emoji": toggleCodeMirrorEmojiMenu(); break;
+          case "headings": cycleCodeMirrorHeading(); break;
+          case "bold": wrapCodeMirrorSelection("**", "**", "bold text"); break;
+          case "italic": wrapCodeMirrorSelection("*", "*", "italic text"); break;
+          case "strike": wrapCodeMirrorSelection("~~", "~~", "struck text"); break;
+          case "link": {
+            const selection = codeMirrorSelection();
+            const label = selection.from === selection.to ? "link text"
+              : codeMirrorView.state.doc.sliceString(selection.from, selection.to);
+            const insert = `[${label}](https://)`;
+            const urlFrom = selection.from + label.length + 3;
+            dispatchCodeMirrorChange(
+              { from: selection.from, to: selection.to, insert },
+              { anchor: urlFrom, head: urlFrom + 8 });
+            break;
+          }
+          case "list": toggleCodeMirrorLinePrefix("- ", /^\s*[-+*]\s+/); break;
+          case "ordered-list": toggleCodeMirrorLinePrefix(
+            (index, line) => `${index + 1}. ${line}`, /^\s*\d+[.)]\s+/); break;
+          case "check": toggleCodeMirrorLinePrefix("- [ ] ", /^\s*[-+*]\s+\[[ xX]\]\s+/); break;
+          case "outdent": transformCodeMirrorLines(line => line.replace(/^(?: {1,4}|\t)/, "")); break;
+          case "indent": transformCodeMirrorLines(line => `  ${line}`); break;
+          case "quote": toggleCodeMirrorLinePrefix("> ", /^\s*>\s?/); break;
+          case "line": insertCodeMirrorBlock("\n---\n", 5); break;
+          case "code": insertCodeMirrorCodeBlock(); break;
+          case "inline-code": wrapCodeMirrorSelection("`", "`", "code"); break;
+          case "insert-before": {
+            const line = codeMirrorView.state.doc.lineAt(codeMirrorSelection().from);
+            dispatchCodeMirrorChange({ from: line.from, insert: "\n" }, { anchor: line.from });
+            break;
+          }
+          case "insert-after": {
+            const line = codeMirrorView.state.doc.lineAt(codeMirrorSelection().to);
+            const insert = line.to === codeMirrorView.state.doc.length ? "\n" : "\n";
+            dispatchCodeMirrorChange({ from: line.to, insert }, { anchor: line.to + 1 });
+            break;
+          }
+          case "upload": openCodeMirrorImagePicker(); break;
+          case "table": insertCodeMirrorBlock(
+            "| Column 1 | Column 2 |\n| --- | --- |\n| Cell | Cell |", 2); break;
+          case "draw": void openDrawingDialog(); break;
+          case "history-undo": undoDocumentChange(); break;
+          case "history-redo": redoDocumentChange(); break;
+          case "fullscreen": {
+            const open = editorElement.classList.toggle("LocalMarkdown-editor--fullscreen");
+            editor.toolbarElements.fullscreen.querySelector("button")
+              ?.setAttribute("aria-pressed", String(open));
+            requestAnimationFrame(() => codeMirrorView.requestMeasure());
+            break;
+          }
+          case "outline": toggleCodeMirrorOutline(); break;
+          case "export": void saveActiveFile(); break;
+        }
+      }
+
+      const codeMirrorToolbarItems = [
+        "emoji", "headings", "bold", "italic", "strike", "link", "|",
+        "list", "ordered-list", "check", "outdent", "indent", "|",
+        "quote", "line", "code", "inline-code", "insert-before", "insert-after", "|",
+        "upload", "table", "draw", "|", "history-undo", "history-redo", "|",
+        "fullscreen", "outline", "export"
+      ];
+      const codeMirrorToolbarTitles = {
+        emoji: "Emoji", headings: "Cycle heading", bold: "Bold", italic: "Italic",
+        strike: "Strikethrough", link: "Link", list: "Bulleted list",
+        "ordered-list": "Numbered list", check: "Task list", outdent: "Outdent",
+        indent: "Indent", quote: "Block quote", line: "Horizontal rule",
+        code: "Code block", "inline-code": "Inline code",
+        "insert-before": "Insert line before", "insert-after": "Insert line after",
+        upload: "Insert image", table: "Insert table", draw: "Draw with Excalidraw",
+        "history-undo": "Undo", "history-redo": "Redo", fullscreen: "Fullscreen",
+        outline: "Outline", export: "Save Markdown"
+      };
+
+      function createCodeMirrorToolbar() {
+        const toolbar = document.createElement("div");
+        toolbar.className = "LocalMarkdown-cm-toolbar";
+        toolbar.setAttribute("role", "toolbar");
+        toolbar.setAttribute("aria-label", "Markdown formatting");
+        const elements = {};
+        for (const name of codeMirrorToolbarItems) {
+          if (name === "|") {
+            const divider = document.createElement("span");
+            divider.className = "LocalMarkdown-cm-toolbar-divider";
+            divider.setAttribute("aria-hidden", "true");
+            toolbar.append(divider);
+            continue;
+          }
+          const wrapper = document.createElement("span");
+          wrapper.className = "LocalMarkdown-cm-toolbar-group";
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "LocalMarkdown-cm-tool";
+          button.dataset.type = name;
+          button.title = codeMirrorToolbarTitles[name] || name;
+          button.setAttribute("aria-label", button.title);
+          button.innerHTML = toolbarIcon(name.replace("history-", ""));
+          button.addEventListener("pointerdown", event => event.preventDefault());
+          button.addEventListener("click", () => runCodeMirrorToolbarCommand(name));
+          wrapper.append(button);
+          toolbar.append(wrapper);
+          elements[name] = wrapper;
+        }
+        return { toolbar, elements };
+      }
+
+      function createCodeMirrorMenus() {
+        codeMirrorOutline = document.createElement("aside");
+        codeMirrorOutline.className = "LocalMarkdown-cm-outline";
+        codeMirrorOutline.setAttribute("aria-label", "Document outline");
+        codeMirrorOutline.hidden = true;
+        codeMirrorView?.dom.parentElement?.append(codeMirrorOutline);
+
+        codeMirrorEmojiMenu = document.createElement("div");
+        codeMirrorEmojiMenu.className = "LocalMarkdown-cm-emoji-menu";
+        codeMirrorEmojiMenu.setAttribute("role", "menu");
+        codeMirrorEmojiMenu.setAttribute("aria-label", "Emoji");
+        codeMirrorEmojiMenu.hidden = true;
+        for (const [name, emoji] of Object.entries(emojiMap)) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.title = name;
+          button.textContent = emoji;
+          button.addEventListener("pointerdown", event => event.preventDefault());
+          button.addEventListener("click", () => {
+            editor.insertMD(emoji);
+            toggleCodeMirrorEmojiMenu(false);
+          });
+          codeMirrorEmojiMenu.append(button);
+        }
+        editorElement.append(codeMirrorEmojiMenu);
+      }
+
+      function createCodeMirrorAdapter(view, toolbarElements) {
+        return {
+          kind: "codemirror",
+          getValue() { return view.state.doc.toString(); },
+          setValue(value) {
+            const next = String(value ?? "");
+            if (view.state.doc.toString() === next) return;
+            codeMirrorInputSuppression += 1;
+            try {
+              view.dispatch({
+                changes: { from: 0, to: view.state.doc.length, insert: next },
+                selection: { anchor: Math.min(view.state.selection.main.head, next.length) }
+              });
+            } finally {
+              codeMirrorInputSuppression -= 1;
+            }
+          },
+          insertMD(markdown) {
+            const selection = view.state.selection.main;
+            const insert = String(markdown ?? "");
+            dispatchCodeMirrorChange(
+              { from: selection.from, to: selection.to, insert },
+              { anchor: selection.from + insert.length });
+          },
+          focus() { view.focus(); },
+          getCurrentMode() { return "ir"; },
+          setTheme() { view.requestMeasure(); },
+          toolbarElements
+        };
+      }
+
+      async function initializeCodeMirror() {
+        const [
+          codeMirrorViewModule,
+          codeMirrorStateModule,
+          codeMirrorCommandsModule,
+          codeMirrorMarkdownModule
+        ] =
+          await Promise.all([
+          import(codeMirrorViewModuleUrl), import(codeMirrorStateModuleUrl),
+          import(codeMirrorCommandsModuleUrl), import(codeMirrorMarkdownModuleUrl)
+        ]);
+        const {
+          EditorView, drawSelection, dropCursor, highlightActiveLine,
+          highlightSpecialChars, keymap
+        } = codeMirrorViewModule;
+        const { EditorState, StateField } = codeMirrorStateModule;
+        codeMirrorMarkdownParser = codeMirrorMarkdownModule.parser;
+        const standardEditingKeymap = codeMirrorCommandsModule.defaultKeymap
+          .filter(binding => !["Enter", "Mod-Enter"].includes(binding.key));
+        const livePreview = createCodeMirrorLivePreview({
+          ...codeMirrorViewModule, StateField
+        });
+        editorElement.classList.add("LocalMarkdown-codemirror");
+        const { toolbar, elements } = createCodeMirrorToolbar();
+        const shell = document.createElement("div");
+        shell.className = "LocalMarkdown-cm-shell";
+        editorElement.replaceChildren(toolbar, shell);
+        codeMirrorView = new EditorView({
+          doc: activeFile().text,
+          extensions: [
+            highlightSpecialChars(),
+            drawSelection(),
+            dropCursor(),
+            highlightActiveLine(),
+            EditorView.lineWrapping,
+            EditorState.allowMultipleSelections.of(true),
+            keymap.of(standardEditingKeymap),
+            livePreview,
+            EditorView.updateListener.of(update => {
+              if (update.docChanged) handleCodeMirrorInput(update.state.doc.toString());
+              if (update.selectionSet) updateCodeMirrorOutlineCurrent(
+                update.state.selection.main.head);
+              else if (update.viewportChanged) updateCodeMirrorOutlineCurrent(
+                update.view.viewport.from);
+              scheduleCodeMirrorLineDecorations();
+            })
+          ],
+          parent: shell
+        });
+        editor = createCodeMirrorAdapter(codeMirrorView, elements);
+        codeMirrorView.contentDOM.setAttribute("aria-label", "Markdown editor");
+        codeMirrorView.contentDOM.setAttribute("spellcheck", "true");
+        createCodeMirrorMenus();
+        editorReady = true;
+        setTheme(document.documentElement.dataset.theme, { persist: false });
+        setEditorValue(activeFile());
+        documentHistoryFor(activeFile());
+        updateDocumentHistoryControls();
+        updateStatus();
+        observeAttachmentPreviews();
+        scheduleCodeMirrorLineDecorations();
+        scheduleAttachmentPreviews();
+        scheduleTableWidths();
+        try {
+          if (localStorage.getItem(outlineStorageKey) === "open") toggleCodeMirrorOutline(true);
+        } catch {}
+      }
+
+      try {
+        await initializeCodeMirror();
+      } catch (error) {
+        console.error(error);
+        editorElement.dataset.initializationError = error?.message || String(error);
+        updateStatus("Could not load CodeMirror 6");
+        editorElement.textContent = "CodeMirror 6 could not be loaded. Check the network and refresh.";
+      }
 
       addEventListener("unload", () => {
         attachmentPreviewObserver?.disconnect();
-        outlineObserver?.disconnect();
-        taskLayoutObserver?.disconnect();
         cancelAnimationFrame(irScrollRestoreFrame);
-        cancelAnimationFrame(taskLayoutNormalizationFrame);
-        cancelAnimationFrame(outlineRefreshFrame);
         cancelAnimationFrame(tableWidthRefreshFrame);
-        cancelAnimationFrame(codeWrapRefreshFrame);
         releaseAttachmentPreviews();
         imageWorker?.terminate();
         if (imageWorkerUrl) URL.revokeObjectURL(imageWorkerUrl);

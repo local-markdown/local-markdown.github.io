@@ -21,7 +21,8 @@ Open Local Markdown in desktop Chrome or Edge, choose a Markdown file, and start
 
 ## Features
 
-- Visual, Markdown, and Split editing views
+- One Obsidian-style Markdown view powered by CodeMirror 6
+- Every Markdown newline is preserved through editing, undo, refresh, and live preview
 - White, Solarized Light, and Solarized Dark color themes
 - Multiple open files in a collapsible, responsive sidebar
 - Persistent topic sections for grouping, collapsing, renaming, and reordering open files
@@ -32,13 +33,17 @@ Open Local Markdown in desktop Chrome or Edge, choose a Markdown file, and start
 - Proportional image resizing and left, centre, or right alignment
 - Automatic Markdown links for pasted URLs, using webpage titles or document filenames
 - Editable Excalidraw drawings embedded directly in Markdown files
-- Hover controls for resizing table columns or the whole table, and adding or deleting rows and columns
-- Formatting toolbar, keyboard shortcuts, outline, and export
+- Directly editable visual table cells with multiline text, images, column widths, and row or column controls
+- Formatting toolbar, keyboard shortcuts, a docked syntax-tree outline, and export
 - Access only to the files you choose
 
 Pasted images are stored inside the Markdown file with Local Markdown's attachment format. Other editors can read the text but may not display those images. Use standard image URLs when compatibility matters.
 
-Hover over an image to reveal its left, centre, and right alignment controls along the image's top edge and its resize handle in the bottom-right corner. Image layout is stored as a standard HTML `<img>` element because Markdown image syntax does not include dimensions or alignment.
+Hover over an image to reveal its left, centre, and right alignment controls along the image's top edge and its resize handle in the bottom-right corner. Drag the handle to resize, or focus it and use the arrow keys in 10-pixel steps (hold Shift for 50-pixel steps). Image layout is stored as a standard HTML `<img>` element because Markdown image syntax does not include dimensions or alignment.
+
+Click any table cell to edit it directly without switching to raw Markdown. Enter adds a line inside the cell, Tab moves to the next cell, and Tab from the last cell adds a new row. Use the table edges to add or remove rows and columns, drag a column boundary to resize it, paste images directly into cells, or hover the upper-left cell for Excel and CSV export.
+
+Live Preview hides Markdown markers on inactive lines and reveals the original source on the line being edited. Headings, inline formatting, links, quotes, lists, horizontal rules, code blocks, tasks, images, and visual tables keep their rendered form without changing the Markdown stored in the file.
 
 Pasting a URL by itself creates a Markdown link. Local Markdown uses a copied link label when available, the filename for document and media URLs, supported sites' oEmbed titles, or a directly accessible HTML page title. If metadata is unavailable, it falls back to a readable name from the URL.
 
@@ -54,7 +59,7 @@ The editor is delivered by GitHub Pages, but your documents are not uploaded to 
 
 The File System Access API works best in desktop Chrome or Chromium-based Edge. The browser may ask you to restore file access after a restart.
 
-An internet connection is required to open the editor and load Vditor from jsDelivr. Excalidraw is loaded from esm.sh only when you open the drawing tool.
+An internet connection is required to open the editor and load CodeMirror 6 from jsDelivr. Excalidraw is loaded from esm.sh only when you open the drawing tool.
 
 ## Run the standalone file
 
