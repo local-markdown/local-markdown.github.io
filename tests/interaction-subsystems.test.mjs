@@ -330,6 +330,11 @@ test("sidebar and task drag affordances keep the source visible and show one dro
   assert.match(extractFunction("markCodeMirrorTaskDragSource"), /session\.source\.from \+ 1[\s\S]*?session\.source\.to/);
 });
 
+test("sidebar file rows use the system cursor", () => {
+  const fileRule = source.match(/\.LocalMarkdown-file\s*\{([^}]*)\}/)?.[1] || "";
+  assert.match(fileRule, /cursor:\s*default;/);
+});
+
 test("rendered sidebar and toolbar omit unused compatibility datasets", () => {
   assert.doesNotMatch(extractFunction("renderTopicSection"), /dataset\.sectionId/);
   assert.doesNotMatch(extractFunction("createCodeMirrorToolbar"), /dataset\.type/);
