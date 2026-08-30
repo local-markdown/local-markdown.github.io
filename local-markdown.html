@@ -292,6 +292,9 @@
     .LocalMarkdown-file-row:has(.LocalMarkdown-file-menu-button:focus) .LocalMarkdown-file {
       padding-right: calc(var(--lm-control-height-compact) + var(--lm-space-2));
     }
+    .LocalMarkdown-file-row:has(.LocalMarkdown-file-drag-handle) .LocalMarkdown-file {
+      padding-left: calc(var(--lm-control-height-compact) + var(--lm-space-1));
+    }
     .LocalMarkdown-file-name { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; }
     .LocalMarkdown-file:hover,
     .LocalMarkdown-search-file:hover,
@@ -301,8 +304,6 @@
     .LocalMarkdown-search-hit:focus-visible {
       outline: 0; box-shadow: inset 0 0 0 1px var(--lm-accent);
     }
-    .LocalMarkdown-file[draggable="true"] { cursor: grab; }
-    .LocalMarkdown-file[draggable="true"]:active { cursor: grabbing; }
     .LocalMarkdown-file[aria-current="true"],
     .LocalMarkdown-search-file[aria-current="true"] {
       color: var(--lm-text); background: var(--lm-selected); font-weight: 500;
@@ -351,17 +352,52 @@
     .LocalMarkdown-file-row:has(.LocalMarkdown-file-menu-button:focus) .LocalMarkdown-unsaved-mark {
       visibility: hidden;
     }
-    .LocalMarkdown-file.LocalMarkdown-dragging { opacity: 0; }
+    .LocalMarkdown-sidebar-drag-handle {
+      width: var(--lm-control-height-compact); height: var(--lm-control-height);
+      padding: 0; flex: 0 0 var(--lm-control-height-compact);
+      display: inline-grid; place-items: center;
+      border: 0; border-radius: var(--lm-radius-control);
+      color: var(--lm-secondary-text); background: transparent;
+      opacity: 0; pointer-events: none; cursor: grab; touch-action: none;
+      transition: opacity 80ms ease, color 100ms ease, background-color 100ms ease;
+    }
+    .LocalMarkdown-sidebar-drag-handle:active { cursor: grabbing; }
+    .LocalMarkdown-sidebar-drag-handle:hover {
+      color: var(--lm-text); background: var(--lm-subtle);
+    }
+    .LocalMarkdown-sidebar-drag-handle:focus-visible {
+      opacity: 1; pointer-events: auto; outline: 0;
+      box-shadow: inset 0 0 0 1px var(--lm-accent);
+    }
+    .LocalMarkdown-sidebar-drag-handle svg {
+      width: 12px; height: 16px; display: block; fill: currentColor;
+    }
+    .LocalMarkdown-file-drag-handle {
+      position: absolute; z-index: 2; top: 50%; left: 1px;
+      transform: translateY(-50%);
+    }
+    .LocalMarkdown-file-row:hover > .LocalMarkdown-file-drag-handle,
+    .LocalMarkdown-file-row:has(.LocalMarkdown-file-drag-handle:focus-visible)
+      > .LocalMarkdown-file-drag-handle,
+    .LocalMarkdown-file-row:has(.LocalMarkdown-file.LocalMarkdown-dragging)
+      > .LocalMarkdown-file-drag-handle,
+    .LocalMarkdown-topic-header:hover > .LocalMarkdown-topic-drag-handle,
+    .LocalMarkdown-topic-header:has(.LocalMarkdown-topic-drag-handle:focus-visible)
+      > .LocalMarkdown-topic-drag-handle,
+    .LocalMarkdown-topic-section.LocalMarkdown-dragging
+      .LocalMarkdown-topic-drag-handle {
+      opacity: 1; pointer-events: auto;
+    }
+    .LocalMarkdown-file.LocalMarkdown-dragging { opacity: .52; }
     .LocalMarkdown-topic-section {
       margin: var(--lm-space-3) 0 var(--lm-space-1); border-radius: var(--lm-radius-control);
       transition: opacity 80ms ease, box-shadow 100ms ease;
     }
-    .LocalMarkdown-topic-section.LocalMarkdown-dragging { opacity: .35; }
+    .LocalMarkdown-topic-section.LocalMarkdown-dragging { opacity: .52; }
     .LocalMarkdown-topic-header {
       position: relative; min-width: 0; display: flex; align-items: center;
-      border: 0; border-radius: var(--lm-radius-control); background: transparent; cursor: grab;
+      border: 0; border-radius: var(--lm-radius-control); background: transparent;
     }
-    .LocalMarkdown-topic-header:active { cursor: grabbing; }
     .LocalMarkdown-topic-toggle {
       min-width: 0; min-height: var(--lm-control-height); flex: 1;
       padding: 2px var(--lm-space-2); display: flex; align-items: center;
@@ -403,10 +439,15 @@
     }
     .LocalMarkdown-topic-files { padding-left: 0; }
     .LocalMarkdown-loose-files { margin-bottom: var(--lm-space-1); }
-    .LocalMarkdown-drop-target { background: var(--lm-selected); }
-    .LocalMarkdown-files.LocalMarkdown-drop-target {
-      background: color-mix(in srgb, var(--lm-selected) 45%, transparent);
+    .LocalMarkdown-sidebar-drop-before,
+    .LocalMarkdown-sidebar-drop-after { position: relative; }
+    .LocalMarkdown-sidebar-drop-before::after,
+    .LocalMarkdown-sidebar-drop-after::after {
+      content: ""; position: absolute; z-index: 2; left: 0; right: 0;
+      height: 2px; background: var(--lm-accent); pointer-events: none;
     }
+    .LocalMarkdown-sidebar-drop-before::after { top: -1px; }
+    .LocalMarkdown-sidebar-drop-after::after { bottom: -1px; }
     .LocalMarkdown-search-summary,
     .LocalMarkdown-search-empty {
       padding: var(--lm-space-1) var(--lm-space-2) var(--lm-space-2);
@@ -714,7 +755,20 @@
     }
     .LocalMarkdown-cm-line-task {
       position: relative;
+      padding-left: calc(var(--lm-task-depth, 0) * 14px) !important;
     }
+    .LocalMarkdown-cm-task-depth-1 { --lm-task-depth: 1; }
+    .LocalMarkdown-cm-task-depth-2 { --lm-task-depth: 2; }
+    .LocalMarkdown-cm-task-depth-3 { --lm-task-depth: 3; }
+    .LocalMarkdown-cm-task-depth-4 { --lm-task-depth: 4; }
+    .LocalMarkdown-cm-task-depth-5 { --lm-task-depth: 5; }
+    .LocalMarkdown-cm-task-depth-6 { --lm-task-depth: 6; }
+    .LocalMarkdown-cm-task-depth-7 { --lm-task-depth: 7; }
+    .LocalMarkdown-cm-task-depth-8 { --lm-task-depth: 8; }
+    .LocalMarkdown-cm-task-depth-9 { --lm-task-depth: 9; }
+    .LocalMarkdown-cm-task-depth-10 { --lm-task-depth: 10; }
+    .LocalMarkdown-cm-task-depth-11 { --lm-task-depth: 11; }
+    .LocalMarkdown-cm-task-depth-12 { --lm-task-depth: 12; }
     .LocalMarkdown-cm-line-task::before {
       content: none;
     }
@@ -734,9 +788,19 @@
     .LocalMarkdown-cm-task-drag-handle {
       width: 16px; height: 1.6em; margin-right: 1px;
       display: inline-grid; place-items: center; color: var(--lm-faint);
-      font-size: 12px; line-height: 1; cursor: grab; user-select: none; touch-action: none;
+      opacity: 0; pointer-events: none; cursor: grab;
+      user-select: none; touch-action: none;
+      transition: opacity 80ms ease, color 100ms ease;
+    }
+    .LocalMarkdown-cm-shell .cm-line:hover .LocalMarkdown-cm-task-drag-handle,
+    .LocalMarkdown-cm-task-drag-source .LocalMarkdown-cm-task-drag-handle {
+      opacity: 1; pointer-events: auto;
     }
     .LocalMarkdown-cm-task-drag-handle:hover { color: var(--lm-muted); }
+    .LocalMarkdown-cm-task-drag-handle:active { cursor: grabbing; }
+    .LocalMarkdown-cm-task-drag-handle svg {
+      width: 12px; height: 16px; display: block; fill: currentColor;
+    }
     .LocalMarkdown-cm-task-dragging { opacity: .52; }
     .LocalMarkdown-cm-task-drop-before,
     .LocalMarkdown-cm-task-drop-after { position: relative; }
@@ -2801,6 +2865,37 @@
         button.append(svg);
       }
 
+      function appendNotionDragHandleIcon(element) {
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("viewBox", "0 0 12 16");
+        svg.setAttribute("aria-hidden", "true");
+        svg.setAttribute("focusable", "false");
+        for (const y of [3, 8, 13]) {
+          for (const x of [3.25, 8.75]) {
+            const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            dot.setAttribute("cx", String(x));
+            dot.setAttribute("cy", String(y));
+            dot.setAttribute("r", "1.35");
+            svg.append(dot);
+          }
+        }
+        element.append(svg);
+      }
+
+      function createSidebarDragHandle(label) {
+        const handle = document.createElement("button");
+        handle.type = "button";
+        handle.className = "LocalMarkdown-sidebar-drag-handle";
+        handle.setAttribute("aria-label", label);
+        handle.title = label;
+        appendNotionDragHandleIcon(handle);
+        handle.addEventListener("click", event => {
+          event.preventDefault();
+          event.stopPropagation();
+        });
+        return handle;
+      }
+
       function renderTopicSection(section) {
         const container = document.createElement("div");
         container.className = "LocalMarkdown-topic-section";
@@ -2808,7 +2903,8 @@
 
         const header = document.createElement("div");
         header.className = "LocalMarkdown-topic-header";
-        header.draggable = true;
+        const dragHandle = createSidebarDragHandle(`Drag section ${section.name}`);
+        dragHandle.classList.add("LocalMarkdown-topic-drag-handle");
         const toggle = document.createElement("button");
         toggle.type = "button";
         toggle.className = "LocalMarkdown-topic-toggle";
@@ -2838,7 +2934,7 @@
           event.preventDefault();
           openSectionContextMenu(event, section, header);
         });
-        header.append(toggle, menu);
+        header.append(dragHandle, toggle, menu);
         container.append(header);
 
         const sectionFiles = document.createElement("div");
@@ -2851,7 +2947,7 @@
           }
         }
         container.append(sectionFiles);
-        enableSectionReordering(header, container, section);
+        enableSectionReordering(dragHandle, container, section);
         attachFileSectionDropZone(container, section.id);
         filesElement.append(container);
       }
@@ -2878,6 +2974,12 @@
           ? showExamples
           : () => selectFile(file.id));
         if (!file.builtin) attachFileContextMenu(button, { file });
+        let dragHandle = null;
+        if (!file.builtin) {
+          dragHandle = createSidebarDragHandle(`Drag ${file.name}`);
+          dragHandle.classList.add("LocalMarkdown-file-drag-handle");
+          row.append(dragHandle);
+        }
         row.append(button);
         if (!file.builtin) {
           const menu = document.createElement("button");
@@ -2892,7 +2994,7 @@
             openFileContextMenu(event, { file }, menu);
           });
           row.append(menu);
-          enableFileReordering(button, row, file.id, sectionId);
+          enableFileReordering(dragHandle, button, row, file.id, sectionId);
         }
         container.append(row);
       }
@@ -3138,20 +3240,35 @@
       }
 
       function clearSidebarDropTargets() {
-        filesElement.classList.remove("LocalMarkdown-drop-target");
-        for (const element of filesElement.querySelectorAll(".LocalMarkdown-drop-target")) {
-          element.classList.remove("LocalMarkdown-drop-target");
+        const classes = [
+          "LocalMarkdown-sidebar-drop-before",
+          "LocalMarkdown-sidebar-drop-after"
+        ];
+        filesElement.classList.remove(...classes);
+        for (const element of filesElement.querySelectorAll(
+          ".LocalMarkdown-sidebar-drop-before, .LocalMarkdown-sidebar-drop-after")) {
+          element.classList.remove(...classes);
         }
       }
 
-      function markSidebarDropTarget(element) {
+      function markSidebarDropTarget(element, after) {
         clearSidebarDropTargets();
-        element.classList.add("LocalMarkdown-drop-target");
+        if (!element) return;
+        element.classList.add(after
+          ? "LocalMarkdown-sidebar-drop-after"
+          : "LocalMarkdown-sidebar-drop-before");
       }
 
-      function enableFileReordering(button, row, fileId, sectionId) {
-        button.draggable = true;
-        button.addEventListener("dragstart", event => {
+      function sidebarSectionDropAnchor(element) {
+        const rows = element.querySelectorAll(".LocalMarkdown-file-row[data-file-id]");
+        return rows[rows.length - 1]
+          || element.querySelector(".LocalMarkdown-topic-header")
+          || element;
+      }
+
+      function enableFileReordering(handle, button, row, fileId, sectionId) {
+        handle.draggable = true;
+        handle.addEventListener("dragstart", event => {
           draggedSidebarItem = { kind: "file", fileId, sectionId };
           button.classList.add("LocalMarkdown-dragging");
           if (event.dataTransfer) {
@@ -3164,7 +3281,7 @@
           event.preventDefault();
           event.stopPropagation();
           if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
-          markSidebarDropTarget(button);
+          markSidebarDropTarget(row, dropAfter(row, event));
         });
         row.addEventListener("drop", event => {
           if (draggedSidebarItem?.kind !== "file" || draggedSidebarItem.fileId === fileId) return;
@@ -3175,7 +3292,7 @@
           clearSidebarDropTargets();
           moveFileToSection(draggedFileId, sectionId, fileId, dropAfter(row, event));
         });
-        button.addEventListener("dragend", () => {
+        handle.addEventListener("dragend", () => {
           draggedSidebarItem = null;
           clearSidebarDropTargets();
           button.classList.remove("LocalMarkdown-dragging");
@@ -3188,9 +3305,15 @@
           if (draggedSidebarItem.kind === "file"
               && event.target.closest(".LocalMarkdown-file-row[data-file-id]")) return;
           if (draggedSidebarItem.kind === "section" && draggedSidebarItem.sectionId === sectionId) return;
+          if (draggedSidebarItem.kind === "section" && !sectionId) return;
           event.preventDefault();
           if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
-          markSidebarDropTarget(element);
+          if (draggedSidebarItem.kind === "section") {
+            const header = element.querySelector(".LocalMarkdown-topic-header");
+            markSidebarDropTarget(element, dropAfter(header, event));
+          } else {
+            markSidebarDropTarget(sidebarSectionDropAnchor(element), true);
+          }
         });
         element.addEventListener("drop", event => {
           if (!draggedSidebarItem) return;
@@ -3207,8 +3330,9 @@
         });
       }
 
-      function enableSectionReordering(header, container, section) {
-        header.addEventListener("dragstart", event => {
+      function enableSectionReordering(handle, container, section) {
+        handle.draggable = true;
+        handle.addEventListener("dragstart", event => {
           draggedSidebarItem = { kind: "section", sectionId: section.id };
           container.classList.add("LocalMarkdown-dragging");
           if (event.dataTransfer) {
@@ -3216,7 +3340,7 @@
             event.dataTransfer.setData("text/plain", section.id);
           }
         });
-        header.addEventListener("dragend", () => {
+        handle.addEventListener("dragend", () => {
           draggedSidebarItem = null;
           clearSidebarDropTargets();
           container.classList.remove("LocalMarkdown-dragging");
@@ -5841,12 +5965,49 @@
         ].includes(event.key)) breakDocumentHistoryCoalescing();
       }
 
-      function clearCodeMirrorTaskDropTarget() {
+      function clearCodeMirrorTaskDropTarget({ includeSource = false } = {}) {
         for (const line of editorElement.querySelectorAll(
-          ".LocalMarkdown-cm-task-dragging, .LocalMarkdown-cm-task-drop-before, .LocalMarkdown-cm-task-drop-after")) {
-          line.classList.remove("LocalMarkdown-cm-task-dragging",
+          ".LocalMarkdown-cm-task-drop-before, .LocalMarkdown-cm-task-drop-after")) {
+          line.classList.remove(
             "LocalMarkdown-cm-task-drop-before", "LocalMarkdown-cm-task-drop-after");
         }
+        if (!includeSource) return;
+        for (const line of editorElement.querySelectorAll(
+          ".LocalMarkdown-cm-task-drag-source, .LocalMarkdown-cm-task-dragging")) {
+          line.classList.remove(
+            "LocalMarkdown-cm-task-drag-source", "LocalMarkdown-cm-task-dragging");
+        }
+      }
+
+      function codeMirrorLineElement(lineNumber) {
+        if (!codeMirrorView || lineNumber < 1
+          || lineNumber > codeMirrorView.state.doc.lines) return null;
+        try {
+          const position = codeMirrorView.state.doc.line(lineNumber).from;
+          const domPosition = codeMirrorView.domAtPos(position);
+          const node = domPosition.node.nodeType === 1
+            ? domPosition.node
+            : domPosition.node.parentElement;
+          return node?.closest?.(".cm-line")
+            || domPosition.node.childNodes?.[domPosition.offset]?.closest?.(".cm-line")
+            || domPosition.node.childNodes?.[Math.max(0, domPosition.offset - 1)]
+              ?.closest?.(".cm-line")
+            || null;
+        } catch {
+          return null;
+        }
+      }
+
+      function markCodeMirrorTaskDragSource(session) {
+        for (let lineNumber = session.source.from + 1;
+          lineNumber <= session.source.to; lineNumber += 1) {
+          codeMirrorLineElement(lineNumber)?.classList.add("LocalMarkdown-cm-task-dragging");
+        }
+        const sourceWidget = editorElement.querySelector(
+          `.LocalMarkdown-cm-task-widget-shell[data-line-from="${session.sourceFrom}"]`);
+        (sourceWidget?.closest(".cm-line")
+          || codeMirrorLineElement(session.sourceIndex + 1))
+          ?.classList.add("LocalMarkdown-cm-task-drag-source");
       }
 
       function startCodeMirrorTaskDrag(event, lineFrom) {
@@ -5855,11 +6016,18 @@
         event.stopPropagation();
         breakDocumentHistoryCoalescing();
         const line = codeMirrorView.state.doc.lineAt(lineFrom);
+        const lines = codeMirrorDocumentLines(codeMirrorView.state.doc);
+        const sourceIndex = line.number - 1;
         codeMirrorTaskDragSession = {
           pointerId: event.pointerId,
           startX: event.clientX,
           startY: event.clientY,
           sourceFrom: line.from,
+          sourceIndex,
+          source: codeMirrorTaskSubtree(lines, sourceIndex),
+          lines,
+          validTargetFroms: codeMirrorTaskSiblingTargetFroms(
+            codeMirrorView.state.doc, lines, sourceIndex),
           targetFrom: null,
           dropAfter: false,
           dragging: false
@@ -5874,9 +6042,7 @@
           if (Math.hypot(event.clientX - session.startX,
             event.clientY - session.startY) < 5) return;
           session.dragging = true;
-          const sourceWidget = editorElement.querySelector(
-            `.LocalMarkdown-cm-task-widget-shell[data-line-from="${session.sourceFrom}"]`);
-          sourceWidget?.closest(".cm-line")?.classList.add("LocalMarkdown-cm-task-dragging");
+          markCodeMirrorTaskDragSource(session);
         }
         event.preventDefault();
         const pointElement = document.elementFromPoint(event.clientX, event.clientY);
@@ -5885,18 +6051,21 @@
             ?.querySelector?.(".LocalMarkdown-cm-task-widget-shell");
         const targetFrom = Number(target?.dataset.lineFrom);
         clearCodeMirrorTaskDropTarget();
-        const sourceWidget = editorElement.querySelector(
-          `.LocalMarkdown-cm-task-widget-shell[data-line-from="${session.sourceFrom}"]`);
-        sourceWidget?.closest(".cm-line")?.classList.add("LocalMarkdown-cm-task-dragging");
-        if (!Number.isInteger(targetFrom) || targetFrom === session.sourceFrom) {
+        if (!Number.isInteger(targetFrom)
+          || !session.validTargetFroms.has(targetFrom)) {
           session.targetFrom = null;
           return;
         }
         const targetLine = target.closest(".cm-line");
         const rect = targetLine.getBoundingClientRect();
+        const targetIndex = codeMirrorView.state.doc.lineAt(targetFrom).number - 1;
+        const targetSubtree = codeMirrorTaskSubtree(session.lines, targetIndex);
         session.targetFrom = targetFrom;
         session.dropAfter = event.clientY >= rect.top + rect.height / 2;
-        targetLine.classList.add(session.dropAfter
+        const landingLine = session.dropAfter
+          ? codeMirrorLineElement(targetSubtree.to)
+          : targetLine;
+        landingLine?.classList.add(session.dropAfter
           ? "LocalMarkdown-cm-task-drop-after" : "LocalMarkdown-cm-task-drop-before");
       }
 
@@ -5907,6 +6076,21 @@
           width = character === "\t" ? width + (4 - width % 4) : width + 1;
         }
         return width;
+      }
+
+      function markdownTaskLineMatch(line) {
+        return String(line || "").match(
+          /^(\s*)(?:[-+*]|\d+[.)])\s+\[([ xX])\]\s?/);
+      }
+
+      function markdownListIndentWidth(line) {
+        const match = String(line || "").match(
+          /^([\t ]*)(?:[-+*]|\d+[.)])(?:[\t ]+|$)/);
+        return match ? markdownIndentWidth(match[1]) : null;
+      }
+
+      function codeMirrorDocumentLines(doc) {
+        return Array.from({ length: doc.lines }, (_, index) => doc.line(index + 1).text);
       }
 
       function codeMirrorTaskSubtree(lines, rootIndex) {
@@ -5927,18 +6111,63 @@
         return { from: rootIndex, to: end };
       }
 
+      function codeMirrorListParentIndex(lines, itemIndex) {
+        const itemIndent = markdownListIndentWidth(lines[itemIndex]);
+        if (itemIndent === null) return null;
+        for (let candidateIndex = itemIndex - 1;
+          candidateIndex >= 0; candidateIndex -= 1) {
+          const candidateIndent = markdownListIndentWidth(lines[candidateIndex]);
+          if (candidateIndent === null || candidateIndent >= itemIndent) continue;
+          if (codeMirrorTaskSubtree(lines, candidateIndex).to > itemIndex) {
+            return candidateIndex;
+          }
+        }
+        return null;
+      }
+
+      function codeMirrorListDepth(lines, itemIndex) {
+        let depth = 0;
+        let parentIndex = codeMirrorListParentIndex(lines, itemIndex);
+        while (parentIndex !== null && depth < lines.length) {
+          depth += 1;
+          parentIndex = codeMirrorListParentIndex(lines, parentIndex);
+        }
+        return depth;
+      }
+
+      function codeMirrorTasksAreSiblings(lines, sourceIndex, targetIndex) {
+        const source = markdownTaskLineMatch(lines[sourceIndex]);
+        const target = markdownTaskLineMatch(lines[targetIndex]);
+        if (!source || !target
+          || markdownIndentWidth(source[1]) !== markdownIndentWidth(target[1])) return false;
+        return codeMirrorListParentIndex(lines, sourceIndex)
+          === codeMirrorListParentIndex(lines, targetIndex);
+      }
+
+      function codeMirrorTaskSiblingTargetFroms(doc, lines, sourceIndex) {
+        const targets = new Set();
+        for (let targetIndex = 0; targetIndex < lines.length; targetIndex += 1) {
+          if (targetIndex !== sourceIndex
+            && codeMirrorTasksAreSiblings(lines, sourceIndex, targetIndex)) {
+            targets.add(doc.line(targetIndex + 1).from);
+          }
+        }
+        return targets;
+      }
+
       function finishCodeMirrorTaskDrag(event, commit = true) {
         const session = codeMirrorTaskDragSession;
         if (!session || (event?.pointerId !== undefined
           && event.pointerId !== session.pointerId)) return;
         codeMirrorTaskDragSession = null;
-        clearCodeMirrorTaskDropTarget();
+        clearCodeMirrorTaskDropTarget({ includeSource: true });
         if (!commit || !session.dragging || session.targetFrom === null || !codeMirrorView) return;
         const doc = codeMirrorView.state.doc;
         const sourceNumber = doc.lineAt(session.sourceFrom).number;
         const targetNumber = doc.lineAt(session.targetFrom).number;
         if (sourceNumber === targetNumber) return;
-        const lines = Array.from({ length: doc.lines }, (_, index) => doc.line(index + 1).text);
+        const lines = codeMirrorDocumentLines(doc);
+        if (!codeMirrorTasksAreSiblings(lines, sourceNumber - 1, targetNumber - 1)) return;
         const source = codeMirrorTaskSubtree(lines, sourceNumber - 1);
         if (targetNumber - 1 >= source.from && targetNumber - 1 < source.to) return;
         const target = codeMirrorTaskSubtree(lines, targetNumber - 1);
@@ -7041,7 +7270,8 @@
             shell.dataset.lineFrom = String(this.lineFrom);
             const handle = document.createElement("span");
             handle.className = "LocalMarkdown-cm-task-drag-handle";
-            handle.textContent = "⠿";
+            handle.title = "Drag task to reorder";
+            appendNotionDragHandleIcon(handle);
             handle.setAttribute("aria-hidden", "true");
             handle.addEventListener("pointerdown", event =>
               startCodeMirrorTaskDrag(event, this.lineFrom));
@@ -7629,6 +7859,7 @@
         function buildDecorations(view) {
           const decorations = [];
           const doc = view.state.doc;
+          const documentLines = codeMirrorDocumentLines(doc);
           const activeLine = doc.lineAt(view.state.selection.main.head).number;
           const activePosition = view.state.selection.main.head;
           const codeBlocks = codeMirrorPreviewCodeBlocks(doc);
@@ -7705,11 +7936,15 @@
                   widget: new HorizontalRuleWidget()
                 }).range(line.from, line.to));
               }
-              const task = line.text.match(/^(\s*)(?:[-+*]|\d+[.)])\s+\[([ xX])\]\s?/);
+              const task = markdownTaskLineMatch(line.text);
               if (task) {
                 const markerIndex = task[0].indexOf("[");
                 const markerFrom = line.from + markerIndex;
+                const taskDepth = codeMirrorListDepth(documentLines, line.number - 1);
                 classes.push("LocalMarkdown-cm-line-task");
+                if (taskDepth) {
+                  classes.push(`LocalMarkdown-cm-task-depth-${Math.min(taskDepth, 12)}`);
+                }
                 decorations.push(Decoration.replace({
                   widget: new TaskWidget(
                     markerFrom, task[2].toLowerCase() === "x", line.from)
@@ -7811,6 +8046,24 @@
         return dispatchCodeMirrorChange(
           { from: first.from, to: last.to, insert: output },
           { anchor: lineEnd });
+      }
+
+      function outdentCodeMirrorLines() {
+        const selection = codeMirrorSelection();
+        if (!selection) return false;
+        const doc = codeMirrorView.state.doc;
+        const first = doc.lineAt(selection.from);
+        const documentLines = codeMirrorDocumentLines(doc);
+        return transformCodeMirrorLines((line, relativeIndex) => {
+          const lineIndex = first.number - 1 + relativeIndex;
+          const parentIndex = codeMirrorListParentIndex(documentLines, lineIndex);
+          if (parentIndex !== null && markdownListIndentWidth(line) !== null) {
+            const whitespace = line.match(/^[\t ]*/)?.[0] || "";
+            const parentWhitespace = documentLines[parentIndex].match(/^[\t ]*/)?.[0] || "";
+            return parentWhitespace + line.slice(whitespace.length);
+          }
+          return line.replace(/^(?: {1,4}|\t)/, "");
+        });
       }
 
       function toggleCodeMirrorLinePrefix(prefix, matcher) {
@@ -8079,8 +8332,8 @@
           case "ordered-list": toggleCodeMirrorLinePrefix(
             (index, line) => `${index + 1}. ${line}`, /^\s*\d+[.)]\s+/); break;
           case "check": toggleCodeMirrorLinePrefix("- [ ] ", /^\s*[-+*]\s+\[[ xX]\]\s+/); break;
-          case "outdent": transformCodeMirrorLines(line => line.replace(/^(?: {1,4}|\t)/, "")); break;
-          case "indent": transformCodeMirrorLines(line => `  ${line}`); break;
+          case "outdent": outdentCodeMirrorLines(); break;
+          case "indent": transformCodeMirrorLines(line => `    ${line}`); break;
           case "quote": toggleCodeMirrorLinePrefix("> ", /^\s*>\s?/); break;
           case "line": insertCodeMirrorBlock("\n---\n", 5); break;
           case "code": insertCodeMirrorCodeBlock(); break;
