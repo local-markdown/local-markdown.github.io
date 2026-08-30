@@ -69,10 +69,7 @@
       --lm-heading-5: #b45309;
       --lm-heading-6: #0e7490;
       --lm-unsaved: #a15c00;
-      --lm-app-background: #fff;
       --lm-document-background: #fff;
-      --lm-document-border: transparent;
-      --lm-document-shadow: transparent;
       --lm-overlay: rgba(0, 0, 0, 0.18);
       --lm-sidebar-shadow: rgba(0, 0, 0, 0.12);
       --lm-menu-shadow: rgba(15, 15, 15, 0.14);
@@ -102,10 +99,7 @@
       --lm-heading-5: #b45309;
       --lm-heading-6: #0e7490;
       --lm-unsaved: #9b6b00;
-      --lm-app-background: #eee8d5;
       --lm-document-background: #fdf6e3;
-      --lm-document-border: #d4cdb9;
-      --lm-document-shadow: rgba(0, 43, 54, 0.12);
       --lm-overlay: rgba(0, 43, 54, 0.22);
       --lm-sidebar-shadow: rgba(0, 43, 54, 0.16);
       --lm-menu-shadow: rgba(0, 43, 54, 0.22);
@@ -135,10 +129,7 @@
       --lm-heading-5: #fbbf24;
       --lm-heading-6: #22d3ee;
       --lm-unsaved: #d6a700;
-      --lm-app-background: #001f27;
       --lm-document-background: #073642;
-      --lm-document-border: #1b4c58;
-      --lm-document-shadow: rgba(0, 0, 0, 0.28);
       --lm-overlay: rgba(0, 0, 0, 0.42);
       --lm-sidebar-shadow: rgba(0, 0, 0, 0.34);
       --lm-menu-shadow: rgba(0, 0, 0, 0.42);
@@ -262,8 +253,6 @@
     .LocalMarkdown-files {
       min-height: 0; overflow: auto;
       padding: var(--lm-space-1) var(--lm-space-2) var(--lm-space-4);
-    }
-    .LocalMarkdown-files {
       scrollbar-width: thin;
       scrollbar-color: var(--lm-scrollbar) transparent;
     }
@@ -768,15 +757,6 @@
     .LocalMarkdown-cm-task-depth-10 { --lm-task-depth: 10; }
     .LocalMarkdown-cm-task-depth-11 { --lm-task-depth: 11; }
     .LocalMarkdown-cm-task-depth-12 { --lm-task-depth: 12; }
-    .LocalMarkdown-cm-line-task::before {
-      content: none;
-    }
-    .LocalMarkdown-cm-line-task[data-task-checked="true"]::before {
-      content: "✓"; display: grid; place-items: center;
-      color: var(--lm-background); border-color: var(--lm-accent);
-      background: var(--lm-accent); font-size: 11px; line-height: 1;
-    }
-    .LocalMarkdown-cm-line-task[data-task-checked="true"] { color: var(--lm-muted); }
     .LocalMarkdown-cm-task-widget {
       width: 15px; height: 15px; margin: 0 8px 0 2px;
       vertical-align: -2px; accent-color: var(--lm-accent); cursor: pointer;
@@ -829,7 +809,8 @@
       display: block; overflow-x: auto;
     }
     .LocalMarkdown-cm-table-widget {
-      width: 100%; border-spacing: 0; border-collapse: collapse;
+      width: var(--lm-table-width-basis, 100%);
+      border-spacing: 0; border-collapse: collapse;
       color: var(--lm-text); background: var(--lm-document-background);
       font: inherit; table-layout: fixed;
     }
@@ -866,15 +847,23 @@
     }
     .LocalMarkdown-cm-outline-close {
       width: var(--lm-control-height-compact); height: var(--lm-control-height-compact);
-      padding: 0; border: 0; border-radius: var(--lm-radius-control);
-      color: inherit; background: transparent; font: inherit; font-size: 18px;
+      margin-left: auto; padding: 5px; flex: 0 0 var(--lm-control-height-compact);
+      display: inline-grid; place-items: center;
+      border: 0; border-radius: var(--lm-radius-control);
+      color: var(--lm-faint); background: transparent;
     }
     .LocalMarkdown-cm-outline-close:hover { color: var(--lm-text); background: var(--lm-subtle); }
+    .LocalMarkdown-cm-outline-close:focus-visible {
+      outline: 2px solid var(--lm-accent); outline-offset: 1px;
+    }
+    .LocalMarkdown-cm-outline-close svg {
+      width: 14px; height: 14px; display: block;
+    }
     .LocalMarkdown-cm-outline-content {
       height: calc(100% - var(--lm-control-height-large)); padding: var(--lm-space-2);
       overflow: auto; scrollbar-color: var(--lm-scrollbar) transparent;
     }
-    .LocalMarkdown-cm-outline button {
+    .LocalMarkdown-cm-outline-content button {
       width: 100%; min-height: var(--lm-control-height); padding: 4px 8px;
       border: 0; border-radius: var(--lm-radius-control); background: transparent;
       font-size: var(--lm-type-metadata-size); text-align: left;
@@ -905,12 +894,6 @@
     .LocalMarkdown-editor.LocalMarkdown-editor--fullscreen {
       position: fixed; z-index: 50; inset: 0; width: 100vw; height: 100dvh;
     }
-    .LocalMarkdown-view-current {
-      min-width: 76px; height: var(--lm-control-height); padding: 0 var(--lm-space-2);
-      display: flex; align-items: center; color: var(--lm-muted);
-      font-size: var(--lm-type-control-size); font-weight: 500;
-    }
-
     .LocalMarkdown-editor svg.LocalMarkdown-toolbar-icon {
       width: 18px; height: 18px; display: block; overflow: visible;
       fill: none !important; stroke: var(--toolbar-icon-color, var(--lm-muted)) !important;
@@ -1054,7 +1037,8 @@
     }
     .LocalMarkdown-table-resize-handle[hidden] { display: none; }
     .LocalMarkdown-sized-table {
-      width: var(--lm-table-width, 100%) !important; table-layout: fixed;
+      width: var(--lm-table-width, var(--lm-table-width-basis, 100%)) !important;
+      table-layout: fixed;
     }
     .LocalMarkdown-drawing-dialog {
       width: 100vw; height: 100dvh; max-width: none; max-height: none;
@@ -1218,18 +1202,13 @@
           </div>
         </div>
         <div class="LocalMarkdown-toolbar-actions">
-          <div class="LocalMarkdown-editor-width" id="LocalMarkdown-editor-width-control">
+          <div class="LocalMarkdown-editor-width">
             <button class="LocalMarkdown-editor-width-reset" id="LocalMarkdown-editor-width-reset" type="button" aria-label="Reset editor width" title="Reset editor width to 760px">
               <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
                 <path d="M4 4v4h4M4.45 7.45A6.25 6.25 0 1 1 5.7 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
               </svg>
             </button>
-            <input class="LocalMarkdown-editor-width-input" id="LocalMarkdown-editor-width" type="range" min="480" max="1600" step="20" value="760" aria-label="Editor width">
-          </div>
-          <div class="LocalMarkdown-view-current" id="LocalMarkdown-view-picker">
-            <span id="LocalMarkdown-view-toggle" aria-label="Editor view: Markdown">
-              <span id="LocalMarkdown-view-label">Markdown</span>
-            </span>
+            <input class="LocalMarkdown-editor-width-input" id="LocalMarkdown-editor-width" type="range" min="480" max="1600" step="1" value="760" aria-label="Editor width">
           </div>
           <div class="LocalMarkdown-theme-picker">
             <button class="LocalMarkdown-theme-toggle" id="LocalMarkdown-theme-toggle" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="LocalMarkdown-theme-menu">
@@ -1448,12 +1427,16 @@
       let codeMirrorMarkdownParser = null;
       let codeMirrorEmojiMenu = null;
       let codeMirrorTaskDragSession = null;
-      let irScrollRestoreFrame = null;
+      let flushActiveCodeMirrorTableCell = () => false;
+      let editorStateRestoreFrame = null;
       let tableHoverCell = null;
       let tableExportTarget = null;
       let tableResizeCell = null;
       let tableResizeSession = null;
       let tableWidthRefreshFrame = null;
+      let fixedTableWidthBasis = null;
+      let preferredEditorWidth = null;
+      let editorWidthTracksMaximum = false;
       let selectedImage = null;
       let imageResizeSession = null;
       let imagePreviewTimer = null;
@@ -1490,6 +1473,7 @@
       const attachmentPreviewUrls = new Map();
       const attachmentPreviewReferences = new Map();
       const attachmentImageIds = new WeakMap();
+      const editorStatesByFile = new WeakMap();
       const imageWorkerRequests = new Map();
       const documentHistories = new Map();
       const editorHistoryValueWaiters = new Map();
@@ -1541,6 +1525,7 @@
       const themeStorageKey = "LocalMarkdown:theme:v1";
       const editorWidthStorageKey = "LocalMarkdown:editor-width:v1";
       const defaultEditorWidth = 760;
+      const editorWidthSideMargin = 24;
       const themeNames = {
         white: "White",
         "solarized-light": "Solarized Light",
@@ -1554,12 +1539,43 @@
       }];
       const mobileSidebarQuery = matchMedia("(max-width: 650px)");
 
-      function setEditorWidth(value, { persist = true } = {}) {
+      function lockTableWidthBasis(width) {
+        if (fixedTableWidthBasis !== null) return;
+        const sizedTables = Array.from(editorElement.querySelectorAll(
+          ".LocalMarkdown-cm-table-widget.LocalMarkdown-sized-table"), table => ({
+            table,
+            width: table.getBoundingClientRect().width,
+            columns: Array.from(table.rows[0]?.cells || [],
+              cell => cell.getBoundingClientRect().width)
+          }));
+        fixedTableWidthBasis = width;
+        editorElement.style.setProperty("--lm-table-width-basis", `${width}px`);
+        for (const layout of sizedTables) {
+          if (layout.width <= 0) continue;
+          layout.table.style.setProperty("--lm-table-width", `${layout.width}px`);
+          for (const cell of layout.table.rows[0]?.cells || []) {
+            const columnWidth = layout.columns[cell.cellIndex];
+            if (columnWidth > 0) {
+              cell.style.setProperty("--lm-table-column-width", `${columnWidth}px`);
+            }
+          }
+        }
+      }
+
+      function setEditorWidth(
+        value, { persist = true, lockTables = true, remember = true } = {}
+      ) {
         const minimum = Number(editorWidthInput.min);
         const maximum = Number(editorWidthInput.max);
         const parsed = value === null || value === "" ? NaN : Number(value);
+        const requested = Number.isFinite(parsed) ? parsed : defaultEditorWidth;
+        if (remember) preferredEditorWidth = requested;
         const width = Math.min(maximum, Math.max(minimum,
-          Number.isFinite(parsed) ? parsed : defaultEditorWidth));
+          requested));
+        if (lockTables && editorReady && fixedTableWidthBasis === null) {
+          const renderedWidth = codeMirrorView?.contentDOM.getBoundingClientRect().width;
+          lockTableWidthBasis(renderedWidth > 0 ? renderedWidth : defaultEditorWidth);
+        }
         editorElement.style.setProperty("--lm-document-max-width", `${width}px`);
         editorWidthInput.value = String(width);
         editorWidthInput.title = `Editor width: ${width}px`;
@@ -1567,6 +1583,27 @@
         if (persist) {
           try { localStorage.setItem(editorWidthStorageKey, String(width)); } catch {}
         }
+      }
+
+      function refreshEditorWidthBounds({ initialize = false } = {}) {
+        if (!editorReady || !codeMirrorView?.scrollDOM) return false;
+        const minimum = Number(editorWidthInput.min);
+        const availableWidth = Math.floor(codeMirrorView.scrollDOM.clientWidth);
+        if (!Number.isFinite(availableWidth) || availableWidth <= 0) return false;
+        const maximum = Math.max(minimum,
+          availableWidth - editorWidthSideMargin * 2);
+        editorWidthInput.max = String(maximum);
+        if (initialize) {
+          editorWidthTracksMaximum = (preferredEditorWidth ?? defaultEditorWidth) >= maximum;
+        }
+        const width = editorWidthTracksMaximum
+          ? maximum : Math.min(preferredEditorWidth ?? defaultEditorWidth, maximum);
+        setEditorWidth(width, {
+          persist: false,
+          lockTables: false,
+          remember: false
+        });
+        return true;
       }
 
       function setTheme(theme, { persist = true } = {}) {
@@ -1577,11 +1614,7 @@
         }
         themeToggle.setAttribute("aria-label", `Color theme: ${themeNames[theme]}`);
         themeToggle.title = `Color theme: ${themeNames[theme]}`;
-        if (editorReady) {
-          const dark = theme === "solarized-dark";
-          const codeTheme = theme === "white" ? "github" : `base16/${theme}`;
-          editor.setTheme(dark ? "dark" : "classic", dark ? "dark" : "light", codeTheme);
-        }
+        if (editorReady) editor.setTheme();
         if (persist) {
           try { localStorage.setItem(themeStorageKey, theme); } catch {}
         }
@@ -1789,7 +1822,7 @@
         mainElement.setAttribute("aria-hidden", String(mainIsBehindDrawer));
         if (focusToggle) sidebarToggle.focus();
         else if (focusDismiss) sidebarDismiss.focus();
-        if (editorReady) setTimeout(scheduleTableWidths, 170);
+        if (editorReady) setTimeout(refreshEditorWidthBounds, 170);
         if (persist) {
           try { localStorage.setItem(sidebarStorageKey, open ? "open" : "closed"); } catch {}
         }
@@ -1873,18 +1906,14 @@
         "",
         "![Random external image](https://picsum.photos/200/300)",
         "",
-        "### Clickable external image",
-        "Wrap the image in a Markdown link. Selecting the image opens the linked page:",
-        "",
-        "[![Clickable random image](https://picsum.photos/200/300)](https://picsum.photos/)",
-        "",
         "---"
       ].join("\n");
 
       const createId = () => crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`;
       const example = {
         id: "LocalMarkdown-examples", name: "Markdown examples", text: exampleText,
-        handle: null, attachments: new Map(), builtin: true, dirty: false
+        handle: null, attachments: new Map(), builtin: true, dirty: false,
+        sidebarMovable: true, sidebarDefaultFirst: true
       };
       const welcome = {
         id: "LocalMarkdown-welcome", name: "", text: "", handle: null,
@@ -1893,7 +1922,7 @@
       const session = {
         activeId: example.id,
         files: [example],
-        sidebar: { sections: [], ungroupedFileIds: [] },
+        sidebar: { sections: [], ungroupedFileIds: [example.id] },
         lastOpenHandle: null
       };
 
@@ -1905,59 +1934,17 @@
         return editorReady ? codeMirrorView?.contentDOM || null : null;
       }
 
-      function selectionNodePath(root, node) {
-        const path = [];
-        let current = node;
-        while (current && current !== root) {
-          const parent = current.parentNode;
-          if (!parent) return null;
-          const index = Array.prototype.indexOf.call(parent.childNodes, current);
-          if (index < 0) return null;
-          path.unshift(index);
-          current = parent;
-        }
-        return current === root ? path : null;
-      }
-
       function editorSelectionSnapshot(file) {
-        if (activeFile() !== file) return null;
-        if (editor?.kind === "codemirror" && codeMirrorView) {
-          const selection = codeMirrorView.state.selection.main;
-          return {
-            mode: "ir",
-            anchor: selection.anchor,
-            head: selection.head
-          };
-        }
-        const surface = activeEditorSurface();
-        const selection = getSelection();
-        if (!surface || !selection?.rangeCount) return null;
-        const range = selection.getRangeAt(0);
-        if (!surface.contains(range.startContainer) || !surface.contains(range.endContainer)) {
-          return null;
-        }
-        const startPath = selectionNodePath(surface, range.startContainer);
-        const endPath = selectionNodePath(surface, range.endContainer);
-        if (!startPath || !endPath) return null;
-        return {
-          mode: editor.getCurrentMode(),
-          startPath,
-          startOffset: range.startOffset,
-          endPath,
-          endOffset: range.endOffset
-        };
+        if (activeFile() !== file || !codeMirrorView) return null;
+        const selection = codeMirrorView.state.selection.main;
+        return { anchor: selection.anchor, head: selection.head };
       }
 
       function editorScrollSnapshot(file) {
         if (activeFile() !== file) return null;
-        const surface = editor?.kind === "codemirror"
-          ? codeMirrorView?.scrollDOM : activeEditorSurface();
+        const surface = codeMirrorView?.scrollDOM;
         if (!surface) return null;
-        return {
-          mode: editor.getCurrentMode(),
-          top: surface.scrollTop,
-          left: surface.scrollLeft
-        };
+        return { top: surface.scrollTop, left: surface.scrollLeft };
       }
 
       function captureDocumentSnapshotEditorState(snapshot, file) {
@@ -1968,108 +1955,37 @@
       }
 
       function currentEditorRange(file) {
-        if (activeFile() !== file) return null;
-        if (editor?.kind === "codemirror" && codeMirrorView) {
-          const selection = codeMirrorView.state.selection.main;
-          return { codeMirror: true, anchor: selection.anchor, head: selection.head };
-        }
-        const surface = activeEditorSurface();
-        const selection = getSelection();
-        if (!surface || !selection?.rangeCount) return null;
-        const range = selection.getRangeAt(0);
-        const startElement = range.startContainer.nodeType === Node.ELEMENT_NODE
-          ? range.startContainer : range.startContainer.parentElement;
-        const block = startElement?.closest?.("[data-block]");
-        return block && surface.contains(block)
-          && surface.contains(range.startContainer) && surface.contains(range.endContainer)
-          ? range.cloneRange()
-          : null;
+        if (activeFile() !== file || !codeMirrorView) return null;
+        const selection = codeMirrorView.state.selection.main;
+        return { anchor: selection.anchor, head: selection.head };
       }
 
       function restoreEditorRange(range) {
-        if (editor?.kind === "codemirror" && codeMirrorView) {
-          const length = codeMirrorView.state.doc.length;
-          const anchor = Math.max(0, Math.min(length, range?.anchor ?? length));
-          const head = Math.max(0, Math.min(length, range?.head ?? anchor));
-          codeMirrorView.dispatch({ selection: { anchor, head }, scrollIntoView: true });
-          codeMirrorView.focus();
-          return;
-        }
-        const surface = activeEditorSurface();
-        if (!surface) return;
-        const selection = getSelection();
-        const nextRange = range?.startContainer?.isConnected ? range : document.createRange();
-        if (nextRange !== range) {
-          const blocks = surface.querySelectorAll("[data-block]");
-          nextRange.selectNodeContents(blocks[blocks.length - 1] || surface);
-          nextRange.collapse(false);
-        }
-        selection.removeAllRanges();
-        selection.addRange(nextRange);
-        surface.focus({ preventScroll: true });
-      }
-
-      function nodeAtSelectionPath(root, path) {
-        let node = root;
-        for (const index of path) {
-          node = node?.childNodes?.[index];
-          if (!node) return null;
-        }
-        return node;
-      }
-
-      function selectionOffsetLimit(node) {
-        return node?.nodeType === Node.TEXT_NODE
-          ? node.data.length
-          : node?.childNodes?.length || 0;
+        if (!codeMirrorView) return;
+        const length = codeMirrorView.state.doc.length;
+        const anchor = Math.max(0, Math.min(length, range?.anchor ?? length));
+        const head = Math.max(0, Math.min(length, range?.head ?? anchor));
+        codeMirrorView.dispatch({ selection: { anchor, head }, scrollIntoView: true });
+        codeMirrorView.focus();
       }
 
       function restoreEditorSelection(file, bookmark, scrollBookmark = null) {
-        cancelAnimationFrame(irScrollRestoreFrame);
-        irScrollRestoreFrame = requestAnimationFrame(() => {
-          irScrollRestoreFrame = null;
+        cancelAnimationFrame(editorStateRestoreFrame);
+        editorStateRestoreFrame = requestAnimationFrame(() => {
+          editorStateRestoreFrame = null;
           if (activeFile() !== file || !editorReady) return;
-          const surface = editor?.kind === "codemirror"
-            ? codeMirrorView?.scrollDOM : activeEditorSurface();
+          const surface = codeMirrorView?.scrollDOM;
           if (!surface) return;
-          const mode = editor.getCurrentMode();
           const restoreScroll = () => {
-            if (scrollBookmark?.mode !== mode) return;
+            if (!scrollBookmark) return;
             surface.scrollTop = scrollBookmark.top;
             surface.scrollLeft = scrollBookmark.left;
           };
-          if (editor?.kind === "codemirror") {
-            const length = codeMirrorView.state.doc.length;
-            const anchor = Math.max(0, Math.min(length, bookmark?.anchor ?? length));
-            const head = Math.max(0, Math.min(length, bookmark?.head ?? anchor));
-            codeMirrorView.dispatch({ selection: { anchor, head } });
-            codeMirrorView.focus();
-            restoreScroll();
-            return;
-          }
-          if (bookmark?.mode !== mode) {
-            surface.focus({ preventScroll: true });
-            restoreScroll();
-            return;
-          }
-          const start = nodeAtSelectionPath(surface, bookmark.startPath);
-          const end = nodeAtSelectionPath(surface, bookmark.endPath);
-          if (!start || !end) {
-            surface.focus({ preventScroll: true });
-            restoreScroll();
-            return;
-          }
-          try {
-            const range = document.createRange();
-            range.setStart(start, Math.min(bookmark.startOffset, selectionOffsetLimit(start)));
-            range.setEnd(end, Math.min(bookmark.endOffset, selectionOffsetLimit(end)));
-            const selection = getSelection();
-            selection.removeAllRanges();
-            selection.addRange(range);
-            surface.focus({ preventScroll: true });
-          } catch {
-            surface.focus({ preventScroll: true });
-          }
+          const length = codeMirrorView.state.doc.length;
+          const anchor = Math.max(0, Math.min(length, bookmark?.anchor ?? length));
+          const head = Math.max(0, Math.min(length, bookmark?.head ?? anchor));
+          codeMirrorView.dispatch({ selection: { anchor, head } });
+          codeMirrorView.focus();
           restoreScroll();
         });
       }
@@ -2155,9 +2071,7 @@
         const label = history.present.label;
         file.text = value;
         if (!file.builtin) {
-          file.dirty = true;
-          scheduleAutoSave(file);
-          scheduleSessionSave();
+          markFileDirty(file);
         }
         history.present = documentSnapshot(file);
         history.present.label = label;
@@ -2223,9 +2137,7 @@
           file.attachments = new Map(snapshot.attachments);
           file.tableWidthsOutOfSync = false;
           if (!file.builtin) {
-            file.dirty = true;
-            scheduleAutoSave(file);
-            scheduleSessionSave();
+            markFileDirty(file);
           }
           if (activeFile() === file && editorReady) {
             setEditorValue(file);
@@ -2242,8 +2154,7 @@
         scheduleAttachmentPreviews();
         scheduleTableWidths();
         if (activeFile() === file) {
-          const scroll = snapshot.scroll?.mode === editor.getCurrentMode()
-            ? snapshot.scroll : currentScroll;
+          const scroll = snapshot.scroll || currentScroll;
           restoreEditorSelection(file, snapshot.selection, scroll);
         }
       }
@@ -2365,10 +2276,10 @@
           && performance.now() - pending.time < 2000 ? pending.inputType : "";
         if (pending?.fileId === file.id) pendingEditorHistoryInput = null;
         if (["insertText", "insertCompositionText"].includes(inputType)) {
-          return { label: "typing", coalesceKey: `typing:${editor.getCurrentMode()}` };
+          return { label: "typing", coalesceKey: "typing" };
         }
         if (["deleteContentBackward", "deleteContentForward"].includes(inputType)) {
-          return { label: "deletion", coalesceKey: `deletion:${inputType}:${editor.getCurrentMode()}` };
+          return { label: "deletion", coalesceKey: `deletion:${inputType}` };
         }
         if (inputType.startsWith("format")) return { label: "formatting" };
         if (inputType.includes("Paste") || inputType.includes("Drop")) return { label: "paste" };
@@ -2379,7 +2290,7 @@
       }
 
       function isStandaloneSidebarFile(file) {
-        return Boolean(file && !file.builtin && !file.welcome);
+        return Boolean(file && !file.welcome && (!file.builtin || file.sidebarMovable));
       }
 
       function sectionForId(sectionId) {
@@ -2413,7 +2324,8 @@
           || session.sidebar.sections.some(section => section.fileIds.includes(file.id));
         if (!isStandaloneSidebarFile(file)) return removeFileFromSidebarLayout(file.id);
         if (assigned) return false;
-        session.sidebar.ungroupedFileIds.push(file.id);
+        if (file.sidebarDefaultFirst) session.sidebar.ungroupedFileIds.unshift(file.id);
+        else session.sidebar.ungroupedFileIds.push(file.id);
         return true;
       }
 
@@ -2474,7 +2386,8 @@
         for (const file of session.files) {
           if (!eligibleIds.has(file.id) || seenFileIds.has(file.id)) continue;
           seenFileIds.add(file.id);
-          ungroupedFileIds.push(file.id);
+          if (file.sidebarDefaultFirst) ungroupedFileIds.unshift(file.id);
+          else ungroupedFileIds.push(file.id);
           changed = true;
         }
         session.sidebar = {
@@ -2668,6 +2581,12 @@
         sessionSaveTimer = setTimeout(persistSessionNow, sessionSaveDelay);
       }
 
+      function markFileDirty(file) {
+        file.dirty = true;
+        scheduleAutoSave(file);
+        scheduleSessionSave();
+      }
+
       function restoredAttachments(items) {
         const attachments = new Map();
         for (const item of Array.isArray(items) ? items : []) {
@@ -2797,6 +2716,7 @@
 
       function captureEditorValue(options = null) {
         if (!editorReady) return;
+        flushActiveCodeMirrorTableCell();
         const file = activeFile();
         const value = canonicalEditorText(currentEditorMarkdown(), file);
         if (value === file.text) {
@@ -2811,9 +2731,7 @@
         const before = documentSnapshot(file, { captureSelection: false });
         file.text = value;
         if (!file.builtin) {
-          file.dirty = true;
-          scheduleAutoSave(file);
-          scheduleSessionSave();
+          markFileDirty(file);
         }
         recordDocumentMutation(file, before, details);
         if (pendingEditorHistoryInput?.fileId === file.id) pendingEditorHistoryInput = null;
@@ -2843,11 +2761,9 @@
         filesElement.setAttribute("aria-label", "Files");
         if (normalizeSidebarLayout()) scheduleSessionSave();
         const ungroupedFiles = sidebarFiles(session.sidebar.ungroupedFileIds);
-        const exampleFile = session.files.find(file => file === example);
         const looseFiles = document.createElement("div");
         looseFiles.className = "LocalMarkdown-loose-files";
         attachFileSectionDropZone(looseFiles, null);
-        if (exampleFile) appendOpenFileButton(exampleFile, null, looseFiles);
         for (const file of ungroupedFiles) appendOpenFileButton(file, null, looseFiles);
         if (looseFiles.childElementCount) filesElement.append(looseFiles);
         for (const section of session.sidebar.sections) renderTopicSection(section);
@@ -2898,7 +2814,6 @@
       function renderTopicSection(section) {
         const container = document.createElement("div");
         container.className = "LocalMarkdown-topic-section";
-        container.dataset.sectionId = section.id;
 
         const header = document.createElement("div");
         header.className = "LocalMarkdown-topic-header";
@@ -2973,8 +2888,9 @@
           ? showExamples
           : () => selectFile(file.id));
         if (!file.builtin) attachFileContextMenu(button, { file });
+        const movable = isStandaloneSidebarFile(file);
         let dragHandle = null;
-        if (!file.builtin) {
+        if (movable) {
           dragHandle = createSidebarDragHandle(`Drag ${file.name}`);
           dragHandle.classList.add("LocalMarkdown-file-drag-handle");
           row.append(dragHandle);
@@ -2993,6 +2909,8 @@
             openFileContextMenu(event, { file }, menu);
           });
           row.append(menu);
+        }
+        if (movable) {
           enableFileReordering(dragHandle, button, row, file.id, sectionId);
         }
         container.append(row);
@@ -3369,6 +3287,13 @@
 
       function activateFile(file, message = null) {
         const previous = activeFile();
+        if (previous !== file && previous && editorReady) {
+          const previousEditorState = {};
+          captureDocumentSnapshotEditorState(previousEditorState, previous);
+          if (previousEditorState.selection || previousEditorState.scroll) {
+            editorStatesByFile.set(previous, previousEditorState);
+          }
+        }
         pendingEditorHistoryInput = null;
         if (previous) releaseAttachmentPreviews(previous.id);
         if (tableResizeSession) finishTableResize(null, false);
@@ -3383,6 +3308,10 @@
         if (file.handle) session.lastOpenHandle = file.handle;
         if (editorReady) setEditorValue(file);
         documentHistoryFor(file);
+        const savedEditorState = editorStatesByFile.get(file);
+        if (savedEditorState) {
+          restoreEditorSelection(file, savedEditorState.selection, savedEditorState.scroll);
+        }
         renderFiles();
         updateStatus(message);
         scheduleAttachmentPreviews();
@@ -3432,6 +3361,8 @@
         return slashCount % 2 === 1;
       }
 
+      // Table subsystem: Markdown parsing/metadata, structure, resize, export,
+      // and the direct CodeMirror cell editor intentionally share one model.
       function markdownTableCells(line) {
         let value = line.trim();
         if (!value || /^ {4}/.test(line)) return null;
@@ -3642,6 +3573,7 @@
       }
 
       function tableWidthBasisPixels(table) {
+        if (fixedTableWidthBasis > 0) return fixedTableWidthBasis;
         const container = table.parentElement;
         if (!container) return table.getBoundingClientRect().width;
         const style = getComputedStyle(container);
@@ -3653,11 +3585,32 @@
         return width > 0 ? width : table.getBoundingClientRect().width;
       }
 
+      function setTableRenderedWidth(table, tableWidth = 100) {
+        const normalizedWidth = normalizedTableWidth(tableWidth);
+        if (!normalizedWidth) return false;
+        if (fixedTableWidthBasis === null) {
+          table.style.setProperty("--lm-table-width", `${normalizedWidth}%`);
+          return true;
+        }
+        const widthBasisPixels = tableWidthBasisPixels(table);
+        if (!widthBasisPixels) return false;
+        table.style.setProperty(
+          "--lm-table-width", `${widthBasisPixels * normalizedWidth / 100}px`);
+        return true;
+      }
+
       function setTableColumnWidths(table, widths, tableWidth = 100) {
         const normalized = normalizedTableWidths(widths, tableColumnCount(table));
         const normalizedWidth = normalizedTableWidth(tableWidth);
         const widthBasisPixels = tableWidthBasisPixels(table);
-        if (!normalized || !normalizedWidth || !widthBasisPixels) return false;
+        if (!normalized || !normalizedWidth) return false;
+        if (!widthBasisPixels) {
+          for (const cell of table.rows[0]?.cells || []) {
+            cell.style.setProperty(
+              "--lm-table-column-width", `${normalized[cell.cellIndex]}%`);
+          }
+          return true;
+        }
         const tablePixels = widthBasisPixels * normalizedWidth / 100;
         for (const cell of table.rows[0]?.cells || []) {
           cell.style.setProperty(
@@ -3683,7 +3636,7 @@
           return false;
         }
         table.classList.add("LocalMarkdown-sized-table");
-        table.style.setProperty("--lm-table-width", `${normalizedWidth}%`);
+        if (!setTableRenderedWidth(table, normalizedWidth)) return false;
         return setTableColumnWidths(table, normalized, normalizedWidth);
       }
 
@@ -3710,8 +3663,7 @@
         for (const image of clone.querySelectorAll("img")) {
           image.replaceWith(document.createTextNode(image.alt || ""));
         }
-        for (const lineBreak of clone.querySelectorAll(
-          "br, .LocalMarkdown-table-line-break")) {
+        for (const lineBreak of clone.querySelectorAll("br")) {
           lineBreak.replaceWith(document.createTextNode("\n"));
         }
         for (const marker of clone.querySelectorAll("script, style")) {
@@ -3955,9 +3907,7 @@
         const before = documentSnapshot(file);
         file.text = updated;
         if (!file.builtin) {
-          file.dirty = true;
-          scheduleAutoSave(file);
-          scheduleSessionSave();
+          markFileDirty(file);
         }
         hideTableEdgeTools();
         setEditorValue(file, updated);
@@ -4053,7 +4003,6 @@
 
         tableResizeCell = cell;
         tableResizeHandle.hidden = false;
-        tableResizeHandle.dataset.edge = "column";
         tableResizeHandle.setAttribute("aria-label", "Resize column");
         tableResizeHandle.title = "Resize column";
         tableResizeHandle.style.left = `${Math.round(cellRect.right)}px`;
@@ -4121,7 +4070,7 @@
       function handleTableEdgePointerMove(event) {
         if (tableResizeSession || tableResizeHandle.contains(event.target)
           || tableEdgeTools.some(tools => tools.contains(event.target))) return;
-        if (!editorReady || editor.getCurrentMode() !== "ir") {
+        if (!editorReady) {
           hideTableEdgeTools();
           hideTableResizeHandle();
           return;
@@ -4191,9 +4140,7 @@
         const before = documentSnapshot(file);
         file.text = updated;
         if (!file.builtin) {
-          file.dirty = true;
-          scheduleAutoSave(file);
-          scheduleSessionSave();
+          markFileDirty(file);
         }
         if (rerender) setEditorValue(file, updated);
         else file.tableWidthsOutOfSync = true;
@@ -4264,7 +4211,7 @@
         resize.widths = layout.widths;
         resize.tableWidth = layout.tableWidth;
         resize.table.classList.add("LocalMarkdown-sized-table");
-        resize.table.style.setProperty("--lm-table-width", `${layout.tableWidth}%`);
+        setTableRenderedWidth(resize.table, layout.tableWidth);
         setTableColumnWidths(resize.table, layout.widths, layout.tableWidth);
         resize.changed = Math.abs(layout.appliedDelta) >= 1;
         const resizedCell = resize.table.rows[0]?.cells[resize.columnIndex];
@@ -4300,7 +4247,7 @@
           value, table, widths, tableWidth);
         const committed = applyTableWidthTextUpdate(
           file, value, updated, "Column width updated",
-          { rerender: editor?.kind === "codemirror" });
+          { rerender: true });
         if (committed && resize.table.isConnected) {
           applyTableWidths(resize.table, widths, tableWidth);
         }
@@ -4569,15 +4516,6 @@
         return `<img ${attributes.join(" ")}>`;
       }
 
-      function replaceOccurrence(value, search, replacement, occurrence) {
-        let index = -1;
-        for (let count = 0; count <= occurrence; count += 1) {
-          index = value.indexOf(search, index + 1);
-          if (index < 0) return value;
-        }
-        return value.slice(0, index) + replacement + value.slice(index + search.length);
-      }
-
       function decodedHtmlAttribute(value) {
         const textarea = document.createElement("textarea");
         textarea.innerHTML = value;
@@ -4726,9 +4664,7 @@
         const before = documentSnapshot(file);
         file.text = updated;
         if (!file.builtin) {
-          file.dirty = true;
-          scheduleAutoSave(file);
-          scheduleSessionSave();
+          markFileDirty(file);
         }
         imageResizeSession = null;
         hideImageResizer();
@@ -4885,23 +4821,38 @@
         return `${attachmentPathPrefix}${id}`;
       }
 
-      function markdownTextWithoutAttachments(storedText) {
-        const blockIndex = storedText.lastIndexOf(attachmentBlockStart);
-        if (blockIndex === -1) return storedText;
-        const body = storedText.slice(0, blockIndex);
-        const block = storedText.slice(blockIndex).trimEnd();
-        if ((blockIndex && !body.endsWith("\n\n"))
-            || !block.startsWith(`${attachmentBlockStart}\n`)
-            || !block.endsWith(`\n${attachmentBlockEnd}`)) {
-          return storedText;
-        }
-        return body.replace(/\n+$/, "");
-      }
-
       function parseStoredMarkdown(storedText) {
-        const match = storedText.match(
-          /(?:\n{2,}|^)<!-- LocalMarkdown attachments:v1\n([\s\S]*?)\n-->\s*$/
-        );
+        let markerSearchEnd = storedText.length;
+        let match = null;
+        let bodyEnd = 0;
+        while (markerSearchEnd >= 0) {
+          const markerIndex = storedText.lastIndexOf(attachmentBlockStart, markerSearchEnd);
+          if (markerIndex === -1) break;
+
+          let candidateBodyEnd = null;
+          if (markerIndex === 0) candidateBodyEnd = 0;
+          else if (markerIndex >= 4
+              && storedText.slice(markerIndex - 4, markerIndex) === "\r\n\r\n") {
+            candidateBodyEnd = markerIndex - 4;
+          } else if (markerIndex >= 2
+              && storedText.slice(markerIndex - 2, markerIndex) === "\n\n") {
+            candidateBodyEnd = markerIndex - 2;
+          }
+
+          if (candidateBodyEnd !== null) {
+            const candidateMatch = storedText.slice(markerIndex).match(
+              /^<!-- LocalMarkdown attachments:v1(?:\r\n|\n)([\s\S]*?)(?:\r\n|\n)-->\s*$/
+            );
+            if (candidateMatch) {
+              match = candidateMatch;
+              bodyEnd = candidateBodyEnd;
+              break;
+            }
+          }
+
+          if (markerIndex === 0) break;
+          markerSearchEnd = markerIndex - 1;
+        }
         if (!match) return { text: storedText, attachments: new Map(), warning: null };
 
         try {
@@ -4927,7 +4878,7 @@
           }
 
           return {
-            text: storedText.slice(0, match.index).replace(/\n+$/, ""),
+            text: storedText.slice(0, bodyEnd),
             attachments,
             warning: null
           };
@@ -5001,7 +4952,7 @@
       }
 
       function setEditorValue(file, value = file.text) {
-        editor.setValue(value, true);
+        editor.setValue(value);
         file.tableWidthsOutOfSync = false;
         scheduleCodeMirrorLineDecorations();
         renderCodeMirrorOutline();
@@ -5031,9 +4982,8 @@
         }
         if (!attachments.length) return file.text;
 
-        const body = file.text.replace(/\n+$/, "");
         const manifest = JSON.stringify({ version: 1, attachments });
-        return `${body}\n\n${attachmentBlockStart}\n${manifest}\n${attachmentBlockEnd}\n`;
+        return `${file.text}\n\n${attachmentBlockStart}\n${manifest}\n${attachmentBlockEnd}\n`;
       }
 
       function attachmentIdFromSource(source) {
@@ -5337,13 +5287,8 @@
               restoreEditorRange(current.editorRange);
               editorValuePromise = waitForEditorHistoryValue(current.file, before.text);
               const markdown = `![Excalidraw drawing](${attachmentPath(id)})`;
-              if (editor?.kind === "codemirror") {
-                if (!insertCodeMirrorBlock(markdown)) {
-                  throw new Error("Could not insert the drawing into CodeMirror");
-                }
-              } else {
-                editor.insertEmptyBlock("afterend");
-                editor.insertMD(`\n\n${markdown}\n\n`);
+              if (!insertCodeMirrorBlock(markdown)) {
+                throw new Error("Could not insert the drawing into CodeMirror");
               }
               drawingDialog.showModal();
             }
@@ -5354,11 +5299,9 @@
             current.file.text = await editorValuePromise;
           }
           closeDrawingDialog({ focusEditor: false });
-          current.file.dirty = true;
+          markFileDirty(current.file);
           renderFiles();
           scheduleAttachmentPreviews();
-          scheduleAutoSave(current.file);
-          scheduleSessionSave();
           recordDocumentMutation(current.file, before, {
             label: isNew ? "drawing insertion" : "drawing update"
           });
@@ -5499,9 +5442,7 @@
           attachment.error = false;
           revokeAttachmentPreview(file.id, attachment.id);
           if (activeFile() === file) scheduleAttachmentPreviews();
-          file.dirty = true;
-          scheduleAutoSave(file);
-          scheduleSessionSave();
+          markFileDirty(file);
           return true;
         })().catch(() => {
           attachment.error = true;
@@ -5567,11 +5508,9 @@
           documentHistoryRecordingDepth -= 1;
         }
         file.text = await editorValuePromise;
-        file.dirty = true;
+        markFileDirty(file);
         renderFiles();
         scheduleAttachmentPreviews();
-        scheduleAutoSave(file);
-        scheduleSessionSave();
         recordDocumentMutation(file, before, {
           label: images.length === 1 ? "image paste" : "image paste batch"
         });
@@ -5672,11 +5611,9 @@
         } finally {
           documentHistoryRecordingDepth -= 1;
         }
-        file.dirty = true;
+        markFileDirty(file);
         renderFiles();
         scheduleAttachmentPreviews();
-        scheduleAutoSave(file);
-        scheduleSessionSave();
         recordDocumentMutation(file, before, {
           label: images.length === 1 ? "table image insertion" : "table image insertion batch"
         });
@@ -5892,30 +5829,27 @@
           ].includes(event.key)) breakDocumentHistoryCoalescing();
           return;
         }
-        if (editor?.kind === "codemirror" && event.key === "Enter"
-          && commandKey && !event.altKey && !event.shiftKey) {
+        if (event.key === "Enter" && commandKey && !event.altKey && !event.shiftKey) {
           event.preventDefault();
           event.stopImmediatePropagation();
           toggleCodeMirrorTask();
           return;
         }
-        if (editor?.kind === "codemirror" && event.key === "Enter"
-          && !commandKey && !event.altKey) {
+        if (event.key === "Enter" && !commandKey && !event.altKey) {
           event.preventDefault();
           event.stopImmediatePropagation();
           if (!event.shiftKey && continueCodeMirrorMarkup()) return;
           insertCodeMirrorNewline();
           return;
         }
-        if (editor?.kind === "codemirror" && event.key === "Tab" && !commandKey) {
+        if (event.key === "Tab" && !commandKey) {
           event.preventDefault();
           event.stopImmediatePropagation();
           if (event.shiftKey) runCodeMirrorToolbarCommand("outdent");
           else runCodeMirrorToolbarCommand("indent");
           return;
         }
-        const formatCommand = editor?.kind === "codemirror" && commandKey
-          && !event.altKey && !event.shiftKey
+        const formatCommand = commandKey && !event.altKey && !event.shiftKey
           ? ({ b: "bold", i: "italic", e: "inline-code" })[key]
           : null;
         if (formatCommand) {
@@ -5924,22 +5858,20 @@
           runCodeMirrorToolbarCommand(formatCommand);
           return;
         }
-        if (editor?.kind === "codemirror" && commandKey && event.altKey
-          && !event.shiftKey && /^[1-6]$/.test(key)) {
+        if (commandKey && event.altKey && !event.shiftKey && /^[1-6]$/.test(key)) {
           event.preventDefault();
           event.stopImmediatePropagation();
           setCodeMirrorHeadingLevel(Number(key));
           return;
         }
-        if (editor?.kind === "codemirror" && commandKey && event.shiftKey
-          && !event.altKey && key === "j") {
+        if (commandKey && event.shiftKey && !event.altKey && key === "j") {
           event.preventDefault();
           event.stopImmediatePropagation();
           toggleCodeMirrorTask();
           return;
         }
-        if (editor?.kind === "codemirror" && commandKey && !event.altKey
-          && !event.shiftKey && ["=", "+", "-"].includes(key)) {
+        if (commandKey && !event.altKey && !event.shiftKey
+          && ["=", "+", "-"].includes(key)) {
           event.preventDefault();
           event.stopImmediatePropagation();
           adjustCodeMirrorHeading(key === "-" ? -1 : 1);
@@ -6507,20 +6439,21 @@
       }
 
       function removeSessionFile(file) {
-        if (!file) return;
+        if (!file || file.builtin) return false;
         const wasActive = file.id === session.activeId;
         cancelAutoSave(file);
         releaseAttachmentPreviews(file.id);
         documentHistories.delete(file.id);
         removeFileFromSidebarLayout(file.id);
         session.files = session.files.filter(candidate => candidate !== file && !candidate.welcome);
-        if (!wasActive) return;
+        if (!wasActive) return true;
         let next = session.files.find(candidate => !candidate.builtin) || session.files[0];
         if (!next) {
           session.files.push(welcome);
           next = welcome;
         }
         activateFile(next);
+        return true;
       }
 
       async function closeFile(file) {
@@ -6552,7 +6485,7 @@
       async function deleteFileTarget(target) {
         const file = target.file;
         const name = file?.name;
-        if (!name) return;
+        if (!name || file.builtin) return;
         if (!await requestFileDialog("delete", name, { dirty: file?.dirty })) {
           updateStatus("Delete cancelled");
           return;
@@ -6649,9 +6582,12 @@
         setThemeMenuOpen(themeToggle.getAttribute("aria-expanded") !== "true", { focus: true });
       });
       editorWidthReset.addEventListener("click", () => {
+        editorWidthTracksMaximum = false;
         setEditorWidth(defaultEditorWidth);
       });
       editorWidthInput.addEventListener("input", () => {
+        editorWidthTracksMaximum = Number(editorWidthInput.value)
+          >= Number(editorWidthInput.max);
         setEditorWidth(editorWidthInput.value, { persist: false });
       });
       editorWidthInput.addEventListener("change", () => {
@@ -6839,7 +6775,7 @@
         closeFileContextMenu();
         closeSectionContextMenu();
         positionImageResizer();
-        scheduleTableWidths();
+        refreshEditorWidthBounds();
       });
       addEventListener("keydown", event => {
         if (event.key === "Escape" && imagePreviewDialog.open) {
@@ -7152,51 +7088,6 @@
         return `<svg class="LocalMarkdown-toolbar-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${paths}</svg>`;
       }
 
-      const toolbarTips = {
-        "ordered-list": "Numbered list",
-        line: "Horizontal rule",
-        upload: "Insert image"
-      };
-
-      function toolbarControl(name, tipPosition = "n") {
-        return {
-          name,
-          tipPosition,
-          icon: toolbarIcon(name),
-          ...(toolbarTips[name] ? { tip: toolbarTips[name] } : {})
-        };
-      }
-
-      function historyToolbarControl(direction) {
-        const isRedo = direction === "redo";
-        const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.platform);
-        const shortcut = isRedo
-          ? (isMac ? "⌘⇧Z" : "Ctrl+Shift+Z / Ctrl+Y")
-          : (isMac ? "⌘Z" : "Ctrl+Z");
-        return {
-          name: `history-${direction}`,
-          tip: `${isRedo ? "Redo" : "Undo"} (${shortcut})`,
-          tipPosition: "nw",
-          icon: toolbarIcon(direction),
-          click() {
-            if (isRedo) redoDocumentChange();
-            else undoDocumentChange();
-          }
-        };
-      }
-
-      function drawingToolbarControl() {
-        return {
-          name: "draw",
-          tip: "Draw with Excalidraw",
-          tipPosition: "n",
-          icon: toolbarIcon("draw"),
-          click() {
-            void openDrawingDialog();
-          }
-        };
-      }
-
       const emojiMap = {
         red_circle: "🔴", orange_circle: "🟠", yellow_circle: "🟡", green_circle: "🟢",
         check_mark: "✅", warning: "⚠️", x: "❌", exclamation: "❗",
@@ -7246,9 +7137,7 @@
         const wasDirty = file.dirty;
         file.text = canonical;
         if (!file.builtin) {
-          file.dirty = true;
-          scheduleAutoSave(file);
-          scheduleSessionSave();
+          markFileDirty(file);
         }
         if (transactionInput) {
           if (pendingEditorHistoryInput?.fileId === file.id) pendingEditorHistoryInput = null;
@@ -7412,6 +7301,8 @@
           return previewSetextHeadings;
         }
 
+        // Direct table cells stay contenteditable. Widget updates must preserve
+        // their DOM whenever the row/column shape still matches.
         function configureCodeMirrorTableImage(image) {
           image.contentEditable = "false";
           image.draggable = false;
@@ -7433,7 +7324,6 @@
             }
           };
           image.addEventListener("focus", () => showImageResizer(image, true));
-          image.addEventListener("click", open);
           image.addEventListener("keydown", event => {
             if (!["Enter", " "].includes(event.key)) return;
             open(event);
@@ -7570,6 +7460,15 @@
           return true;
         }
 
+        flushActiveCodeMirrorTableCell = () => {
+          const cell = document.activeElement?.closest?.(
+            ".LocalMarkdown-cm-table-widget td, .LocalMarkdown-cm-table-widget th");
+          const table = cell?.closest("table");
+          return table && codeMirrorView && editorElement.contains(table)
+            ? commitCodeMirrorTableEdit(codeMirrorView, table)
+            : false;
+        };
+
         function focusCodeMirrorTableCell(cell, atEnd = true) {
           if (!cell) return;
           cell.focus({ preventScroll: true });
@@ -7598,6 +7497,10 @@
               fragment.append(lastNode);
             }
           });
+          if (lastNode?.nodeName === "BR") {
+            lastNode = document.createTextNode("\u200b");
+            fragment.append(lastNode);
+          }
           if (!lastNode) {
             lastNode = document.createElement("br");
             fragment.append(lastNode);
@@ -7610,14 +7513,28 @@
           return true;
         }
 
+        function shouldDeferCodeMirrorTableCommit(event, cell) {
+          if (!["insertText", "insertCompositionText"].includes(event.inputType)
+            || !/^[ \t\u00a0]+$/.test(event.data || "")
+            || !/[ \t\u00a0]$/.test(tableCellMarkdown(cell))) return false;
+          const selection = getSelection();
+          if (!selection?.isCollapsed || !selection.rangeCount
+            || !cell.contains(selection.focusNode)) return false;
+          const trailingRange = document.createRange();
+          trailingRange.selectNodeContents(cell);
+          try {
+            trailingRange.setStart(selection.focusNode, selection.focusOffset);
+          } catch {
+            return false;
+          }
+          return !trailingRange.toString().replace(/\u200b/g, "");
+        }
+
         function tableCellAt(table, rowIndex, columnIndex) {
           return table?.rows[rowIndex]?.cells[columnIndex] || null;
         }
 
-        function configureCodeMirrorTableCell(cell, value, rowIndex, columnIndex, alignment) {
-          cell.dataset.markdownRow = String(rowIndex);
-          cell.dataset.markdownColumn = String(columnIndex);
-          cell.dataset.markdownValue = value;
+        function configureCodeMirrorTableCell(cell, rowIndex, columnIndex, alignment) {
           cell.style.textAlign = alignment || "left";
           cell.contentEditable = "true";
           cell.spellcheck = true;
@@ -7628,23 +7545,11 @@
 
         function applyCodeMirrorTableLayout(table, block) {
           table.dataset.markdownTableStart = String(block.start);
-          table.dataset.markdownTableEnd = String(block.end);
           table.dataset.markdownTableIndex = String(block.tableIndex);
-          table.classList.toggle("LocalMarkdown-sized-table", Boolean(block.widths));
           if (block.widths) {
-            table.style.setProperty("--lm-table-width", `${block.tableWidth}%`);
-            table.style.width = `${block.tableWidth}%`;
+            applyTableWidths(table, block.widths, block.tableWidth);
           } else {
-            table.style.removeProperty("--lm-table-width");
-            table.style.width = "100%";
-          }
-          for (const cell of table.rows[0]?.cells || []) {
-            if (block.widths) {
-              cell.style.setProperty("--lm-table-column-width",
-                `${block.widths[cell.cellIndex]}%`);
-            } else {
-              cell.style.removeProperty("--lm-table-column-width");
-            }
+            clearTableWidths(table);
           }
         }
 
@@ -7707,9 +7612,12 @@
             this.block = block;
           }
           eq(other) {
-            return other.block.renderStart === this.block.renderStart
+            return other.block.start === this.block.start
+              && other.block.tableIndex === this.block.tableIndex
+              && other.block.renderStart === this.block.renderStart
               && other.block.end === this.block.end
               && JSON.stringify(other.block.rows) === JSON.stringify(this.block.rows)
+              && JSON.stringify(other.block.alignments) === JSON.stringify(this.block.alignments)
               && JSON.stringify(other.block.widths) === JSON.stringify(this.block.widths)
               && other.block.tableWidth === this.block.tableWidth;
           }
@@ -7718,15 +7626,12 @@
             wrapper.className = "LocalMarkdown-cm-table-block";
             const table = document.createElement("table");
             table.className = "LocalMarkdown-cm-table-widget";
-            table.dataset.markdownTableStart = String(this.block.start);
-            table.dataset.markdownTableEnd = String(this.block.end);
-            table.dataset.markdownTableIndex = String(this.block.tableIndex);
             const body = document.createElement("tbody");
             this.block.rows.forEach((row, rowIndex) => {
               const tr = document.createElement("tr");
               row.forEach((value, columnIndex) => {
                 const cell = document.createElement(rowIndex === 0 ? "th" : "td");
-                configureCodeMirrorTableCell(cell, value, rowIndex, columnIndex,
+                configureCodeMirrorTableCell(cell, rowIndex, columnIndex,
                   this.block.alignments[columnIndex]);
                 appendTableCellContent(cell, value);
                 tr.append(cell);
@@ -7736,6 +7641,13 @@
             table.append(body);
             applyCodeMirrorTableLayout(table, this.block);
             table.addEventListener("input", event => {
+              const cell = event.target.closest?.("td, th");
+              if (cell && shouldDeferCodeMirrorTableCommit(event, cell)) return;
+              if (cell && !commitCodeMirrorTableEdit(view, table)) {
+                updateStatus("Could not update the table cell");
+              }
+            });
+            table.addEventListener("focusout", event => {
               const cell = event.target.closest?.("td, th");
               if (cell && !commitCodeMirrorTableEdit(view, table)) {
                 updateStatus("Could not update the table cell");
@@ -7759,31 +7671,7 @@
             table.addEventListener("focusin", event => {
               const cell = event.target.closest?.("td, th");
               if (!cell) return;
-              table.dataset.activeRow = String(cell.parentElement.rowIndex);
-              table.dataset.activeColumn = String(cell.cellIndex);
               tableHoverCell = cell;
-            });
-            table.addEventListener("pointerup", event => {
-              const image = event.target.closest?.("img");
-              if (!image || event.button !== 0) return;
-              event.preventDefault();
-              event.stopPropagation();
-              showImageResizer(image, true);
-              if (image.classList.contains("LocalMarkdown-excalidraw-image")) {
-                clearTimeout(imagePreviewTimer);
-                imagePreviewTimer = setTimeout(() => openImagePreview(image), 220);
-              } else {
-                openImagePreview(image);
-              }
-            });
-            table.addEventListener("dblclick", event => {
-              const attachment = excalidrawAttachmentFromEvent(event);
-              if (!attachment) return;
-              clearTimeout(imagePreviewTimer);
-              imagePreviewTimer = null;
-              event.preventDefault();
-              event.stopPropagation();
-              void openDrawingDialog(attachment.id);
             });
             wrapper.append(table);
             return wrapper;
@@ -7797,7 +7685,7 @@
               row.forEach((value, columnIndex) => {
                 const cell = table.rows[rowIndex].cells[columnIndex];
                 const currentValue = tableCellMarkdown(cell);
-                configureCodeMirrorTableCell(cell, value, rowIndex, columnIndex,
+                configureCodeMirrorTableCell(cell, rowIndex, columnIndex,
                   this.block.alignments[columnIndex]);
                 if (currentValue !== value) {
                   cell.replaceChildren();
@@ -7887,11 +7775,10 @@
           const activeCodeBlock = codeBlocks.find(block =>
             activePosition >= block.from && activePosition <= block.to);
           const tableBlocks = markdownTableRenderBlocks(doc.toString());
-          const renderedTables = tableBlocks;
           for (const visible of view.visibleRanges) {
             let line = doc.lineAt(visible.from);
             while (line.from <= visible.to) {
-              if (renderedTables.some(block =>
+              if (tableBlocks.some(block =>
                 line.from >= block.renderStart && line.from <= block.end)) {
                 if (line.to >= doc.length) break;
                 line = doc.line(line.number + 1);
@@ -8052,7 +7939,28 @@
           { anchor: from, head: from + content.length });
       }
 
-      function transformCodeMirrorLines(transform) {
+      function codeMirrorLineTransformPosition(position, blockFrom, inputLines, outputLines) {
+        let inputFrom = blockFrom;
+        let outputFrom = blockFrom;
+        for (let index = 0; index < inputLines.length; index += 1) {
+          const input = inputLines[index];
+          const output = outputLines[index];
+          const inputTo = inputFrom + input.length;
+          if (position <= inputTo) {
+            const relative = position - inputFrom;
+            const prefixDelta = output.length - input.length;
+            const mappedRelative = prefixDelta >= 0
+              ? relative + prefixDelta
+              : Math.max(0, relative + prefixDelta);
+            return outputFrom + Math.min(output.length, mappedRelative);
+          }
+          inputFrom = inputTo + 1;
+          outputFrom += output.length + 1;
+        }
+        return position + outputFrom - inputFrom;
+      }
+
+      function transformCodeMirrorLines(transform, { preserveSelection = false } = {}) {
         const selection = codeMirrorSelection();
         if (!selection) return false;
         const doc = codeMirrorView.state.doc;
@@ -8061,28 +7969,36 @@
           ? selection.to - 1 : selection.to;
         const last = doc.lineAt(Math.max(selection.from, lastPosition));
         const source = doc.sliceString(first.from, last.to);
-        const output = source.split("\n").map(transform).join("\n");
+        const inputLines = source.split("\n");
+        const outputLines = inputLines.map(transform);
+        const output = outputLines.join("\n");
         const lineEnd = first.from + output.length;
+        const nextSelection = preserveSelection ? {
+          anchor: codeMirrorLineTransformPosition(
+            selection.anchor, first.from, inputLines, outputLines),
+          head: codeMirrorLineTransformPosition(
+            selection.head, first.from, inputLines, outputLines)
+        } : { anchor: lineEnd };
         return dispatchCodeMirrorChange(
           { from: first.from, to: last.to, insert: output },
-          { anchor: lineEnd });
+          nextSelection);
+      }
+
+      function removeCodeMirrorIndentationUnit(line) {
+        let index = 0;
+        let width = 0;
+        while (index < line.length && width < 4) {
+          if (line[index] === " ") width += 1;
+          else if (line[index] === "\t") width += 4 - width % 4;
+          else break;
+          index += 1;
+        }
+        return line.slice(index);
       }
 
       function outdentCodeMirrorLines() {
-        const selection = codeMirrorSelection();
-        if (!selection) return false;
-        const doc = codeMirrorView.state.doc;
-        const first = doc.lineAt(selection.from);
-        const documentLines = codeMirrorDocumentLines(doc);
-        return transformCodeMirrorLines((line, relativeIndex) => {
-          const lineIndex = first.number - 1 + relativeIndex;
-          const parentIndex = codeMirrorListParentIndex(documentLines, lineIndex);
-          if (parentIndex !== null && markdownListIndentWidth(line) !== null) {
-            const whitespace = line.match(/^[\t ]*/)?.[0] || "";
-            const parentWhitespace = documentLines[parentIndex].match(/^[\t ]*/)?.[0] || "";
-            return parentWhitespace + line.slice(whitespace.length);
-          }
-          return line.replace(/^(?: {1,4}|\t)/, "");
+        return transformCodeMirrorLines(removeCodeMirrorIndentationUnit, {
+          preserveSelection: true
         });
       }
 
@@ -8213,7 +8129,10 @@
         const button = editor?.toolbarElements?.outline?.querySelector("button");
         button?.setAttribute("aria-pressed", String(open));
         if (open) renderCodeMirrorOutline();
-        requestAnimationFrame(() => codeMirrorView?.requestMeasure());
+        requestAnimationFrame(() => {
+          refreshEditorWidthBounds();
+          codeMirrorView?.requestMeasure();
+        });
         try { localStorage.setItem(outlineStorageKey, open ? "open" : "closed"); } catch {}
       }
 
@@ -8279,7 +8198,7 @@
         const close = document.createElement("button");
         close.type = "button";
         close.className = "LocalMarkdown-cm-outline-close";
-        close.textContent = "×";
+        close.innerHTML = `<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M5.5 5.5l9 9m0-9l-9 9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>`;
         close.title = "Close outline";
         close.setAttribute("aria-label", "Close outline");
         close.addEventListener("click", () => toggleCodeMirrorOutline(false));
@@ -8353,7 +8272,9 @@
             (index, line) => `${index + 1}. ${line}`, /^\s*\d+[.)]\s+/); break;
           case "check": toggleCodeMirrorLinePrefix("- [ ] ", /^\s*[-+*]\s+\[[ xX]\]\s+/); break;
           case "outdent": outdentCodeMirrorLines(); break;
-          case "indent": transformCodeMirrorLines(line => `    ${line}`); break;
+          case "indent": transformCodeMirrorLines(line => `    ${line}`, {
+            preserveSelection: true
+          }); break;
           case "quote": toggleCodeMirrorLinePrefix("> ", /^\s*>\s?/); break;
           case "line": insertCodeMirrorBlock("\n---\n", 5); break;
           case "code": insertCodeMirrorCodeBlock(); break;
@@ -8365,7 +8286,7 @@
           }
           case "insert-after": {
             const line = codeMirrorView.state.doc.lineAt(codeMirrorSelection().to);
-            const insert = line.to === codeMirrorView.state.doc.length ? "\n" : "\n";
+            const insert = "\n";
             dispatchCodeMirrorChange({ from: line.to, insert }, { anchor: line.to + 1 });
             break;
           }
@@ -8379,7 +8300,10 @@
             const open = editorElement.classList.toggle("LocalMarkdown-editor--fullscreen");
             editor.toolbarElements.fullscreen.querySelector("button")
               ?.setAttribute("aria-pressed", String(open));
-            requestAnimationFrame(() => codeMirrorView.requestMeasure());
+            requestAnimationFrame(() => {
+              refreshEditorWidthBounds();
+              codeMirrorView.requestMeasure();
+            });
             break;
           }
           case "outline": toggleCodeMirrorOutline(); break;
@@ -8425,7 +8349,6 @@
           const button = document.createElement("button");
           button.type = "button";
           button.className = "LocalMarkdown-cm-tool";
-          button.dataset.type = name;
           button.title = codeMirrorToolbarTitles[name] || name;
           button.setAttribute("aria-label", button.title);
           button.innerHTML = toolbarIcon(name.replace("history-", ""));
@@ -8467,7 +8390,6 @@
 
       function createCodeMirrorAdapter(view, toolbarElements) {
         return {
-          kind: "codemirror",
           getValue() { return view.state.doc.toString(); },
           setValue(value) {
             const next = String(value ?? "");
@@ -8490,7 +8412,6 @@
               { anchor: selection.from + insert.length });
           },
           focus() { view.focus(); },
-          getCurrentMode() { return "ir"; },
           setTheme() { view.requestMeasure(); },
           toolbarElements
         };
@@ -8550,6 +8471,7 @@
         codeMirrorView.contentDOM.setAttribute("spellcheck", "true");
         createCodeMirrorMenus();
         editorReady = true;
+        refreshEditorWidthBounds({ initialize: true });
         setTheme(document.documentElement.dataset.theme, { persist: false });
         setEditorValue(activeFile());
         documentHistoryFor(activeFile());
@@ -8573,14 +8495,52 @@
         editorElement.textContent = "CodeMirror 6 could not be loaded. Check the network and refresh.";
       }
 
-      addEventListener("unload", () => {
+      function disposeRuntimeResources() {
         attachmentPreviewObserver?.disconnect();
-        cancelAnimationFrame(irScrollRestoreFrame);
+        attachmentPreviewObserver = null;
+        cancelAnimationFrame(codeMirrorLineDecorationFrame);
+        codeMirrorLineDecorationFrame = null;
+        cancelAnimationFrame(editorStateRestoreFrame);
+        editorStateRestoreFrame = null;
         cancelAnimationFrame(tableWidthRefreshFrame);
+        tableWidthRefreshFrame = null;
+        if (tableResizeSession?.frameId != null) {
+          cancelAnimationFrame(tableResizeSession.frameId);
+        }
+        tableResizeSession = null;
+        clearTimeout(imagePreviewTimer);
+        imagePreviewTimer = null;
+        clearTimeout(attachmentPreviewTimer);
+        attachmentPreviewTimer = null;
+        clearTimeout(sessionSaveTimer);
+        sessionSaveTimer = null;
+        clearTimeout(editorHistorySynchronizationTimer);
+        editorHistorySynchronizationTimer = null;
+        editorHistorySynchronization = null;
+        for (const timer of autoSaveTimers.values()) clearTimeout(timer);
+        autoSaveTimers.clear();
+        for (const request of imageWorkerRequests.values()) clearTimeout(request.timer);
+        imageWorkerRequests.clear();
+        for (const waiter of editorHistoryValueWaiters.values()) clearTimeout(waiter.timeout);
+        editorHistoryValueWaiters.clear();
+        sidebarDragPreview?.remove();
+        sidebarDragPreview = null;
         releaseAttachmentPreviews();
         imageWorker?.terminate();
+        imageWorker = null;
         if (imageWorkerUrl) URL.revokeObjectURL(imageWorkerUrl);
-      });
+        imageWorkerUrl = null;
+        drawingRoot?.unmount();
+        drawingRoot = null;
+        drawingSession = null;
+        flushActiveCodeMirrorTableCell = () => false;
+        codeMirrorView?.destroy();
+        codeMirrorView = null;
+        editor = null;
+        editorReady = false;
+      }
+
+      addEventListener("unload", disposeRuntimeResources);
     })();
   </script>
 </body>
