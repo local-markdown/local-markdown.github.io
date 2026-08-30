@@ -23,7 +23,6 @@ Open Local Markdown in desktop Chrome or Edge, choose a Markdown file, and start
 
 - Visual, Markdown, and Split editing views
 - White, Solarized Light, and Solarized Dark color themes
-- Saved 80%, 90%, and 100% interface sizes, including the sidebar
 - Multiple open files in a collapsible, responsive sidebar
 - Persistent topic sections for grouping, collapsing, renaming, and reordering open files
 - File context actions for saving, renaming, closing, and confirmed deletion

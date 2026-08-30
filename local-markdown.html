@@ -848,6 +848,14 @@
       background: var(--lm-document-background);
       box-shadow: none;
     }
+    .LocalMarkdown-editor .vditor-preview .LocalMarkdown-preview-blank-lines {
+      display: block;
+      block-size: calc(var(--lm-blank-lines) * 1lh);
+      font-size: 16px;
+      line-height: var(--lm-line-body);
+      margin: 0;
+      pointer-events: none;
+    }
     .LocalMarkdown-editor .vditor-reset {
       color: var(--lm-text); font-family: inherit;
       font-size: 16px; line-height: var(--lm-line-body);
@@ -920,6 +928,7 @@
       color: var(--lm-secondary-text); cursor: grab; opacity: 0;
       background-image: radial-gradient(circle, currentColor 1.2px, transparent 1.35px);
       background-position: 1px 1px; background-size: 5px 5px;
+      touch-action: none; user-select: none;
       transition: color 100ms ease, opacity 100ms ease;
     }
     .LocalMarkdown-editor :is(.vditor-ir, .vditor-wysiwyg)
@@ -1487,8 +1496,12 @@
       const drawingCancelButton = document.querySelector("#LocalMarkdown-drawing-cancel");
       let editor = null;
       let editorReady = false;
+      let originalSplitViewRenderer = null;
+      let originalPreviewRenderer = null;
       let irScrollTopBeforeInput = null;
       let irScrollRestoreFrame = null;
+      let taskLayoutNormalizationFrame = null;
+      let taskLayoutObserver = null;
       let splitScrollFollower = null;
       let splitScrollFollowerTop = null;
       let tableHoverCell = null;
@@ -1550,6 +1563,10 @@
       const attachmentBlockStart = "<!-- LocalMarkdown attachments:v1";
       const attachmentBlockEnd = "-->";
       const attachmentPathPrefix = "lmd/";
+      const blankLinePlaceholderPrefix = `LOCALMARKDOWN__PRESERVED_BLANK_LINE__${
+        Date.now().toString(36)}_${Math.random().toString(36).slice(2)}__`;
+      const splitViewNewlineHtml =
+        '<span data-type="newline"><br /><span style="display: none">\n</span></span>';
       const supportedAttachmentPathPrefixes = [
         attachmentPathPrefix,
         "local-markdown-attachment/"
@@ -2022,6 +2039,24 @@
         };
       }
 
+      function editorScrollSnapshot(file) {
+        if (activeFile() !== file) return null;
+        const surface = activeEditorSurface();
+        if (!surface) return null;
+        return {
+          mode: editor.getCurrentMode(),
+          top: surface.scrollTop,
+          left: surface.scrollLeft
+        };
+      }
+
+      function captureDocumentSnapshotEditorState(snapshot, file) {
+        const selection = editorSelectionSnapshot(file);
+        const scroll = editorScrollSnapshot(file);
+        if (selection) snapshot.selection = selection;
+        if (scroll) snapshot.scroll = scroll;
+      }
+
       function currentEditorRange(file) {
         if (activeFile() !== file) return null;
         const surface = activeEditorSurface();
@@ -2067,20 +2102,29 @@
           : node?.childNodes?.length || 0;
       }
 
-      function restoreEditorSelection(file, bookmark) {
+      function restoreEditorSelection(file, bookmark, scrollBookmark = null) {
         cancelAnimationFrame(irScrollRestoreFrame);
         irScrollRestoreFrame = requestAnimationFrame(() => {
           irScrollRestoreFrame = null;
           if (activeFile() !== file || !editorReady) return;
           const surface = activeEditorSurface();
-          if (!surface || bookmark?.mode !== editor.getCurrentMode()) {
-            editor.focus();
+          if (!surface) return;
+          const mode = editor.getCurrentMode();
+          const restoreScroll = () => {
+            if (scrollBookmark?.mode !== mode) return;
+            surface.scrollTop = scrollBookmark.top;
+            surface.scrollLeft = scrollBookmark.left;
+          };
+          if (bookmark?.mode !== mode) {
+            surface.focus({ preventScroll: true });
+            restoreScroll();
             return;
           }
           const start = nodeAtSelectionPath(surface, bookmark.startPath);
           const end = nodeAtSelectionPath(surface, bookmark.endPath);
           if (!start || !end) {
-            editor.focus();
+            surface.focus({ preventScroll: true });
+            restoreScroll();
             return;
           }
           try {
@@ -2092,8 +2136,9 @@
             selection.addRange(range);
             surface.focus({ preventScroll: true });
           } catch {
-            editor.focus();
+            surface.focus({ preventScroll: true });
           }
+          restoreScroll();
         });
       }
 
@@ -2108,6 +2153,7 @@
           text: file.text,
           attachments,
           selection: captureSelection ? editorSelectionSnapshot(file) : null,
+          scroll: captureSelection ? editorScrollSnapshot(file) : null,
           label: null
         };
       }
@@ -2211,8 +2257,9 @@
           history.present = before;
           history.future = [];
           history.lastChange = null;
-        } else if (before.selection) {
-          history.present.selection = before.selection;
+        } else {
+          if (before.selection) history.present.selection = before.selection;
+          if (before.scroll) history.present.scroll = before.scroll;
         }
 
         const next = documentSnapshot(file);
@@ -2236,6 +2283,7 @@
 
       function applyDocumentSnapshot(file, snapshot) {
         if (pendingEditorHistoryInput?.fileId === file.id) pendingEditorHistoryInput = null;
+        const currentScroll = editorScrollSnapshot(file);
         restoringDocumentHistory = true;
         try {
           releaseAttachmentPreviews(file.id);
@@ -2249,7 +2297,7 @@
           }
           if (activeFile() === file && editorReady) {
             setEditorValue(file);
-            const canonical = canonicalEditorText(editor.getValue(), file);
+            const canonical = canonicalEditorText(currentEditorMarkdown(), file);
             if (canonical !== file.text) {
               file.text = canonical;
               snapshot.text = canonical;
@@ -2261,7 +2309,11 @@
         renderFiles();
         scheduleAttachmentPreviews();
         scheduleTableWidths();
-        if (activeFile() === file) restoreEditorSelection(file, snapshot.selection);
+        if (activeFile() === file) {
+          const scroll = snapshot.scroll?.mode === editor.getCurrentMode()
+            ? snapshot.scroll : currentScroll;
+          restoreEditorSelection(file, snapshot.selection, scroll);
+        }
       }
 
       function undoDocumentChange() {
@@ -2270,7 +2322,7 @@
         captureEditorValue();
         const history = documentHistoryFor(file);
         if (!history.past.length) return false;
-        history.present.selection = editorSelectionSnapshot(file) || history.present.selection;
+        captureDocumentSnapshotEditorState(history.present, file);
         const current = history.present;
         const target = history.past.pop();
         history.future.push(current);
@@ -2288,7 +2340,7 @@
         captureEditorValue();
         const history = documentHistoryFor(file);
         if (!history.future.length) return false;
-        history.present.selection = editorSelectionSnapshot(file) || history.present.selection;
+        captureDocumentSnapshotEditorState(history.present, file);
         const target = history.future.pop();
         history.past.push(history.present);
         history.present = target;
@@ -2313,7 +2365,7 @@
         if (startsPendingBatch
           && sameDocumentSnapshot(history.present,
             documentSnapshot(file, { captureSelection: false }))) {
-          history.present.selection = editorSelectionSnapshot(file) || history.present.selection;
+          captureDocumentSnapshotEditorState(history.present, file);
         }
         pendingEditorHistoryInput = {
           fileId: file.id,
@@ -2348,7 +2400,7 @@
           const timeout = setTimeout(() => {
             editorHistoryValueWaiters.delete(file.id);
             expectEditorHistorySynchronization(file);
-            resolve(canonicalEditorText(editor.getValue(), file));
+            resolve(canonicalEditorText(currentEditorMarkdown(), file));
           }, 1000);
           editorHistoryValueWaiters.set(file.id, { resolve, timeout, previousText });
         });
@@ -2824,7 +2876,7 @@
       function captureEditorValue(options = null) {
         if (!editorReady) return;
         const file = activeFile();
-        const value = canonicalEditorText(editor.getValue(), file);
+        const value = canonicalEditorText(currentEditorMarkdown(), file);
         if (value === file.text) {
           if (pendingEditorHistoryInput?.fileId === file.id) pendingEditorHistoryInput = null;
           return;
@@ -3527,6 +3579,7 @@
           updateStatus("Could not change editor view");
           return;
         }
+        setEditorValue(activeFile());
         rememberEditorMode(currentMode);
         scheduleAttachmentPreviews();
         scheduleTableWidths();
@@ -4068,7 +4121,7 @@
         const file = activeFile();
         if (!table || !file || !editorReady) return false;
         captureEditorValue();
-        const value = canonicalEditorText(editor.getValue(), file);
+        const value = canonicalEditorText(currentEditorMarkdown(), file);
         const context = markdownTableContext(table, value);
         if (!context) return false;
         const block = context.block;
@@ -4465,7 +4518,7 @@
         const file = activeFile();
         const table = tableHoverCell.closest("table");
         if (!file || !table) return null;
-        const value = canonicalEditorText(editor.getValue(), file);
+        const value = canonicalEditorText(currentEditorMarkdown(), file);
         const context = markdownTableContext(table, value);
         const widths = context?.block.widths || tableColumnWidthsFromLayout(table);
         if (!context || !widths) return null;
@@ -4483,7 +4536,7 @@
 
       function synchronizeTableWidthsAfterAction(context, message) {
         if (activeFile() !== context.file || !editorReady) return;
-        const value = canonicalEditorText(editor.getValue(), context.file);
+        const value = canonicalEditorText(currentEditorMarkdown(), context.file);
         const table = markdownTableBlocks(value)[context.tableIndex];
         if (!table) return;
         let widths = context.widths;
@@ -4869,7 +4922,7 @@
       function commitImageResize(image, width) {
         const file = activeFile();
         if (!file || !editorReady) return false;
-        const value = canonicalEditorText(editor.getValue(), file);
+        const value = canonicalEditorText(currentEditorMarkdown(), file);
         const source = imageSourceReference(image, file);
         const tag = source
           ? imageHtml(source, image.getAttribute("alt"), image.getAttribute("title"), width)
@@ -4883,7 +4936,7 @@
         if (!image || !["left", "center", "right"].includes(alignment)) return false;
         const file = activeFile();
         if (!file || !editorReady) return false;
-        const value = canonicalEditorText(editor.getValue(), file);
+        const value = canonicalEditorText(currentEditorMarkdown(), file);
         const source = imageSourceReference(image, file);
         const tag = source
           ? imageHtml(
@@ -5118,8 +5171,243 @@
         return canonical;
       }
 
+      function blankLinePlaceholder(contribution) {
+        return `${blankLinePlaceholderPrefix}${contribution}`;
+      }
+
+      function blankLinePlaceholderContribution(value) {
+        const match = value.match(new RegExp(
+          `^${blankLinePlaceholderPrefix}([12])$`));
+        return match ? Number(match[1]) : null;
+      }
+
+      function preservedBlankLineContributions(
+        count, hasContentBefore, hasContentAfter) {
+        if (!hasContentBefore) return Array(count).fill(1);
+        if (!hasContentAfter) return Array(Math.max(0, count - 1)).fill(1);
+        if (count <= 2) return [];
+        const contributions = [];
+        let additional = count - 2;
+        if (additional % 2) {
+          contributions.push(1);
+          additional -= 1;
+        }
+        contributions.push(...Array(additional / 2).fill(2));
+        return contributions;
+      }
+
+      // Vditor's visual parsers collapse excess blank lines. These markers exist
+      // only while rebuilding editor DOM; file and history text remain unchanged.
+      function markdownTextWithBlankLinePlaceholders(value) {
+        if (!value.includes("\n")) return value;
+        return value.replace(/\n+/g, (newlines, offset) => {
+          const count = newlines.length;
+          const hasContentBefore = offset > 0;
+          const hasContentAfter = offset + count < value.length;
+          const contributions = preservedBlankLineContributions(
+            count, hasContentBefore, hasContentAfter);
+          if (!contributions.length) return newlines;
+
+          const placeholders = contributions
+            .map(blankLinePlaceholder).join("\n\n");
+          if (!hasContentBefore && !hasContentAfter) return placeholders;
+          if (!hasContentBefore) return `${placeholders}\n\n`;
+          if (!hasContentAfter) return `\n\n${placeholders}\n`;
+          return `\n\n${placeholders}\n\n`;
+        });
+      }
+
+      function markdownTextWithoutBlankLinePlaceholders(value) {
+        if (!value.includes(blankLinePlaceholderPrefix)) return value;
+        const markerPattern = new RegExp(
+          `^${blankLinePlaceholderPrefix}([12])$`, "gm");
+        const marked = value.replace(markerPattern,
+          (_, contribution) => "\u0000".repeat(Number(contribution)));
+        return marked.replace(/[\n\u0000]+/g, (run, offset) => {
+          if (!run.includes("\u0000")) return run;
+          const contribution = run.replace(/\n/g, "").length;
+          const hasContentBefore = offset > 0;
+          const hasContentAfter = offset + run.length < marked.length;
+          const structuralNewlines = hasContentBefore
+            ? (hasContentAfter ? 2 : 1)
+            : 0;
+          return "\n".repeat(structuralNewlines + contribution);
+        });
+      }
+
+      function splitViewDomWithPreservedBlankLines(render, value) {
+        const encoded = markdownTextWithBlankLinePlaceholders(value);
+        let dom = render(encoded);
+        for (const contribution of [1, 2]) {
+          const marker = `<span data-type="text">${
+            blankLinePlaceholder(contribution)}</span>`;
+          if (contribution === 1) {
+            dom = dom.split(`${marker}${splitViewNewlineHtml}`).join("");
+          }
+          dom = dom.split(marker).join("");
+        }
+
+        const trailingNewlines = value.match(/\n*$/)?.[0].length || 0;
+        while (dom.endsWith(splitViewNewlineHtml)) {
+          dom = dom.slice(0, -splitViewNewlineHtml.length);
+        }
+        return dom + splitViewNewlineHtml.repeat(trailingNewlines);
+      }
+
+      function installSplitViewBlankLinePreservation() {
+        const lute = editor?.vditor?.lute;
+        if (!lute || originalSplitViewRenderer) return;
+        originalSplitViewRenderer = lute.SpinVditorSVDOM.bind(lute);
+        lute.SpinVditorSVDOM = value =>
+          splitViewDomWithPreservedBlankLines(originalSplitViewRenderer, value);
+      }
+
+      function previewBlankLineMarker(contribution, ownLine = false) {
+        return ownLine
+          ? `${blankLinePlaceholderPrefix}BLOCK_${contribution}`
+          : blankLinePlaceholder(contribution);
+      }
+
+      function previewMarkerNeedsOwnLine(value, offset) {
+        const lineStart = value.lastIndexOf("\n", offset - 1) + 1;
+        const line = value.slice(lineStart, offset);
+        return /^(?: {0,3}(?:`{3,}|~{3,}|#{1,6}(?:\s|$))| {0,3}(?:=+|-+)\s*$| {0,3}\[[^\]]+\]:| {0,3}\|.*\|\s*$)/
+          .test(line);
+      }
+
+      // Inline markers retain the original Markdown block structure. The
+      // generated preview HTML replaces them with visual blank-line spans.
+      function markdownTextWithPreviewBlankLineMarkers(value) {
+        if (!value.includes("\n")) return value;
+        return value.replace(/\n+/g, (newlines, offset) => {
+          const hasContentBefore = offset > 0;
+          const hasContentAfter = offset + newlines.length < value.length;
+          const contributions = preservedBlankLineContributions(
+            newlines.length, hasContentBefore, hasContentAfter);
+          if (!contributions.length) return newlines;
+          const inlineMarkers = contributions.map(contribution =>
+            previewBlankLineMarker(contribution)).join("");
+          if (!hasContentBefore) {
+            const blockMarkers = contributions.map(contribution =>
+              previewBlankLineMarker(contribution, true)).join("");
+            return `${blockMarkers}\n\n${newlines}`;
+          }
+          if (!previewMarkerNeedsOwnLine(value, offset)) {
+            return `${inlineMarkers}${newlines}`;
+          }
+          const blockMarkers = contributions.map(contribution =>
+            previewBlankLineMarker(contribution, true)).join("");
+          const markerOffset = Math.min(2, newlines.length);
+          return `${newlines.slice(0, markerOffset)}${blockMarkers}\n\n${
+            newlines.slice(markerOffset)}`;
+        });
+      }
+
+      function previewHtmlWithPreservedBlankLines(render, value) {
+        const encoded = markdownTextWithPreviewBlankLineMarkers(value);
+        let html = render(encoded);
+        const inlineMarkers = [1, 2].map(contribution =>
+          previewBlankLineMarker(contribution));
+        const blockMarkers = [1, 2].map(contribution =>
+          previewBlankLineMarker(contribution, true));
+        const literalBlockMarkerPattern = blockMarkers
+          .map(marker => marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+          .join("|");
+        html = html.replace(/<pre\b[\s\S]*?<\/pre>/g, literalBlock => {
+          let cleaned = literalBlock.replace(
+            new RegExp(`(?:${literalBlockMarkerPattern})+\\n\\n`, "g"), "");
+          for (const marker of [...inlineMarkers, ...blockMarkers]) {
+            cleaned = cleaned.split(marker).join("");
+          }
+          return cleaned;
+        });
+        for (const contribution of [1, 2]) {
+          const blankLines = '<span class="LocalMarkdown-preview-blank-lines" '
+            + `style="--lm-blank-lines: ${contribution}" `
+            + 'aria-hidden="true"></span>';
+          html = html.split(previewBlankLineMarker(contribution, true))
+            .join(blankLines);
+          html = html.split(previewBlankLineMarker(contribution))
+            .join(blankLines);
+        }
+        html = html.replace(/<p>((?:<span class="LocalMarkdown-preview-blank-lines" [^>]+><\/span>)+)<\/p>/g,
+          "$1");
+        return html;
+      }
+
+      function installPreviewBlankLinePreservation() {
+        const lute = editor?.vditor?.lute;
+        if (!lute || originalPreviewRenderer) return;
+        originalPreviewRenderer = lute.Md2HTML.bind(lute);
+      }
+
+      function transformPreviewHtml(html) {
+        if (!editorReady || !originalPreviewRenderer) return html;
+        return previewHtmlWithPreservedBlankLines(
+          originalPreviewRenderer, currentEditorMarkdown());
+      }
+
+      function isBlankEditorParagraph(element) {
+        return element?.tagName === "P" && element.dataset.block === "0"
+          && !element.textContent.replace(/\u200b/g, "").trim();
+      }
+
+      function restoreEditorBlankLinePlaceholders() {
+        if (!editorReady || editor.getCurrentMode() === "sv") return;
+        const surface = activeEditorSurface();
+        if (!surface) return;
+        for (const block of surface.children) {
+          const contribution = blankLinePlaceholderContribution(
+            block.textContent.replace(/\u200b/g, "").trim());
+          if (!contribution || block.tagName !== "P") continue;
+          const caret = document.createElement("wbr");
+          const lineBreak = document.createElement("br");
+          block.replaceChildren(caret, lineBreak);
+          block.dataset.localMarkdownBlankLines = String(contribution);
+        }
+      }
+
+      function currentEditorMarkdown(fallback = editor.getValue()) {
+        if (!editorReady) return fallback;
+        const surface = activeEditorSurface();
+        if (!surface) return fallback;
+        if (editor.getCurrentMode() === "sv") {
+          return surface.textContent.replace(/\u00a0/g, " ");
+        }
+        const blocks = Array.from(surface.children);
+        const blankIndexes = blocks
+          .map((block, index) => isBlankEditorParagraph(block) ? index : -1)
+          .filter(index => index >= 0);
+        if (!blankIndexes.length) return fallback;
+
+        const clone = surface.cloneNode(true);
+        const clonedBlocks = Array.from(clone.children);
+        for (const index of blankIndexes) {
+          const block = blocks[index];
+          let contribution = Number(block.dataset.localMarkdownBlankLines);
+          if (![1, 2].includes(contribution)) {
+            const hasContentBefore = blocks
+              .slice(0, index).some(candidate => !isBlankEditorParagraph(candidate));
+            const hasContentAfter = blocks
+              .slice(index + 1).some(candidate => !isBlankEditorParagraph(candidate));
+            contribution = hasContentBefore && hasContentAfter ? 2 : 1;
+          }
+          clonedBlocks[index].replaceChildren(
+            document.createTextNode(blankLinePlaceholder(contribution)));
+        }
+
+        const encoded = editor.getCurrentMode() === "wysiwyg"
+          ? editor.vditor.lute.VditorDOM2Md(clone.innerHTML)
+          : editor.vditor.lute.VditorIRDOM2Md(clone.innerHTML);
+        return markdownTextWithoutBlankLinePlaceholders(encoded);
+      }
+
       function setEditorValue(file, value = file.text) {
-        editor.setValue(value, true);
+        const editorValue = editor.getCurrentMode() === "sv"
+          ? value
+          : markdownTextWithBlankLinePlaceholders(value);
+        editor.setValue(editorValue, true);
+        restoreEditorBlankLinePlaceholders();
         file.tableWidthsOutOfSync = false;
       }
 
@@ -5734,7 +6022,7 @@
           editor.insertMD(attachments
             .map(({ attachment }) => `![Pasted image](${attachmentPath(attachment.id)})`)
             .join("\n\n"));
-          file.text = canonicalEditorText(editor.getValue(), file);
+          file.text = canonicalEditorText(currentEditorMarkdown(), file);
         } finally {
           documentHistoryRecordingDepth -= 1;
         }
@@ -5997,6 +6285,59 @@
           child.matches('input[type="checkbox"]')) || null;
       }
 
+      function taskItemNeedsLayoutNormalization(item) {
+        const text = item.textContent || "";
+        return (!taskItemCheckbox(item) && !text.trim())
+          || /(?:\r?\n[\t ]*){2,}$/.test(text);
+      }
+
+      function normalizeTaskItemLayout(item) {
+        if (!taskItemCheckbox(item) && !item.textContent.trim()) {
+          if (item.parentElement?.children.length > 1) {
+            item.remove();
+            return true;
+          }
+          return false;
+        }
+        for (let node = item.lastChild; node; node = node.previousSibling) {
+          if (node.nodeType !== Node.TEXT_NODE) {
+            if (node.textContent?.trim()) break;
+            continue;
+          }
+          const normalized = node.data.replace(/(?:\r?\n[\t ]*){2,}$/, "\n");
+          if (normalized === node.data) {
+            if (node.data.trim()) break;
+            continue;
+          }
+          node.data = normalized;
+          return true;
+        }
+        return false;
+      }
+
+      function scheduleTaskListLayoutNormalization() {
+        cancelAnimationFrame(taskLayoutNormalizationFrame);
+        taskLayoutNormalizationFrame = requestAnimationFrame(() => {
+          taskLayoutNormalizationFrame = requestAnimationFrame(() => {
+            taskLayoutNormalizationFrame = null;
+            if (!editorReady
+                || !["ir", "wysiwyg"].includes(editor.getCurrentMode())) return;
+            const surface = activeEditorSurface();
+            const items = surface
+              ? Array.from(surface.querySelectorAll("li.vditor-task")) : [];
+            if (!items.some(taskItemNeedsLayoutNormalization)) return;
+
+            const file = activeFile();
+            const selection = editorSelectionSnapshot(file);
+            const scroll = editorScrollSnapshot(file);
+            let changed = false;
+            for (const item of items) changed = normalizeTaskItemLayout(item) || changed;
+            if (!changed) return;
+            restoreEditorSelection(file, selection, scroll);
+          });
+        });
+      }
+
       function taskItemFromEvent(event) {
         return event.target instanceof Element
           ? event.target.closest("li.vditor-task")
@@ -6009,11 +6350,19 @@
       }
 
       function isTaskDragHandlePoint(item, event) {
-        const checkbox = taskItemCheckbox(item);
-        if (!checkbox) return false;
-        const rect = checkbox.getBoundingClientRect();
-        return event.clientX >= rect.left - 20 && event.clientX <= rect.left - 2
-          && event.clientY >= rect.top - 4 && event.clientY <= rect.bottom + 4;
+        if (!taskItemCheckbox(item)) return false;
+        const itemRect = item.getBoundingClientRect();
+        const handleStyle = getComputedStyle(item, "::before");
+        const left = itemRect.left + Number.parseFloat(handleStyle.left);
+        const top = itemRect.top + Number.parseFloat(handleStyle.top);
+        const width = Number.parseFloat(handleStyle.width);
+        const height = Number.parseFloat(handleStyle.height);
+        if (![left, top, width, height].every(Number.isFinite)) return false;
+        const hitSlop = 2;
+        return event.clientX >= left - hitSlop
+          && event.clientX <= left + width + hitSlop
+          && event.clientY >= top - hitSlop
+          && event.clientY <= top + height + hitSlop;
       }
 
       function clearTaskDropTarget() {
@@ -7239,6 +7588,7 @@
         outline: { enable: false, position: "right" },
         preview: {
           actions: [],
+          transform: transformPreviewHtml,
           theme: {
             current: document.documentElement.dataset.theme === "solarized-dark" ? "dark" : "light"
           },
@@ -7258,7 +7608,7 @@
         placeholder: "Write Markdown…",
         input(value) {
           const file = activeFile();
-          const canonical = canonicalEditorText(value, file);
+          const canonical = canonicalEditorText(currentEditorMarkdown(value), file);
           const transactionInput = resolveEditorHistoryValue(file, canonical);
           const synchronizeHistory = !transactionInput
             && consumeEditorHistorySynchronization(file);
@@ -7285,10 +7635,18 @@
           for (const button of viewButtons) button.disabled = false;
           updateViewButtons(editor.getCurrentMode());
           observeAttachmentPreviews();
+          installSplitViewBlankLinePreservation();
+          installPreviewBlankLinePreservation();
           setEditorValue(activeFile());
           documentHistoryFor(activeFile());
           updateDocumentHistoryControls();
           updateStatus();
+          taskLayoutObserver = new MutationObserver(scheduleTaskListLayoutNormalization);
+          taskLayoutObserver.observe(editorElement, {
+            subtree: true,
+            childList: true,
+            characterData: true
+          });
           scheduleAttachmentPreviews();
           scheduleTableWidths();
           scheduleCodeWrapControls();
@@ -7299,7 +7657,9 @@
       addEventListener("unload", () => {
         attachmentPreviewObserver?.disconnect();
         outlineObserver?.disconnect();
+        taskLayoutObserver?.disconnect();
         cancelAnimationFrame(irScrollRestoreFrame);
+        cancelAnimationFrame(taskLayoutNormalizationFrame);
         cancelAnimationFrame(outlineRefreshFrame);
         cancelAnimationFrame(tableWidthRefreshFrame);
         cancelAnimationFrame(codeWrapRefreshFrame);
