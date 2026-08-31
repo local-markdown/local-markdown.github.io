@@ -34,6 +34,7 @@ Open Local Markdown in desktop Chrome or Edge, choose a Markdown file, and start
 - Automatic Markdown links for pasted URLs, using webpage titles or document filenames
 - Editable Excalidraw drawings embedded directly in Markdown files
 - Directly editable visual table cells with multiline text, images, column widths, and row or column controls
+- Live Mermaid diagrams from fenced `mermaid` code blocks
 - Formatting toolbar, keyboard shortcuts, a docked syntax-tree outline, and export
 - Access only to the files you choose
 

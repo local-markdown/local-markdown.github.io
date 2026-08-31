@@ -798,6 +798,29 @@
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     }
     .LocalMarkdown-cm-format-link { color: var(--lm-accent); text-decoration: underline; }
+    .LocalMarkdown-cm-mermaid-block {
+      width: 100%; min-height: 72px; margin: var(--lm-space-3) 0;
+      padding: var(--lm-space-3); display: grid; place-items: center;
+      overflow-x: auto; border: 1px solid var(--lm-border);
+      border-radius: var(--lm-radius-surface); background: #fff;
+      color: #37352f; cursor: text;
+    }
+    .LocalMarkdown-cm-mermaid-block:focus-visible {
+      outline: 2px solid var(--lm-accent); outline-offset: 2px;
+    }
+    .LocalMarkdown-cm-mermaid-block svg {
+      display: block; max-width: 100%; height: auto;
+    }
+    .LocalMarkdown-cm-mermaid-status {
+      margin: 0; color: #787774;
+      font: 13px/1.45 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      white-space: pre-wrap;
+    }
+    .LocalMarkdown-cm-mermaid-block[data-render-state="error"] {
+      place-items: start; border-color: #dc2626; background: #fef2f2;
+    }
+    .LocalMarkdown-cm-mermaid-block[data-render-state="error"]
+      .LocalMarkdown-cm-mermaid-status { color: #991b1b; }
     .LocalMarkdown-cm-image-widget {
       display: block; max-width: 100%; height: auto; margin: var(--lm-space-2) 0;
       border-radius: 3px; cursor: zoom-in;
@@ -1355,6 +1378,8 @@
         "https://cdn.jsdelivr.net/npm/@codemirror/commands@6.11.0/+esm";
       const codeMirrorMarkdownModuleUrl =
         "https://cdn.jsdelivr.net/npm/@lezer/markdown@1.7.2/+esm";
+      const mermaidModuleUrl =
+        "https://cdn.jsdelivr.net/npm/mermaid@11.12.0/+esm";
       const filesElement = document.querySelector("#LocalMarkdown-files");
       const appElement = document.querySelector(".LocalMarkdown-app");
       const sidebarElement = document.querySelector("#LocalMarkdown-sidebar");
@@ -1427,6 +1452,8 @@
       let codeMirrorMarkdownParser = null;
       let codeMirrorEmojiMenu = null;
       let codeMirrorTaskDragSession = null;
+      let mermaidModulePromise = null;
+      let mermaidRenderId = 0;
       let flushActiveCodeMirrorTableCell = () => false;
       let editorStateRestoreFrame = null;
       let tableHoverCell = null;
@@ -3351,6 +3378,59 @@
           });
         }
         return records;
+      }
+
+      function markdownMermaidRenderBlocks(value) {
+        const blocks = [];
+        let fence = null;
+        for (const line of markdownLineRecords(value)) {
+          if (fence) {
+            const closer = line.text.match(/^ {0,3}(`{3,}|~{3,})[ \t]*$/);
+            if (!closer || closer[1][0] !== fence.character
+              || closer[1].length < fence.length) continue;
+            if (fence.isMermaid) {
+              blocks.push({
+                from: fence.from,
+                to: line.end - line.newline.length,
+                bodyFrom: fence.bodyFrom,
+                source: value.slice(fence.bodyFrom, line.start)
+              });
+            }
+            fence = null;
+            continue;
+          }
+          const opener = line.text.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
+          if (!opener) continue;
+          const info = opener[2].trim();
+          fence = {
+            character: opener[1][0],
+            length: opener[1].length,
+            from: line.start,
+            bodyFrom: line.end,
+            isMermaid: /^mermaid(?:\s|$)/i.test(info)
+              && !(opener[1][0] === "`" && info.includes("`"))
+          };
+        }
+        return blocks;
+      }
+
+      function loadMermaid() {
+        if (!mermaidModulePromise) {
+          mermaidModulePromise = import(mermaidModuleUrl).then(module => {
+            const mermaid = module.default;
+            mermaid.initialize({
+              startOnLoad: false,
+              securityLevel: "strict",
+              suppressErrorRendering: true,
+              theme: "neutral"
+            });
+            return mermaid;
+          }).catch(error => {
+            mermaidModulePromise = null;
+            throw error;
+          });
+        }
+        return mermaidModulePromise;
       }
 
       function characterIsEscaped(value, index) {
@@ -7162,6 +7242,77 @@
       function createCodeMirrorLivePreview({
         Decoration, EditorView, StateField, ViewPlugin, WidgetType
       }) {
+        function selectionTouchesBlock(selection, block) {
+          return selection.ranges.some(range => range.empty
+            ? range.head >= block.from && range.head <= block.to
+            : range.from < block.to && range.to > block.from);
+        }
+
+        class MermaidWidget extends WidgetType {
+          constructor(block) {
+            super();
+            this.block = block;
+          }
+          eq(other) {
+            return other.block.from === this.block.from
+              && other.block.to === this.block.to
+              && other.block.source === this.block.source;
+          }
+          toDOM(view) {
+            const wrapper = document.createElement("div");
+            wrapper.className = "LocalMarkdown-cm-mermaid-block";
+            wrapper.dataset.renderState = "loading";
+            wrapper.tabIndex = 0;
+            wrapper.setAttribute("role", "img");
+            wrapper.setAttribute("aria-label", "Mermaid diagram. Click to edit its source.");
+            wrapper.title = "Click to edit Mermaid source";
+            const status = document.createElement("pre");
+            status.className = "LocalMarkdown-cm-mermaid-status";
+            status.textContent = "Rendering Mermaid diagram…";
+            wrapper.append(status);
+            const edit = event => {
+              if (event.type === "mousedown" && event.button !== 0) return;
+              event.preventDefault();
+              event.stopPropagation();
+              view.dispatch({
+                selection: { anchor: Math.min(this.block.bodyFrom, view.state.doc.length) },
+                scrollIntoView: true
+              });
+              requestAnimationFrame(() => view.focus());
+            };
+            wrapper.addEventListener("mousedown", edit);
+            wrapper.addEventListener("keydown", event => {
+              if (["Enter", " "].includes(event.key)) edit(event);
+            });
+            this.render(wrapper);
+            return wrapper;
+          }
+          async render(wrapper) {
+            try {
+              const mermaid = await loadMermaid();
+              const id = `LocalMarkdown-mermaid-${++mermaidRenderId}`;
+              const { svg, bindFunctions } = await mermaid.render(id, this.block.source);
+              if (!wrapper.isConnected) return;
+              wrapper.innerHTML = svg;
+              wrapper.dataset.renderState = "ready";
+              const diagram = wrapper.querySelector("svg");
+              diagram?.setAttribute("role", "img");
+              diagram?.setAttribute("aria-label", "Mermaid diagram");
+              bindFunctions?.(wrapper);
+            } catch (error) {
+              if (!wrapper.isConnected) return;
+              wrapper.dataset.renderState = "error";
+              const status = document.createElement("pre");
+              status.className = "LocalMarkdown-cm-mermaid-status";
+              status.textContent = `Could not render Mermaid diagram: ${
+                error?.message || String(error)}`;
+              wrapper.replaceChildren(status);
+              console.error("Could not render Mermaid diagram", error);
+            }
+          }
+          ignoreEvent() { return true; }
+        }
+
         class TaskWidget extends WidgetType {
           constructor(markerFrom, checked, lineFrom) {
             super();
@@ -7772,13 +7923,17 @@
           const activePosition = view.state.selection.main.head;
           const codeBlocks = codeMirrorPreviewCodeBlocks(doc);
           const setextHeadings = codeMirrorPreviewSetextHeadings(doc);
+          const renderedMermaidBlocks = markdownMermaidRenderBlocks(doc.toString())
+            .filter(block => !selectionTouchesBlock(view.state.selection, block));
           const activeCodeBlock = codeBlocks.find(block =>
             activePosition >= block.from && activePosition <= block.to);
           const tableBlocks = markdownTableRenderBlocks(doc.toString());
           for (const visible of view.visibleRanges) {
             let line = doc.lineAt(visible.from);
             while (line.from <= visible.to) {
-              if (tableBlocks.some(block =>
+              if (renderedMermaidBlocks.some(block =>
+                line.from < block.to && line.to >= block.from)
+                || tableBlocks.some(block =>
                 line.from >= block.renderStart && line.from <= block.end)) {
                 if (line.to >= doc.length) break;
                 line = doc.line(line.number + 1);
@@ -7901,7 +8056,25 @@
           },
           provide: field => EditorView.decorations.from(field)
         });
-        return [inlinePreview, tablePreview];
+
+        function buildMermaidDecorations(state) {
+          const decorations = markdownMermaidRenderBlocks(state.doc.toString())
+            .filter(block => !selectionTouchesBlock(state.selection, block))
+            .map(block => Decoration.replace({
+              widget: new MermaidWidget(block), block: true
+            }).range(block.from, block.to));
+          return Decoration.set(decorations, true);
+        }
+
+        const mermaidPreview = StateField.define({
+          create: buildMermaidDecorations,
+          update(value, transaction) {
+            return transaction.docChanged || transaction.selection
+              ? buildMermaidDecorations(transaction.state) : value;
+          },
+          provide: field => EditorView.decorations.from(field)
+        });
+        return [inlinePreview, tablePreview, mermaidPreview];
       }
 
       function codeMirrorSelection() {
