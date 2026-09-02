@@ -71,3 +71,22 @@ test("live preview lazy-loads Mermaid with strict rendering", () => {
   assert.match(extractFunction("createCodeMirrorLivePreview"),
     /return \[inlinePreview, tablePreview, mermaidPreview\];/);
 });
+
+test("rendered Mermaid diagrams expose a separate full-screen preview control", () => {
+  const livePreview = extractFunction("createCodeMirrorLivePreview");
+
+  assert.match(source, /<dialog class="LocalMarkdown-mermaid-preview"/);
+  assert.match(livePreview, /aria-label", "Enlarge Mermaid diagram"/);
+  assert.match(livePreview,
+    /expand\.addEventListener\("mousedown", event => event\.stopPropagation\(\)\)/);
+  assert.match(livePreview, /if \(diagram\) openMermaidPreview\(diagram\)/);
+  assert.match(livePreview,
+    /event\.target\.closest\?\.\("\.LocalMarkdown-cm-mermaid-expand"\)/);
+  assert.match(livePreview, /wrapper\.addEventListener\("mousedown", edit\)/);
+  assert.match(extractFunction("openMermaidPreview"),
+    /mermaidPreviewContent\.replaceChildren\(diagram\)/);
+  assert.match(extractFunction("closeMermaidPreview"),
+    /mermaidPreviewOrigin\.prepend\(diagram\)/);
+  assert.match(source,
+    /event\.key === "Escape" && mermaidPreviewDialog\.open[\s\S]*closeMermaidPreview\(\)/);
+});

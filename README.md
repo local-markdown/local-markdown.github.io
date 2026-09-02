@@ -46,6 +46,8 @@ Click any table cell to edit it directly without switching to raw Markdown. Ente
 
 Live Preview hides Markdown markers on inactive lines and reveals the original source on the line being edited. Headings, inline formatting, links, quotes, lists, horizontal rules, code blocks, tasks, images, and visual tables keep their rendered form without changing the Markdown stored in the file.
 
+Click a rendered Mermaid diagram to edit its source. Hover over it and select the expand control to inspect the diagram full-screen; large diagrams remain scrollable.
+
 Pasting a URL by itself creates a Markdown link. Local Markdown uses a copied link label when available, the filename for document and media URLs, supported sites' oEmbed titles, or a directly accessible HTML page title. If metadata is unavailable, it falls back to a readable name from the URL.
 
 ## Draw with Excalidraw

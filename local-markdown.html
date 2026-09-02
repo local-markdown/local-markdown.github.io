@@ -799,7 +799,7 @@
     }
     .LocalMarkdown-cm-format-link { color: var(--lm-accent); text-decoration: underline; }
     .LocalMarkdown-cm-mermaid-block {
-      width: 100%; min-height: 72px; margin: var(--lm-space-3) 0;
+      position: relative; width: 100%; min-height: 72px; margin: var(--lm-space-3) 0;
       padding: var(--lm-space-3); display: grid; place-items: center;
       overflow-x: auto; border: 1px solid var(--lm-border);
       border-radius: var(--lm-radius-surface); background: #fff;
@@ -808,8 +808,25 @@
     .LocalMarkdown-cm-mermaid-block:focus-visible {
       outline: 2px solid var(--lm-accent); outline-offset: 2px;
     }
-    .LocalMarkdown-cm-mermaid-block svg {
+    .LocalMarkdown-cm-mermaid-block > svg {
       display: block; max-width: 100%; height: auto;
+    }
+    .LocalMarkdown-cm-mermaid-expand {
+      position: absolute; z-index: 1; top: var(--lm-space-2); right: var(--lm-space-2);
+      width: 30px; height: 30px; padding: 6px; display: grid; place-items: center;
+      border: 1px solid rgba(55, 53, 47, .18); border-radius: var(--lm-radius-control);
+      color: #37352f; background: rgba(255, 255, 255, .94); cursor: zoom-in;
+      opacity: 0; transition: opacity 100ms ease;
+      box-shadow: 0 2px 8px rgba(15, 15, 15, .12);
+    }
+    .LocalMarkdown-cm-mermaid-block:hover .LocalMarkdown-cm-mermaid-expand,
+    .LocalMarkdown-cm-mermaid-block:focus-within .LocalMarkdown-cm-mermaid-expand {
+      opacity: 1;
+    }
+    .LocalMarkdown-cm-mermaid-expand svg {
+      width: 16px; height: 16px; display: block; fill: none;
+      stroke: currentColor; stroke-width: 1.6; stroke-linecap: round;
+      stroke-linejoin: round;
     }
     .LocalMarkdown-cm-mermaid-status {
       margin: 0; color: #787774;
@@ -949,6 +966,42 @@
       padding: 0; border: 1px solid rgba(255, 255, 255, .35);
       border-radius: 999px; color: white; background: rgba(0, 0, 0, .55);
       font-size: 26px; line-height: 1;
+    }
+    .LocalMarkdown-mermaid-preview {
+      width: 100vw; height: 100dvh; max-width: none; max-height: none;
+      margin: 0; padding: 48px; overflow: auto; border: 0;
+      color: white; background: rgba(0, 0, 0, .9); box-sizing: border-box;
+    }
+    .LocalMarkdown-mermaid-preview::backdrop { background: rgba(0, 0, 0, .72); }
+    .LocalMarkdown-mermaid-preview figure {
+      width: max-content; min-width: 100%; min-height: 100%;
+      margin: 0; display: grid; place-items: center;
+    }
+    .LocalMarkdown-mermaid-preview-content {
+      width: max(calc(100vw - 96px), var(--mermaid-natural-width, 0px));
+      display: grid; place-items: center; overflow: hidden;
+      border-radius: var(--lm-radius-control); background: #fff;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, .45);
+    }
+    .LocalMarkdown-mermaid-preview-content > svg {
+      display: block; width: 100% !important; max-width: none !important; height: auto;
+    }
+    .LocalMarkdown-mermaid-preview-close {
+      position: fixed; z-index: 1; top: var(--lm-space-4); right: var(--lm-space-4);
+      width: 40px; height: 40px; display: grid; place-items: center;
+      padding: 0; border: 1px solid rgba(255, 255, 255, .35);
+      border-radius: 999px; color: white; background: rgba(0, 0, 0, .55);
+      font-size: 26px; line-height: 1;
+    }
+
+    @media (hover: none) {
+      .LocalMarkdown-cm-mermaid-expand { opacity: 1; }
+    }
+    @media (max-width: 600px) {
+      .LocalMarkdown-mermaid-preview { padding: 24px; }
+      .LocalMarkdown-mermaid-preview-content {
+        width: max(calc(100vw - 48px), var(--mermaid-natural-width, 0px));
+      }
     }
 
     .LocalMarkdown-image-resizer {
@@ -1352,6 +1405,10 @@
     <button class="LocalMarkdown-image-preview-close" id="LocalMarkdown-image-preview-close" type="button" aria-label="Close full-screen image preview" title="Close">×</button>
     <figure><img id="LocalMarkdown-image-preview-content" alt=""></figure>
   </dialog>
+  <dialog class="LocalMarkdown-mermaid-preview" id="LocalMarkdown-mermaid-preview" aria-label="Enlarged Mermaid diagram">
+    <button class="LocalMarkdown-mermaid-preview-close" id="LocalMarkdown-mermaid-preview-close" type="button" aria-label="Close enlarged Mermaid diagram" title="Close">×</button>
+    <figure><div class="LocalMarkdown-mermaid-preview-content" id="LocalMarkdown-mermaid-preview-content"></div></figure>
+  </dialog>
   <dialog class="LocalMarkdown-drawing-dialog" id="LocalMarkdown-drawing-dialog" aria-labelledby="LocalMarkdown-drawing-title">
     <div class="LocalMarkdown-drawing-shell">
       <header class="LocalMarkdown-drawing-header">
@@ -1418,6 +1475,9 @@
       const imagePreviewDialog = document.querySelector("#LocalMarkdown-image-preview");
       const imagePreviewContent = document.querySelector("#LocalMarkdown-image-preview-content");
       const imagePreviewClose = document.querySelector("#LocalMarkdown-image-preview-close");
+      const mermaidPreviewDialog = document.querySelector("#LocalMarkdown-mermaid-preview");
+      const mermaidPreviewContent = document.querySelector("#LocalMarkdown-mermaid-preview-content");
+      const mermaidPreviewClose = document.querySelector("#LocalMarkdown-mermaid-preview-close");
       const editorWidthReset = document.querySelector("#LocalMarkdown-editor-width-reset");
       const editorWidthInput = document.querySelector("#LocalMarkdown-editor-width");
       const themeToggle = document.querySelector("#LocalMarkdown-theme-toggle");
@@ -1454,6 +1514,7 @@
       let codeMirrorTaskDragSession = null;
       let mermaidModulePromise = null;
       let mermaidRenderId = 0;
+      let mermaidPreviewOrigin = null;
       let flushActiveCodeMirrorTableCell = () => false;
       let editorStateRestoreFrame = null;
       let tableHoverCell = null;
@@ -4566,6 +4627,29 @@
         imagePreviewContent.removeAttribute("src");
       }
 
+      function openMermaidPreview(diagram) {
+        if (!diagram?.isConnected || mermaidPreviewDialog.open) return;
+        mermaidPreviewOrigin = diagram.parentElement;
+        const naturalWidth = diagram.viewBox?.baseVal?.width
+          || diagram.getBoundingClientRect().width;
+        mermaidPreviewContent.style.setProperty(
+          "--mermaid-natural-width", `${Math.ceil(naturalWidth)}px`);
+        mermaidPreviewContent.replaceChildren(diagram);
+        mermaidPreviewDialog.showModal();
+        mermaidPreviewClose.focus();
+      }
+
+      function closeMermaidPreview() {
+        if (mermaidPreviewDialog.open) mermaidPreviewDialog.close();
+        const diagram = mermaidPreviewContent.querySelector(":scope > svg");
+        if (diagram && mermaidPreviewOrigin?.isConnected) {
+          mermaidPreviewOrigin.prepend(diagram);
+        }
+        mermaidPreviewContent.replaceChildren();
+        mermaidPreviewContent.style.removeProperty("--mermaid-natural-width");
+        mermaidPreviewOrigin = null;
+      }
+
       function escapeHtmlAttribute(value) {
         return String(value)
           .replace(/&/g, "&amp;")
@@ -6858,6 +6942,11 @@
         refreshEditorWidthBounds();
       });
       addEventListener("keydown", event => {
+        if (event.key === "Escape" && mermaidPreviewDialog.open) {
+          event.preventDefault();
+          closeMermaidPreview();
+          return;
+        }
         if (event.key === "Escape" && imagePreviewDialog.open) {
           event.preventDefault();
           closeImagePreview();
@@ -7110,6 +7199,14 @@
         event.preventDefault();
         closeImagePreview();
       });
+      mermaidPreviewClose.addEventListener("click", closeMermaidPreview);
+      mermaidPreviewDialog.addEventListener("click", event => {
+        if (event.target === mermaidPreviewDialog) closeMermaidPreview();
+      });
+      mermaidPreviewDialog.addEventListener("cancel", event => {
+        event.preventDefault();
+        closeMermaidPreview();
+      });
 
       addEventListener("beforeunload", event => {
         captureEditorValue();
@@ -7263,7 +7360,7 @@
             wrapper.className = "LocalMarkdown-cm-mermaid-block";
             wrapper.dataset.renderState = "loading";
             wrapper.tabIndex = 0;
-            wrapper.setAttribute("role", "img");
+            wrapper.setAttribute("role", "group");
             wrapper.setAttribute("aria-label", "Mermaid diagram. Click to edit its source.");
             wrapper.title = "Click to edit Mermaid source";
             const status = document.createElement("pre");
@@ -7271,6 +7368,7 @@
             status.textContent = "Rendering Mermaid diagram…";
             wrapper.append(status);
             const edit = event => {
+              if (event.target.closest?.(".LocalMarkdown-cm-mermaid-expand")) return;
               if (event.type === "mousedown" && event.button !== 0) return;
               event.preventDefault();
               event.stopPropagation();
@@ -7299,6 +7397,20 @@
               diagram?.setAttribute("role", "img");
               diagram?.setAttribute("aria-label", "Mermaid diagram");
               bindFunctions?.(wrapper);
+              const expand = document.createElement("button");
+              expand.type = "button";
+              expand.className = "LocalMarkdown-cm-mermaid-expand";
+              expand.setAttribute("aria-label", "Enlarge Mermaid diagram");
+              expand.title = "Enlarge Mermaid diagram";
+              expand.innerHTML = `<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M8 3H3v5m9-5h5v5M8 17H3v-5m9 5h5v-5"></path></svg>`;
+              expand.addEventListener("mousedown", event => event.stopPropagation());
+              expand.addEventListener("keydown", event => event.stopPropagation());
+              expand.addEventListener("click", event => {
+                event.preventDefault();
+                event.stopPropagation();
+                if (diagram) openMermaidPreview(diagram);
+              });
+              wrapper.append(expand);
             } catch (error) {
               if (!wrapper.isConnected) return;
               wrapper.dataset.renderState = "error";
