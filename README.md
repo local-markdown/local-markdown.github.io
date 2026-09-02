@@ -56,6 +56,8 @@ Create or open a Markdown file, then select **Draw with Excalidraw** in the form
 
 Double-click an embedded drawing to reopen it, then select **Update** to replace the preview without creating a second attachment.
 
+Use Excalidraw's menu to **Open** a `.excalidraw` file, then select **Insert** to embed it in the current Markdown file. Choose **Save to…** from the same menu to export the current drawing as a `.excalidraw` file.
+
 ## Privacy and browser support
 
 The editor is delivered by GitHub Pages, but your documents are not uploaded to GitHub or another server. Your browser grants access only to the files you choose. Local Markdown also keeps a browser-local copy so it can restore your session after a refresh.

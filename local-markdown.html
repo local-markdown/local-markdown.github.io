@@ -5370,7 +5370,7 @@
           drawingSaveButton.disabled = !drawingSession.elements.some(element => !element.isDeleted);
           drawingStatus.textContent = attachmentId
             ? "Edit the drawing, then select Update"
-            : "Draw, then select Insert";
+            : "Draw or open a .excalidraw file, then select Insert";
 
           const { React, createRoot, Excalidraw } = modules;
           drawingRoot = createRoot(drawingCanvas);
@@ -5380,8 +5380,8 @@
             autoFocus: true,
             UIOptions: {
               canvasActions: {
-                loadScene: false,
-                saveToActiveFile: false,
+                loadScene: true,
+                saveToActiveFile: true,
                 export: false,
                 saveAsImage: false,
                 toggleTheme: false
