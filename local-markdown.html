@@ -1159,6 +1159,13 @@
     }
 
     @media (max-width: 650px) {
+      :root {
+        --lm-control-height-compact: 36px;
+        --lm-control-height: 40px;
+        --lm-control-height-large: 48px;
+        --lm-type-body-size: 17px;
+        --lm-type-control-size: 16px;
+      }
       .LocalMarkdown-app,
       .LocalMarkdown-app[data-sidebar="closed"] {
         --sidebar-width: 0px;
@@ -1187,6 +1194,7 @@
       }
       .LocalMarkdown-sidebar-header { padding: 0 var(--lm-space-2); }
       .LocalMarkdown-sidebar-dismiss { display: inline-grid; place-items: center; }
+      .LocalMarkdown-main { grid-template-columns: minmax(0, 1fr); }
       .LocalMarkdown-toolbar { padding: 0 var(--lm-space-2); gap: var(--lm-space-1); }
       .LocalMarkdown-toolbar-location { display: none; }
       .LocalMarkdown-document-meta::before { display: none; }
@@ -1195,9 +1203,18 @@
         padding-inline: var(--lm-space-1); gap: var(--lm-space-1);
       }
       .LocalMarkdown-editor-width-input { width: 64px; }
+      .LocalMarkdown-sidebar-toggle svg,
+      .LocalMarkdown-sidebar-dismiss svg,
+      .LocalMarkdown-editor-width-reset svg,
+      .LocalMarkdown-theme-toggle svg,
+      .LocalMarkdown-editor svg.LocalMarkdown-toolbar-icon {
+        width: 22px; height: 22px; flex: 0 0 22px;
+      }
+      .LocalMarkdown-cm-shell > .cm-editor { font-size: 18px; }
       .LocalMarkdown-cm-shell .cm-content {
         padding-inline: var(--lm-space-4);
       }
+      .LocalMarkdown-cm-task-widget { width: 18px; height: 18px; }
       .LocalMarkdown-cm-outline {
         width: min(220px, 44vw); min-width: 150px; flex-basis: min(220px, 44vw);
       }
