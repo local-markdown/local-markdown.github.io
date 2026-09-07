@@ -64,6 +64,8 @@ The editor is delivered by GitHub Pages, but your documents are not uploaded to 
 
 The File System Access API works best in desktop Chrome or Chromium-based Edge. The browser may ask you to restore file access after a restart.
 
+On iPhone and browsers without a save picker, **Save Markdown** and **Save As** download a `.md` copy, including embedded attachments. On iPhone, confirm the download and find it in the Files app’s Downloads folder. Save again after further edits; downloaded copies do not receive automatic updates.
+
 An internet connection is required to open the editor and load CodeMirror 6 from jsDelivr. Excalidraw is loaded from esm.sh only when you open the drawing tool.
 
 ## Run the standalone file
