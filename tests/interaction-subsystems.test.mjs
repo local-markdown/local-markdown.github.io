@@ -245,6 +245,64 @@ test("task hierarchy exposes only siblings and a parent drag moves its subtree",
   assert.equal(runtime.dispatches.length, 0, "a parent cannot be dropped inside its descendants");
 });
 
+for (const [kind, first, second] of [
+  ["bulleted", "- First", "+ Second"],
+  ["numbered", "1. First", "2) Second"],
+  ["mixed", "* First", "- [x] Second"]
+]) {
+  test(`${kind} list drag moves the subtree and accepts only siblings`, () => {
+    const runtime = createTaskRuntime();
+    const lines = [first, "    - Child", "        1. Grandchild", second,
+      "    - Other child", "Paragraph"];
+    const doc = fakeDoc(lines.join("\n"));
+    assert.deepEqual([...runtime.codeMirrorTaskSiblingTargetFroms(doc, lines, 0)],
+      [doc.line(4).from]);
+    assert.equal(runtime.codeMirrorTasksAreSiblings(lines, 1, 4), false,
+      "children under different parents are not siblings");
+    for (const [sourceLine, targetLine, dropAfter] of [[1, 4, true], [4, 1, false]]) {
+      runtime.setDrag({ state: { doc } }, {
+        pointerId: 1,
+        sourceFrom: doc.line(sourceLine).from,
+        targetFrom: doc.line(targetLine).from,
+        dropAfter,
+        dragging: true
+      });
+      runtime.finishCodeMirrorTaskDrag({ pointerId: 1 });
+      assert.equal(runtime.dispatches.length, 1);
+      assert.equal(runtime.dispatches[0].changes.insert,
+        [second, "    - Other child", first, "    - Child",
+          "        1. Grandchild", "Paragraph"].join("\n"));
+    }
+    runtime.setDrag({ state: { doc } }, {
+      pointerId: 1, sourceFrom: 0, targetFrom: doc.line(4).from,
+      dropAfter: true, dragging: true
+    });
+    runtime.finishCodeMirrorTaskDrag({ pointerId: 1 }, false);
+    assert.equal(runtime.dispatches.length, 0, "cancel leaves the document unchanged");
+  });
+}
+
+test("list conversion preserves nesting, replaces markers, and numbers each level", () => {
+  const convert = (text, kind) => new Function("doc", "kind", `
+    const codeMirrorView = { state: { doc } };
+    function codeMirrorSelection() { return { from: 0, to: doc.length }; }
+    function transformCodeMirrorLines(transform) {
+      return Array.from({ length: doc.lines }, (_, i) => transform(doc.line(i + 1).text, i)).join("\\n");
+    }
+    ${extractFunction("markdownIndentWidth")}
+    ${extractFunction("toggleCodeMirrorList")}
+    return toggleCodeMirrorList(kind);
+  `)(fakeDoc(text), kind);
+  assert.equal(convert("    - Child\n    - [x] Other", "ordered"),
+    "    1. Child\n    2. Other");
+  assert.equal(convert("    1. Child\n    2. Other", "ordered"),
+    "    Child\n    Other");
+  assert.equal(convert("- Parent\n    - Child\n    - Other\n- Next\n    - Last", "ordered"),
+    "1. Parent\n    1. Child\n    2. Other\n2. Next\n    1. Last");
+  assert.equal(convert("\t2) Child", "bullet"), "\t- Child");
+  assert.equal(convert("    1. Child", "task"), "    - [ ] Child");
+});
+
 const createSidebarRuntime = new Function(`
   let session = null;
   let renderCount = 0;

@@ -739,7 +739,7 @@
       min-height: 0 !important; height: 0; padding: 0 !important; overflow: hidden;
     }
     .LocalMarkdown-cm-list-marker {
-      display: inline-block; min-width: 1.1em; color: var(--lm-muted);
+      display: inline-block; min-width: 1.1em; margin-right: 6px; color: var(--lm-muted);
       font-weight: 650; text-align: center;
     }
     .LocalMarkdown-cm-horizontal-rule {
@@ -6363,10 +6363,10 @@
       }
 
       function codeMirrorTasksAreSiblings(lines, sourceIndex, targetIndex) {
-        const source = markdownTaskLineMatch(lines[sourceIndex]);
-        const target = markdownTaskLineMatch(lines[targetIndex]);
-        if (!source || !target
-          || markdownIndentWidth(source[1]) !== markdownIndentWidth(target[1])) return false;
+        const sourceIndent = markdownListIndentWidth(lines[sourceIndex]);
+        const targetIndent = markdownListIndentWidth(lines[targetIndex]);
+        if (sourceIndent === null || targetIndent === null
+          || sourceIndent !== targetIndent) return false;
         return codeMirrorListParentIndex(lines, sourceIndex)
           === codeMirrorListParentIndex(lines, targetIndex);
       }
@@ -6408,7 +6408,8 @@
           .reduce((length, line) => length + line.length + 1, 0);
         dispatchCodeMirrorChange(
           { from: 0, to: doc.length, insert: updated }, { anchor });
-        updateStatus(moved.length > 1 ? "Task group reordered" : "Task reordered");
+        const itemLabel = markdownTaskLineMatch(moved[0]) ? "Task" : "List item";
+        updateStatus(`${itemLabel}${moved.length > 1 ? " group" : ""} reordered`);
       }
 
       async function writeText(handle, text) {
@@ -7602,6 +7603,21 @@
           ignoreEvent() { return true; }
         }
 
+        function createListDragShell(lineFrom, label = "list item") {
+          const shell = document.createElement("span");
+          shell.className = "LocalMarkdown-cm-task-widget-shell";
+          shell.dataset.lineFrom = String(lineFrom);
+          const handle = document.createElement("span");
+          handle.className = "LocalMarkdown-cm-task-drag-handle";
+          handle.title = `Drag ${label} to reorder`;
+          appendNotionDragHandleIcon(handle);
+          handle.setAttribute("aria-hidden", "true");
+          handle.addEventListener("pointerdown", event =>
+            startCodeMirrorTaskDrag(event, lineFrom));
+          shell.append(handle);
+          return shell;
+        }
+
         class TaskWidget extends WidgetType {
           constructor(markerFrom, checked, lineFrom) {
             super();
@@ -7614,16 +7630,7 @@
               && other.lineFrom === this.lineFrom;
           }
           toDOM(view) {
-            const shell = document.createElement("span");
-            shell.className = "LocalMarkdown-cm-task-widget-shell";
-            shell.dataset.lineFrom = String(this.lineFrom);
-            const handle = document.createElement("span");
-            handle.className = "LocalMarkdown-cm-task-drag-handle";
-            handle.title = "Drag task to reorder";
-            appendNotionDragHandleIcon(handle);
-            handle.setAttribute("aria-hidden", "true");
-            handle.addEventListener("pointerdown", event =>
-              startCodeMirrorTaskDrag(event, this.lineFrom));
+            const shell = createListDragShell(this.lineFrom, "task");
             const checkbox = document.createElement("input");
             checkbox.type = "checkbox";
             checkbox.className = "LocalMarkdown-cm-task-widget";
@@ -7643,7 +7650,7 @@
               });
               view.focus();
             });
-            shell.append(handle, checkbox);
+            shell.append(checkbox);
             return shell;
           }
           ignoreEvent() { return true; }
@@ -7684,17 +7691,22 @@
         }
 
         class ListMarkerWidget extends WidgetType {
-          constructor(marker) {
+          constructor(marker, lineFrom) {
             super();
             this.marker = marker;
+            this.lineFrom = lineFrom;
           }
-          eq(other) { return other.marker === this.marker; }
+          eq(other) {
+            return other.marker === this.marker && other.lineFrom === this.lineFrom;
+          }
           toDOM() {
+            const shell = createListDragShell(this.lineFrom);
             const marker = document.createElement("span");
             marker.className = "LocalMarkdown-cm-list-marker";
             marker.textContent = /^\d/.test(this.marker)
               ? this.marker.replace(/\)$/, ".") : "•";
-            return marker;
+            shell.append(marker);
+            return shell;
           }
           ignoreEvent() { return true; }
         }
@@ -8348,15 +8360,18 @@
                   widget: new TaskWidget(
                     markerFrom, task[2].toLowerCase() === "x", line.from)
                 }).range(line.from + task[1].length, line.from + task[0].length));
-              } else if (line.number !== activeLine) {
+              } else {
                 const list = line.text.match(/^(\s*)([-+*]|\d+[.)])(\s+)/);
                 if (list && !horizontalRule) {
+                  const depth = codeMirrorListDepth(documentLines, line.number - 1);
+                  classes.push("LocalMarkdown-cm-line-task");
+                  if (depth) classes.push(`LocalMarkdown-cm-task-depth-${Math.min(depth, 12)}`);
                   const markerFrom = line.from + list[1].length;
                   decorations.push(Decoration.replace({
-                    widget: new ListMarkerWidget(list[2])
+                    widget: new ListMarkerWidget(list[2], line.from)
                   }).range(markerFrom, markerFrom + list[2].length + list[3].length));
                 }
-                inlinePreviewDecorations(line, decorations);
+                if (line.number !== activeLine) inlinePreviewDecorations(line, decorations);
               }
               if (classes.length) {
                 decorations.push(Decoration.line({ class: classes.join(" ") }).range(line.from));
@@ -8560,6 +8575,39 @@
         return transformCodeMirrorLines((line, index) => remove
           ? line.replace(matcher, "")
           : typeof prefix === "function" ? prefix(index, line) : `${prefix}${line}`);
+      }
+
+      function toggleCodeMirrorList(kind) {
+        const selection = codeMirrorSelection();
+        if (!selection) return false;
+        const doc = codeMirrorView.state.doc;
+        const first = doc.lineAt(selection.from);
+        const last = doc.lineAt(selection.to);
+        const parse = line => {
+          const match = line.match(/^([\t ]*)(?:([-+*]|\d+[.)])[\t ]+(\[[ xX]\][\t ]*)?)?/);
+          const type = match[3] ? "task" : match[2]
+            ? (/^\d/.test(match[2]) ? "ordered" : "bullet") : null;
+          return { indent: match[1], content: line.slice(match[0].length), type };
+        };
+        const items = [];
+        for (let number = first.number; number <= last.number; number += 1) {
+          items.push(parse(doc.line(number).text));
+        }
+        const remove = items.every(item => item.type === kind);
+        const counters = new Map();
+        return transformCodeMirrorLines((line, index) => {
+          const item = items[index];
+          if (remove) return item.indent + item.content;
+          const width = markdownIndentWidth(item.indent);
+          for (const depth of counters.keys()) {
+            if (depth > width) counters.delete(depth);
+          }
+          const number = (counters.get(width) || 0) + 1;
+          counters.set(width, number);
+          const marker = kind === "ordered" ? `${number}. `
+            : kind === "task" ? "- [ ] " : "- ";
+          return item.indent + marker + item.content;
+        });
       }
 
       function cycleCodeMirrorHeading() {
@@ -8811,10 +8859,9 @@
               { anchor: urlFrom, head: urlFrom + 8 });
             break;
           }
-          case "list": toggleCodeMirrorLinePrefix("- ", /^\s*[-+*]\s+/); break;
-          case "ordered-list": toggleCodeMirrorLinePrefix(
-            (index, line) => `${index + 1}. ${line}`, /^\s*\d+[.)]\s+/); break;
-          case "check": toggleCodeMirrorLinePrefix("- [ ] ", /^\s*[-+*]\s+\[[ xX]\]\s+/); break;
+          case "list": toggleCodeMirrorList("bullet"); break;
+          case "ordered-list": toggleCodeMirrorList("ordered"); break;
+          case "check": toggleCodeMirrorList("task"); break;
           case "outdent": outdentCodeMirrorLines(); break;
           case "indent": transformCodeMirrorLines(line => `    ${line}`, {
             preserveSelection: true
