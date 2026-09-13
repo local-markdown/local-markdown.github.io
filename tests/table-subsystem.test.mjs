@@ -343,6 +343,7 @@ test("capture flushes the active table cell before reading CodeMirror", () => {
     function documentSnapshot() { return {}; }
     function markFileDirty() { calls.push("dirty"); }
     function recordDocumentMutation() { calls.push("record-history"); }
+  ${extractFunction("isDrawingFile")}
     ${captureSource}
     return { captureEditorValue, calls, file,
       pending() { return pendingEditorHistoryInput; } };
@@ -426,7 +427,7 @@ test("direct table editing and focus-preserving updateDOM remain authoritative",
   );
   assert.match(
     tableWidgetSource,
-    /table\.addEventListener\("focusout", event => \{\s+const cell = event\.target\.closest\?\.\("td, th"\);\s+if \(cell && !commitCodeMirrorTableEdit\(view, table\)\)/
+    /table\.addEventListener\("focusout", event => \{[\s\S]*?queueMicrotask\(\(\) => \{\s+if \(cell\?\.isConnected && !commitCodeMirrorTableEdit\(view, table\)\)/
   );
   assert.match(tableWidgetSource, /commitCodeMirrorTableEdit\(view, table\)/);
   assert.match(tableWidgetSource, /table\.addEventListener\("paste"/);
@@ -434,7 +435,7 @@ test("direct table editing and focus-preserving updateDOM remain authoritative",
   assert.match(tableWidgetSource, /const currentValue = tableCellMarkdown\(cell\);/);
   assert.match(
     tableWidgetSource,
-    /if \(currentValue !== value\) \{\s+cell\.replaceChildren\(\);\s+appendTableCellContent\(cell, value\);\s+\}/
+    /if \(currentValue !== value\) \{\s+cell\.replaceChildren\(\);\s+appendTableCellContent\(cell, value\);\s+if \(document.activeElement === cell\) revealCodeMirrorTableFormatting\(cell\);\s+\}/
   );
   assert.match(tableWidgetSource, /ignoreEvent\(\) \{ return true; \}/);
 
@@ -472,4 +473,111 @@ test("table export has no Vditor-only line-break class fallback", () => {
   const exportSource = extractFunction("tableCellExportText");
   assert.match(exportSource, /querySelectorAll\("br"\)/);
   assert.doesNotMatch(source, /LocalMarkdown-table-line-break/);
+});
+
+test("inline formatting uses the table DOM selection instead of the source cursor", () => {
+  const cell = {
+    contains: node => node === anchor,
+    dispatchEvent(event) { events.push(event.type); }
+  };
+  const anchor = {};
+  const events = [];
+  const selectedText = { textContent: "beta" };
+  const content = {
+    nodes: [selectedText],
+    hasChildNodes() { return this.nodes.length > 0; },
+    append(node) { this.nodes.push(node); }
+  };
+  let inserted;
+  const range = {
+    extractContents: () => content,
+    insertNode(fragment) { inserted = fragment.nodes; },
+    setStartAfter(node) { this.start = node; },
+    setEndBefore(node) { this.end = node; }
+  };
+  const selection = {
+    anchorNode: anchor,
+    focusNode: anchor,
+    rangeCount: 1,
+    getRangeAt: () => range,
+    removeAllRanges() {},
+    addRange(value) { assert.equal(value, range); }
+  };
+  const document = {
+    createTextNode: textContent => ({ textContent }),
+    createDocumentFragment: () => ({
+      nodes: [],
+      append(...nodes) { this.nodes.push(...nodes); }
+    })
+  };
+  let sourceReads = 0;
+  const wrap = new Function("document", "getSelection", "tableCellFromNode",
+    "markEditorHistoryPending", "codeMirrorSelection", `
+    ${extractFunction("wrapCodeMirrorTableSelection")}
+    ${extractFunction("wrapCodeMirrorSelection")}
+    return wrapCodeMirrorSelection;
+  `)(document, () => selection, node => node === anchor ? cell : null,
+    () => events.push("history"), () => { sourceReads += 1; return null; });
+
+  for (const marker of ["**", "*", "~~", "`"]) {
+    assert.equal(wrap(marker, marker, "placeholder"), true);
+    assert.equal(inserted[0].textContent, marker);
+    assert.equal(inserted[1].nodes[0], selectedText);
+    assert.equal(inserted[2].textContent, marker);
+    assert.equal(range.start, inserted[0]);
+    assert.equal(range.end, inserted[2]);
+  }
+  assert.equal(sourceReads, 0);
+  assert.deepEqual(events, Array(4).fill(["history", "input"]).flat());
+
+  // A cross-cell selection must not modify the stale document cursor either.
+  selection.focusNode = {};
+  events.length = 0;
+  assert.equal(wrap("**"), true);
+  assert.equal(sourceReads, 0);
+  assert.deepEqual(events, []);
+
+  // Normal editor selections continue through the existing source-based path.
+  selection.anchorNode = {};
+  assert.equal(wrap("**"), false);
+  assert.equal(sourceReads, 1);
+});
+
+test("styled table cells serialize formatting without losing original delimiters", () => {
+  const serialize = new Function("Node", `
+    ${extractFunction("tableTextNodeMarkdown")}
+    ${extractFunction("tableCellNodeMarkdown")}
+    return tableCellNodeMarkdown;
+  `)({ TEXT_NODE: 3, ELEMENT_NODE: 1 });
+  const text = nodeValue => ({ nodeType: 3, nodeValue });
+  const element = (tagName, childNodes, dataset = {}) => ({
+    nodeType: 1, tagName, childNodes, dataset
+  });
+  assert.equal(serialize(element("STRONG", [text("ddd")])), "**ddd**");
+  assert.equal(serialize(element("EM", [text("italic")], {
+    markdownOpen: "_", markdownClose: "_"
+  })), "_italic_");
+  assert.equal(serialize(element("S", [text("removed")])), "~~removed~~");
+  assert.equal(serialize(element("STRONG", [text("one"), element("BR", []),
+    element("EM", [text("two|three")])])), "**one<br>*two\\|three***");
+  assert.equal(serialize(element("CODE", [text("a`b")], {
+    markdownOpen: "``", markdownClose: "``"
+  })), "``a`b``");
+});
+
+test("focusing formatted table text reveals editable delimiters and preserves content nodes", () => {
+  const child = { nodeValue: "ddd" };
+  let replacement;
+  const element = {
+    dataset: { markdownOpen: "**", markdownClose: "**" },
+    childNodes: [child],
+    replaceWith(...nodes) { replacement = nodes; }
+  };
+  const reveal = new Function("document", `
+    ${extractFunction("revealCodeMirrorTableFormatting")}
+    return revealCodeMirrorTableFormatting;
+  `)({ createTextNode: nodeValue => ({ nodeValue }) });
+  reveal({ querySelectorAll: () => [element] });
+  assert.deepEqual(replacement.map(node => node.nodeValue), ["**", "ddd", "**"]);
+  assert.equal(replacement[1], child);
 });

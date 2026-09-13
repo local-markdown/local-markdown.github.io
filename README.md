@@ -15,7 +15,7 @@ Open Local Markdown in desktop Chrome or Edge, choose a Markdown file, and start
 ## Get started
 
 1. Open the [online editor](https://local-markdown.github.io/) in desktop Chrome or Edge.
-2. Select **+**, then choose **Open File** for an existing `.md` file or **New File** to create one.
+2. Select **+**, then choose **Open File** for an existing `.md` file or **New Markdown File** or **New Excalidraw File** to create one.
 3. Grant access to the file when your browser asks.
 4. Hover over a new file, select **⋯**, then **Save…** once. After that, changes save automatically.
 
@@ -51,6 +51,8 @@ Click a rendered Mermaid diagram to edit its source. Hover over it and select th
 Pasting a URL by itself creates a Markdown link. Local Markdown uses a copied link label when available, the filename for document and media URLs, supported sites' oEmbed titles, or a directly accessible HTML page title. If metadata is unavailable, it falls back to a readable name from the URL.
 
 ## Draw with Excalidraw
+
+Select **+ → New Excalidraw File** to create a standalone `.excalidraw` drawing. Drawing changes are kept in your session; select **Done**, then use the file’s **⋯ → Save…** action to save it locally. Select it in the sidebar to view its preview; use **Edit drawing** or double-click the preview to edit it. Existing drawings can also be opened with **Open File…**. Once saved locally, changes save automatically.
 
 Create or open a Markdown file, then select **Draw with Excalidraw** in the formatting toolbar. Select **Insert** when the drawing is ready. Local Markdown embeds an SVG preview and its editable Excalidraw scene inside the Markdown file.
 

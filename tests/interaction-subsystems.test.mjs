@@ -463,7 +463,7 @@ test("generic image resize and alignment preserve source metadata", () => {
 });
 
 test("table images delegate to the same image controls and table-cell paste path", () => {
-  assert.match(extractFunction("appendTableCellContent"), /configureCodeMirrorTableImage\(image\);/);
+  assert.match(extractFunction("appendTableCellPlainContent"), /configureCodeMirrorTableImage\(image\);/);
   assert.match(extractFunction("configureCodeMirrorTableImage"), /showImageResizer\(image, true\)/);
   assert.match(source, /if \(tableCell\) void pasteEmbeddedImagesIntoTableCell\(images, tableCell\);/);
   assert.match(extractFunction("editableImageFromNode"), /element\?\.closest\?\.\("img"\)/);
@@ -508,6 +508,7 @@ const createDrawingRuntime = new Function(`
     records.push(["history", file.id, before.text, details.label]);
   }
   function updateStatus(message) { statuses.push(message); }
+  ${extractFunction("isDrawingFile")}
   ${extractFunction("commitDrawing")}
   return {
     async run({ file, attachmentId = null }) {
