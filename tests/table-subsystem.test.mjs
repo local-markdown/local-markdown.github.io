@@ -408,6 +408,42 @@ test("TableWidget equality includes alignment-only changes", () => {
   assert.equal(new TableWidget(block).eq(movedIndex), false);
 });
 
+test("table updates preserve cell nodes when deletion exposes padding, but apply changed content", () => {
+  const document = { activeElement: null };
+  const RuntimeWidget = new Function("document", `
+    class WidgetType {}
+    function tableCellMarkdown(cell) { return cell.text; }
+    function configureCodeMirrorTableCell() {}
+    function appendTableCellContent(cell, value) { cell.text = value; }
+    function applyCodeMirrorTableLayout() {}
+    ${tableWidgetSource}
+    return TableWidget;
+  `)(document);
+
+  for (const text of ["Cell this is a ", "Cell this is a\u00a0", " Cell", "\tCell\t", " "]) {
+    let replacements = 0;
+    const cell = {
+      text,
+      replaceChildren() { replacements++; },
+      querySelectorAll() { return []; }
+    };
+    document.activeElement = cell;
+    const wrapper = { querySelector: () => ({ rows: [{ cells: [cell] }] }) };
+    const rows = [tableRuntime.markdownTableCells(
+      tableRuntime.serializeCodeMirrorTableRow([text]))];
+    const widget = new RuntimeWidget({ rows, alignments: ["left"] });
+    assert.equal(widget.updateDOM(wrapper), true);
+    assert.equal(replacements, 0, `Rebuilt cell containing ${JSON.stringify(text)}`);
+    assert.equal(cell.text, text);
+
+    // Undo and external edits must still replace genuinely different content.
+    const undoWidget = new RuntimeWidget({ rows: [["Restored text"]], alignments: ["left"] });
+    assert.equal(undoWidget.updateDOM(wrapper), true);
+    assert.equal(replacements, 1);
+    assert.equal(cell.text, "Restored text");
+  }
+});
+
 test("direct table editing and focus-preserving updateDOM remain authoritative", () => {
   const configureCell = extractFunction("configureCodeMirrorTableCell");
   assert.match(configureCell,
@@ -435,7 +471,7 @@ test("direct table editing and focus-preserving updateDOM remain authoritative",
   assert.match(tableWidgetSource, /const currentValue = tableCellMarkdown\(cell\);/);
   assert.match(
     tableWidgetSource,
-    /if \(currentValue !== value\) \{\s+cell\.replaceChildren\(\);\s+appendTableCellContent\(cell, value\);\s+if \(document.activeElement === cell\) revealCodeMirrorTableFormatting\(cell\);\s+\}/
+    /if \(currentValue\.trim\(\) !== value\) \{\s+cell\.replaceChildren\(\);\s+appendTableCellContent\(cell, value\);\s+\}/
   );
   assert.match(tableWidgetSource, /ignoreEvent\(\) \{ return true; \}/);
 
@@ -503,7 +539,9 @@ test("inline formatting uses the table DOM selection instead of the source curso
     removeAllRanges() {},
     addRange(value) { assert.equal(value, range); }
   };
+  const commands = [];
   const document = {
+    execCommand: (...args) => commands.push(args),
     createTextNode: textContent => ({ textContent }),
     createDocumentFragment: () => ({
       nodes: [],
@@ -519,7 +557,13 @@ test("inline formatting uses the table DOM selection instead of the source curso
   `)(document, () => selection, node => node === anchor ? cell : null,
     () => events.push("history"), () => { sourceReads += 1; return null; });
 
-  for (const marker of ["**", "*", "~~", "`"]) {
+  for (const [marker, command] of [["**", "bold"], ["*", "italic"], ["~~", "strikeThrough"]]) {
+    assert.equal(wrap(marker, marker, "placeholder"), true);
+    assert.deepEqual(commands.at(-2), ["styleWithCSS", false, false]);
+    assert.deepEqual(commands.at(-1), [command, false]);
+    assert.equal(inserted, undefined);
+  }
+  for (const marker of ["`"]) {
     assert.equal(wrap(marker, marker, "placeholder"), true);
     assert.equal(inserted[0].textContent, marker);
     assert.equal(inserted[1].nodes[0], selectedText);
@@ -543,6 +587,37 @@ test("inline formatting uses the table DOM selection instead of the source curso
   assert.equal(sourceReads, 1);
 });
 
+test("table toolbar commands never use the unrelated source cursor", () => {
+  const calls = [];
+  const cell = {};
+  const run = new Function("cell", "calls", `
+    const codeMirrorView = {};
+    const document = { activeElement: cell };
+    function getSelection() { return { anchorNode: cell }; }
+    function tableCellFromNode(node) { return node === cell ? cell : null; }
+    function toggleCodeMirrorEmojiMenu() {}
+    function updateStatus(message) { calls.push(["status", message]); }
+    function wrapCodeMirrorSelection(...args) { calls.push(args); }
+    function wrapCodeMirrorTableSelection(...args) { calls.push(args); return true; }
+    ${extractFunction("runCodeMirrorToolbarCommand")}
+    return runCodeMirrorToolbarCommand;
+  `)(cell, calls);
+  for (const command of ["emoji", "headings", "list", "ordered-list", "check",
+    "outdent", "indent", "quote", "line", "code", "insert-before",
+    "insert-after", "upload", "table", "draw"]) {
+    calls.length = 0;
+    run(command);
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0][0], "status", command);
+  }
+  for (const [command, marker] of [["bold", "**"], ["italic", "*"],
+    ["strike", "~~"], ["inline-code", "`"], ["link", "["]]) {
+    calls.length = 0;
+    run(command);
+    assert.equal(calls[0][0], marker, command);
+  }
+});
+
 test("styled table cells serialize formatting without losing original delimiters", () => {
   const serialize = new Function("Node", `
     ${extractFunction("tableTextNodeMarkdown")}
@@ -558,26 +633,13 @@ test("styled table cells serialize formatting without losing original delimiters
     markdownOpen: "_", markdownClose: "_"
   })), "_italic_");
   assert.equal(serialize(element("S", [text("removed")])), "~~removed~~");
+  assert.equal(serialize(element("STRIKE", [text("removed")])), "~~removed~~");
+  assert.equal(serialize(element("B", [text(" bold ")])), " **bold** ");
+  assert.equal(serialize(element("I", [text(" new")])), " *new*");
+  assert.equal(serialize(element("I", [text(" ")])), " ");
   assert.equal(serialize(element("STRONG", [text("one"), element("BR", []),
     element("EM", [text("two|three")])])), "**one<br>*two\\|three***");
   assert.equal(serialize(element("CODE", [text("a`b")], {
     markdownOpen: "``", markdownClose: "``"
   })), "``a`b``");
-});
-
-test("focusing formatted table text reveals editable delimiters and preserves content nodes", () => {
-  const child = { nodeValue: "ddd" };
-  let replacement;
-  const element = {
-    dataset: { markdownOpen: "**", markdownClose: "**" },
-    childNodes: [child],
-    replaceWith(...nodes) { replacement = nodes; }
-  };
-  const reveal = new Function("document", `
-    ${extractFunction("revealCodeMirrorTableFormatting")}
-    return revealCodeMirrorTableFormatting;
-  `)({ createTextNode: nodeValue => ({ nodeValue }) });
-  reveal({ querySelectorAll: () => [element] });
-  assert.deepEqual(replacement.map(node => node.nodeValue), ["**", "ddd", "**"]);
-  assert.equal(replacement[1], child);
 });

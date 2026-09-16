@@ -7907,9 +7907,13 @@
           if (node.tagName === "BR") return "<br>";
           if (node.tagName === "IMG") return tableImageMarkdown(node);
           const content = Array.from(node.childNodes, tableCellNodeMarkdown).join("");
-          const marker = ({ STRONG: "**", B: "**", EM: "*", I: "*", S: "~~", CODE: "`" })[node.tagName];
+          const marker = ({ STRONG: "**", B: "**", EM: "*", I: "*", S: "~~", STRIKE: "~~", CODE: "`" })[node.tagName];
           if (marker && content) {
-            return `${node.dataset.markdownOpen || marker}${content}${node.dataset.markdownClose || marker}`;
+            // Emphasis delimiters cannot open or close against whitespace.
+            const inner = node.tagName === "CODE" ? content : content.trim();
+            if (!inner) return content;
+            const start = content.indexOf(inner);
+            return `${content.slice(0, start)}${node.dataset.markdownOpen || marker}${inner}${node.dataset.markdownClose || marker}${content.slice(start + inner.length)}`;
           }
           return /^(?:DIV|P|LI)$/i.test(node.tagName) && node.nextSibling
             ? `${content}<br>` : content;
@@ -8170,7 +8174,6 @@
               const cell = event.target.closest?.("td, th");
               if (!cell) return;
               tableHoverCell = cell;
-              revealCodeMirrorTableFormatting(cell);
             });
             wrapper.append(table);
             return wrapper;
@@ -8186,10 +8189,11 @@
                 const currentValue = tableCellMarkdown(cell);
                 configureCodeMirrorTableCell(cell, rowIndex, columnIndex,
                   this.block.alignments[columnIndex]);
-                if (currentValue !== value) {
+                // The table parser trims cell padding. Keep the live DOM (and
+                // selection) when deletion only exposes boundary whitespace.
+                if (currentValue.trim() !== value) {
                   cell.replaceChildren();
                   appendTableCellContent(cell, value);
-                  if (document.activeElement === cell) revealCodeMirrorTableFormatting(cell);
                 }
                 for (const image of cell.querySelectorAll("img")) {
                   configureCodeMirrorTableImage(image);
@@ -8445,23 +8449,26 @@
         return true;
       }
 
-      function revealCodeMirrorTableFormatting(cell) {
-        for (const element of cell.querySelectorAll("[data-markdown-open]")) {
-          element.replaceWith(
-            document.createTextNode(element.dataset.markdownOpen),
-            ...element.childNodes,
-            document.createTextNode(element.dataset.markdownClose));
-        }
-      }
-
       function wrapCodeMirrorTableSelection(open, close, placeholder) {
         const selection = getSelection();
-        const cell = tableCellFromNode(selection?.anchorNode);
+        const cell = tableCellFromNode(selection?.anchorNode)
+          || tableCellFromNode(document.activeElement);
         if (!cell) return false;
         // A widget's DOM selection is independent of CodeMirror's source cursor.
         // Never fall back to that cursor when the selection crosses table cells.
-        if (!selection.rangeCount || !cell.contains(selection.focusNode)) return true;
+        if (!selection?.rangeCount || !cell.contains(selection.anchorNode)
+          || !cell.contains(selection.focusNode)) return true;
         markEditorHistoryPending("", "command");
+        const command = open === close
+          ? ({ "**": "bold", "*": "italic", "~~": "strikeThrough" })[open] : null;
+        if (command) {
+          // Native contenteditable formatting preserves partial selections and
+          // toggles typing styles at a caret without exposing Markdown markers.
+          document.execCommand("styleWithCSS", false, false);
+          document.execCommand(command, false);
+          cell.dispatchEvent(new Event("input", { bubbles: true }));
+          return true;
+        }
         const range = selection.getRangeAt(0);
         const content = range.extractContents();
         if (!content.hasChildNodes()) content.append(document.createTextNode(placeholder));
@@ -8842,6 +8849,16 @@
       function runCodeMirrorToolbarCommand(name) {
         if (!codeMirrorView) return;
         if (name !== "emoji") toggleCodeMirrorEmojiMenu(false);
+        const cell = tableCellFromNode(getSelection()?.anchorNode)
+          || tableCellFromNode(document.activeElement);
+        // Widget selections do not update CodeMirror's source cursor. Commands
+        // without a cell implementation must never edit that unrelated position.
+        if (cell && ["emoji", "headings", "list", "ordered-list", "check",
+          "outdent", "indent", "quote", "line", "code", "insert-before",
+          "insert-after", "upload", "table", "draw"].includes(name)) {
+          updateStatus("This control is not supported inside table cells. Use inline formatting or edit outside the table.");
+          return;
+        }
         switch (name) {
           case "emoji": toggleCodeMirrorEmojiMenu(); break;
           case "headings": cycleCodeMirrorHeading(); break;
@@ -8849,6 +8866,7 @@
           case "italic": wrapCodeMirrorSelection("*", "*", "italic text"); break;
           case "strike": wrapCodeMirrorSelection("~~", "~~", "struck text"); break;
           case "link": {
+            if (wrapCodeMirrorTableSelection("[", "](https://)", "link text")) break;
             const selection = codeMirrorSelection();
             const label = selection.from === selection.to ? "link text"
               : codeMirrorView.state.doc.sliceString(selection.from, selection.to);
