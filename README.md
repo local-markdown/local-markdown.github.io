@@ -50,6 +50,8 @@ Click a rendered Mermaid diagram to edit its source. Hover over it and select th
 
 Pasting a URL by itself creates a Markdown link. Local Markdown uses a copied link label when available, the filename for document and media URLs, supported sites' oEmbed titles, or a directly accessible HTML page title. If metadata is unavailable, it falls back to a readable name from the URL.
 
+Use the toolbar’s **Download** button to choose **Download Markdown (.md)** or **Download Word (.docx)**. Both options download a copy. Word export preserves headings, inline formatting, lists, tables, and accessible images. Mermaid diagrams export as source code; images that cannot be loaded are replaced with a text label. Word export loads its conversion libraries on demand and runs in your browser.
+
 ## Draw with Excalidraw
 
 Select **+ → New Excalidraw File** to create a standalone `.excalidraw` drawing. Drawing changes are kept in your session; select **Done**, then use the file’s **⋯ → Save…** action to save it locally. Select it in the sidebar to view its preview; use **Edit drawing** or double-click the preview to edit it. Existing drawings can also be opened with **Open File…**. Once saved locally, changes save automatically.

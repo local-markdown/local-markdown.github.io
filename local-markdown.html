@@ -668,6 +668,18 @@
     .LocalMarkdown-cm-toolbar-group {
       display: flex; align-items: center;
     }
+    .LocalMarkdown-download-menu {
+      position: absolute; top: 100%; right: 0; z-index: 20; min-width: 200px;
+      padding: 4px; border: 1px solid var(--lm-border); border-radius: var(--lm-radius-surface);
+      background: var(--lm-background); box-shadow: 0 8px 28px var(--lm-menu-shadow);
+    }
+    .LocalMarkdown-download-menu[hidden] { display: none; }
+    .LocalMarkdown-download-menu button {
+      display: block; width: 100%; padding: 8px 12px; text-align: left;
+      border: 0; background: transparent; color: var(--lm-text); font: inherit; cursor: pointer;
+    }
+    .LocalMarkdown-download-menu button:hover,
+    .LocalMarkdown-download-menu button:focus-visible { outline: none; background: var(--lm-subtle); }
     .LocalMarkdown-cm-toolbar-divider {
       width: 1px; height: 16px; margin: 0 var(--lm-space-1);
       background: var(--lm-border);
@@ -684,6 +696,7 @@
       color: var(--lm-accent); background: var(--lm-subtle);
     }
     .LocalMarkdown-cm-tool:disabled { color: var(--lm-faint); background: transparent; }
+    .LocalMarkdown-download-toggle:focus { outline: none; }
     .LocalMarkdown-cm-shell {
       min-width: 0; min-height: 0; flex: 1; display: flex; overflow: hidden;
     }
@@ -6665,6 +6678,233 @@
         }
       }
 
+      async function wordImageRun(source, alt, file, docx, warnings, requestedWidth = null) {
+        let url;
+        try {
+          const attachment = file.attachments.get(attachmentIdFromSource(source));
+          // Remote images can fail because their server disallows browser access.
+          const blob = attachment ? attachmentBlob(attachment)
+            : await fetch(source, { signal: AbortSignal.timeout(15000) }).then(response => {
+              if (!response.ok) throw new Error("Image unavailable");
+              return response.blob();
+            });
+          url = URL.createObjectURL(blob);
+          const image = new Image();
+          image.src = url;
+          await image.decode();
+          const width = Math.min(Number(requestedWidth) || image.naturalWidth, 600);
+          const height = Math.max(1, Math.round(image.naturalHeight * width / image.naturalWidth));
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.round(width * 2);
+          canvas.height = height * 2;
+          canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+          const png = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+          if (!png) throw new Error("Image conversion failed");
+          return new docx.ImageRun({ type: "png", data: await png.arrayBuffer(),
+            transformation: { width, height }, altText: { title: alt, description: alt, name: alt } });
+        } catch {
+          warnings.add("Some images could not be included");
+          return new docx.TextRun(`[Image: ${alt || source}]`);
+        } finally {
+          if (url) URL.revokeObjectURL(url);
+        }
+      }
+
+      async function createWordDocument(file, docx, marked, warnings = new Set()) {
+        const { Document, Paragraph, TextRun, Table, TableRow, TableCell,
+          ExternalHyperlink, HeadingLevel, WidthType, LevelFormat } = docx;
+        const numbering = [];
+        const decode = value => {
+          const element = document.createElement("textarea");
+          element.innerHTML = value || "";
+          return element.value;
+        };
+        async function inline(tokens, style = {}) {
+          const runs = [];
+          for (const token of tokens || []) {
+            if (["strong", "em", "del"].includes(token.type)) {
+              const property = { strong: "bold", em: "italics", del: "strike" }[token.type];
+              runs.push(...await inline(token.tokens, { ...style, [property]: true }));
+            } else if (token.type === "link") {
+              const children = await inline(token.tokens, { ...style, style: "Hyperlink" });
+              if (/^(https?:|mailto:)/i.test(token.href)) {
+                runs.push(new ExternalHyperlink({ link: token.href, children }));
+              } else runs.push(...children);
+            } else if (token.type === "image") {
+              runs.push(await wordImageRun(token.href, token.text, file, docx, warnings));
+            } else if (token.type === "br") {
+              runs.push(new TextRun({ break: 1 }));
+            } else if (token.type === "html") {
+              if (/^<br\s*\/?\s*>$/i.test(token.text.trim())) runs.push(new TextRun({ break: 1 }));
+              else if (/^<img\b/i.test(token.text.trim())) {
+                runs.push(await wordImageRun(htmlAttribute(token.text, "src"),
+                  htmlAttribute(token.text, "alt") || "", file, docx, warnings,
+                  htmlAttribute(token.text, "width")));
+              }
+            } else if (token.tokens) runs.push(...await inline(token.tokens, style));
+            else {
+              const lines = decode(token.text ?? token.raw).split("\n");
+              lines.forEach((text, index) => runs.push(new TextRun({ ...style, text,
+                ...(index ? { break: 1 } : {}),
+                ...(token.type === "codespan" ? { font: "Consolas" } : {}) })));
+            }
+          }
+          return runs;
+        }
+        async function blocks(tokens, options = {}, depth = 0) {
+          const children = [];
+          for (const token of tokens) {
+            if (token.type === "space" || token.type === "def") continue;
+            if (token.type === "list") {
+              const reference = `list-${numbering.length}`;
+              numbering.push({ reference, levels: Array.from({ length: 9 }, (_, level) => ({
+                level, format: token.ordered ? LevelFormat.DECIMAL : LevelFormat.BULLET,
+                text: token.ordered ? `%${level + 1}.` : "•", start: Number(token.start) || 1,
+                style: { paragraph: { indent: { left: 720 * (level + 1), hanging: 360 } } }
+              })) });
+              for (const item of token.items) {
+                const level = Math.min(depth, 8);
+                let first = true;
+                for (const block of item.tokens) {
+                  if (block.type === "list") children.push(...await blocks([block], options, depth + 1));
+                  else {
+                    const itemOptions = first ? { ...options, numbering: { reference, level } }
+                      : { ...options, indent: { left: 720 * (level + 1) } };
+                    const itemBlock = first && item.task ? { ...block, tokens: [
+                      { type: "text", text: item.checked ? "☑ " : "☐ " },
+                      ...(block.tokens || [{ type: "text", text: block.text || "" }])
+                    ] } : block;
+                    const itemBlocks = await blocks([itemBlock], itemOptions, depth);
+                    children.push(...itemBlocks);
+                    if (itemBlocks.length) first = false;
+                  }
+                }
+              }
+            } else if (token.type === "table") {
+              const rows = [token.header, ...token.rows];
+              children.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE },
+                rows: await Promise.all(rows.map(async (row, index) => new TableRow({
+                  tableHeader: index === 0,
+                  children: await Promise.all(row.map(async cell => new TableCell({
+                    children: [new Paragraph({ children: await inline(cell.tokens,
+                      index === 0 ? { bold: true } : {}) })]
+                  })))
+                }))) }));
+              children.push(new Paragraph({}));
+            } else if (token.type === "blockquote") {
+              children.push(...await blocks(token.tokens, { ...options, indent: { left: 720 } }, depth));
+            } else if (token.type === "code") {
+              children.push(new Paragraph({ ...options,
+                children: token.text.split("\n").map((text, index) => new TextRun({
+                  text, font: "Consolas", size: 20, ...(index ? { break: 1 } : {})
+                })) }));
+            } else if (token.type === "hr") {
+              children.push(new Paragraph({ ...options, thematicBreak: true }));
+            } else {
+              const content = token.tokens || marked.lexer(token.text || "", { gfm: true })[0]?.tokens;
+              children.push(new Paragraph({ ...options,
+                ...(token.type === "heading" ? { heading: HeadingLevel[`HEADING_${token.depth}`] } : {}),
+                children: await inline(token.type === "html" ? [token] : content || [
+                  { type: "text", text: token.text || "" }
+                ]) }));
+            }
+          }
+          return children;
+        }
+        const children = await blocks(marked.lexer(file.text, { gfm: true }));
+        return new Document({ numbering: { config: numbering },
+          sections: [{ children: children.length ? children : [new Paragraph({})] }] });
+      }
+
+      async function downloadWordFile() {
+        captureEditorValue();
+        const file = activeFile();
+        if (!file || isDrawingFile(file)) return false;
+        updateStatus("Preparing Word document…");
+        try {
+          if (!await waitForFileAttachments(file)) throw new Error("Attachments unavailable");
+          // Snapshot before loading dependencies so switching files cannot change the export.
+          const snapshot = { ...file, attachments: new Map(file.attachments) };
+          const [docx, { marked }] = await Promise.all([
+            import("https://cdn.jsdelivr.net/npm/docx@9.5.1/+esm"),
+            import("https://cdn.jsdelivr.net/npm/marked@15.0.12/+esm")
+          ]);
+          const warnings = new Set();
+          const documentFile = await createWordDocument(snapshot, docx, marked, warnings);
+          const blob = await docx.Packer.toBlob(documentFile);
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          try {
+            link.href = url;
+            link.download = (snapshot.name || "Untitled").replace(/\.(md|markdown|txt)$/i, "") + ".docx";
+            document.body.append(link);
+            link.click();
+          } finally {
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 60000);
+          }
+          updateStatus(warnings.size ? `Word downloaded — ${[...warnings].join("; ")}` : "Word download started");
+          return true;
+        } catch (error) {
+          console.error("Word export failed", error);
+          updateStatus("Couldn’t download Word. Check your connection and try again.");
+          return false;
+        }
+      }
+
+      function createDownloadMenu(wrapper, button) {
+        wrapper.style.position = "relative";
+        button.classList.add("LocalMarkdown-download-toggle");
+        const menu = document.createElement("div");
+        menu.className = "LocalMarkdown-download-menu";
+        menu.hidden = true;
+        menu.setAttribute("role", "menu");
+        menu.setAttribute("aria-label", "Download options");
+        button.setAttribute("aria-haspopup", "menu");
+        button.setAttribute("aria-expanded", "false");
+        const close = () => { menu.hidden = true; button.setAttribute("aria-expanded", "false"); };
+        const downloadMarkdown = () => {
+          captureEditorValue();
+          const file = activeFile();
+          if (file && !isDrawingFile(file)) return downloadMarkdownFile(file);
+        };
+        for (const [label, action] of [["Download Markdown (.md)", downloadMarkdown], ["Download Word (.docx)", downloadWordFile]]) {
+          const item = document.createElement("button");
+          item.type = "button";
+          item.textContent = label;
+          item.setAttribute("role", "menuitem");
+          item.addEventListener("click", () => { close(); button.focus(); void action(); });
+          menu.append(item);
+        }
+        button.addEventListener("click", event => {
+          const open = menu.hidden;
+          close();
+          if (open) {
+            menu.hidden = false;
+            button.setAttribute("aria-expanded", "true");
+            if (event.detail === 0) menu.firstElementChild.focus();
+            else button.focus();
+          }
+        });
+        wrapper.addEventListener("keydown", event => {
+          if (event.key === "Escape") { close(); button.focus(); event.preventDefault(); }
+          if (["ArrowDown", "ArrowUp"].includes(event.key)) {
+            event.preventDefault();
+            menu.hidden = false;
+            button.setAttribute("aria-expanded", "true");
+            const items = [...menu.children];
+            const index = items.indexOf(document.activeElement);
+            const next = index < 0
+              ? (event.key === "ArrowDown" ? 0 : items.length - 1)
+              : (index + (event.key === "ArrowDown" ? 1 : items.length - 1)) % items.length;
+            items[next].focus();
+          }
+        });
+        wrapper.addEventListener("focusout", event => { if (!wrapper.contains(event.relatedTarget)) close(); });
+        document.addEventListener("pointerdown", event => { if (!wrapper.contains(event.target)) close(); });
+        wrapper.append(menu);
+      }
+
       async function openLocalFile(sectionId = null) {
         if (typeof window.showOpenFilePicker !== "function") {
           updateStatus("Opening local files requires Chrome");
@@ -8936,7 +9176,7 @@
         "insert-before": "Insert line before", "insert-after": "Insert line after",
         upload: "Insert image", table: "Insert table", draw: "Draw with Excalidraw",
         "history-undo": "Undo", "history-redo": "Redo", fullscreen: "Fullscreen",
-        outline: "Outline", export: "Save Markdown"
+        outline: "Outline", export: "Download"
       };
 
       function createCodeMirrorToolbar() {
@@ -8962,8 +9202,9 @@
           button.setAttribute("aria-label", button.title);
           button.innerHTML = toolbarIcon(name.replace("history-", ""));
           button.addEventListener("pointerdown", event => event.preventDefault());
-          button.addEventListener("click", () => runCodeMirrorToolbarCommand(name));
+          if (name !== "export") button.addEventListener("click", () => runCodeMirrorToolbarCommand(name));
           wrapper.append(button);
+          if (name === "export") createDownloadMenu(wrapper, button);
           toolbar.append(wrapper);
           elements[name] = wrapper;
         }
