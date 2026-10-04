@@ -2919,7 +2919,7 @@
           : file.name;
         button.append(name);
         appendUnsavedMark(button, !file.builtin && file.dirty);
-        button.title = file.builtin ? "Examples" : "Drag to reorder or move to a section";
+        button.title = name.textContent;
         button.setAttribute("aria-current", String(file.id === session.activeId));
         button.addEventListener("click", file === example
           ? showExamples
