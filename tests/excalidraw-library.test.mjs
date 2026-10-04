@@ -12,7 +12,6 @@ function extractFunction(name) {
 }
 
 function libraryRuntime(saved = null) {
-  const bundled = [{ id: 'bundled' }];
   const storage = new Map(saved === null ? [] : [['library', JSON.stringify({ libraryItems: saved })]]);
   const localStorage = {
     getItem: key => storage.get(key) ?? null,
@@ -22,17 +21,17 @@ function libraryRuntime(saved = null) {
     loadLibraryFromBlob: async blob => JSON.parse(await blob.text()).libraryItems,
     serializeLibraryAsJSON: libraryItems => JSON.stringify({ libraryItems })
   };
-  const createAdapter = new Function('localStorage', 'document', 'Blob', `
+  const createAdapter = new Function('localStorage', 'Blob', `
     const drawingLibraryStorageKey = 'library';
     ${extractFunction('createDrawingLibraryAdapter')}
     return createDrawingLibraryAdapter;
-  `)(localStorage, { querySelector: () => ({ textContent: JSON.stringify({ libraryItems: bundled }) }) }, Blob);
-  return { createAdapter: () => createAdapter(modules), storage, bundled };
+  `)(localStorage, Blob);
+  return { createAdapter: () => createAdapter(modules), storage };
 }
 
-test('an untouched library starts with the bundled collection', async () => {
+test('an untouched library starts empty', async () => {
   const runtime = libraryRuntime();
-  assert.deepEqual((await runtime.createAdapter().load()).libraryItems, runtime.bundled);
+  assert.deepEqual((await runtime.createAdapter().load()).libraryItems, []);
 });
 
 test('removing imported items and resetting stay removed after reopening', async () => {

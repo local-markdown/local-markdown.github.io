@@ -64,7 +64,7 @@ Double-click an embedded drawing to reopen it, then select **Update** to replace
 
 Use Excalidraw's menu to **Open** a `.excalidraw` file, then select **Insert** to embed it in the current Markdown file. Choose **Save to…** from the same menu to export the current drawing as a `.excalidraw` file.
 
-The **Library** panel starts with Youri Tjang's Software Architecture collection. Use **Browse libraries → Add to Excalidraw** to add a collection, or **Open** in the Library menu to import a local `.excalidrawlib` file. Select items to remove them, or choose **Reset library** to clear everything. Library changes are stored in this browser, including an empty library after a reset.
+The **Library** panel starts empty. Use **Browse libraries → Add to Excalidraw** to add a collection, or **Open** in the Library menu to import a local `.excalidrawlib` file. Select items to remove them, or choose **Reset library** to clear everything. Library changes are stored in this browser, including an empty library after a reset.
 
 When opening the standalone HTML file directly (`file://`), use **Download** in the catalogue, then **Library → ⋯ → Open** to import the downloaded `.excalidrawlib` file. Browsers block the catalogue's **Add to Excalidraw** return link to local files; that one-click flow requires opening Local Markdown over HTTP, such as GitHub Pages or localhost.
 
