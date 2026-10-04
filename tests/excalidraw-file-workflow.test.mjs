@@ -80,7 +80,10 @@ test('standalone drawing changes persist, including deleting the last shape', as
     let drawingSession = null, drawingRoot = null, props = null;
     const editorReady = true;
     const drawingSaveButton = {}, drawingCancelButton = {}, drawingStatus = {}, drawingLoading = {};
-    const drawingDialog = { showModal() {} }, drawingCanvas = {};
+    const drawingCanvas = {};
+    const window = { name: "LocalMarkdown-test" };
+    function setDrawingDialogOpen() {}
+    function DrawingEditor() {}
     const document = { documentElement: { dataset: {} } };
     function captureEditorValue() {}
     function activeFile() { return file; }

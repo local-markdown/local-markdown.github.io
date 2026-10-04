@@ -61,45 +61,6 @@ const createIndentRuntime = new Function(`
   };
 `);
 
-const createTaskRuntime = new Function(`
-  let codeMirrorTaskDragSession = null;
-  let codeMirrorView = null;
-  const dispatches = [];
-  const statuses = [];
-  function clearCodeMirrorTaskDropTarget() {}
-  function dispatchCodeMirrorChange(changes, selection) {
-    dispatches.push({ changes, selection });
-    return true;
-  }
-  function updateStatus(message) { statuses.push(message); }
-  ${extractFunction("markdownIndentWidth")}
-  ${extractFunction("markdownTaskLineMatch")}
-  ${extractFunction("markdownListIndentWidth")}
-  ${extractFunction("codeMirrorDocumentLines")}
-  ${extractFunction("codeMirrorTaskSubtree")}
-  ${extractFunction("codeMirrorListParentIndex")}
-  ${extractFunction("codeMirrorListDepth")}
-  ${extractFunction("codeMirrorTasksAreSiblings")}
-  ${extractFunction("codeMirrorTaskSiblingTargetFroms")}
-  ${extractFunction("finishCodeMirrorTaskDrag")}
-  return {
-    markdownIndentWidth,
-    codeMirrorTaskSubtree,
-    codeMirrorListDepth,
-    codeMirrorTasksAreSiblings,
-    codeMirrorTaskSiblingTargetFroms,
-    finishCodeMirrorTaskDrag,
-    setDrag(view, session) {
-      codeMirrorView = view;
-      codeMirrorTaskDragSession = session;
-      dispatches.length = 0;
-      statuses.length = 0;
-    },
-    dispatches,
-    statuses
-  };
-`);
-
 test("task indentation changes exactly one four-space level", () => {
   const runtime = createIndentRuntime();
   assert.deepEqual([
@@ -183,104 +144,11 @@ test("other line toolbar transforms keep their established line-end selection", 
   for (const functionName of [
     "toggleCodeMirrorLinePrefix",
     "cycleCodeMirrorHeading",
-    "setCodeMirrorHeadingLevel",
-    "adjustCodeMirrorHeading",
     "toggleCodeMirrorTask"
   ]) {
     assert.doesNotMatch(extractFunction(functionName), /preserveSelection/);
   }
 });
-
-test("task hierarchy exposes only siblings and a parent drag moves its subtree", () => {
-  const runtime = createTaskRuntime();
-  const lines = [
-    "- [ ] Parent",
-    "    - [ ] Child",
-    "        - [ ] Grandchild",
-    "- [ ] Sibling",
-    "    - [ ] Sibling child",
-    "- [ ] Last"
-  ];
-  const doc = fakeDoc(lines.join("\n"));
-
-  assert.deepEqual(runtime.codeMirrorTaskSubtree(lines, 0), { from: 0, to: 3 });
-  assert.equal(runtime.codeMirrorListDepth(lines, 2), 2);
-  assert.equal(runtime.codeMirrorTasksAreSiblings(lines, 0, 3), true);
-  assert.equal(runtime.codeMirrorTasksAreSiblings(lines, 0, 1), false);
-  assert.deepEqual(
-    [...runtime.codeMirrorTaskSiblingTargetFroms(doc, lines, 0)],
-    [doc.line(4).from, doc.line(6).from]
-  );
-
-  runtime.setDrag({ state: { doc } }, {
-    pointerId: 7,
-    sourceFrom: doc.line(1).from,
-    sourceIndex: 0,
-    source: { from: 0, to: 3 },
-    targetFrom: doc.line(4).from,
-    dropAfter: true,
-    dragging: true
-  });
-  runtime.finishCodeMirrorTaskDrag({ pointerId: 7 });
-  assert.equal(runtime.dispatches.length, 1);
-  assert.equal(runtime.dispatches[0].changes.insert, [
-    "- [ ] Sibling",
-    "    - [ ] Sibling child",
-    "- [ ] Parent",
-    "    - [ ] Child",
-    "        - [ ] Grandchild",
-    "- [ ] Last"
-  ].join("\n"));
-
-  runtime.setDrag({ state: { doc } }, {
-    pointerId: 8,
-    sourceFrom: doc.line(1).from,
-    sourceIndex: 0,
-    source: { from: 0, to: 3 },
-    targetFrom: doc.line(2).from,
-    dropAfter: true,
-    dragging: true
-  });
-  runtime.finishCodeMirrorTaskDrag({ pointerId: 8 });
-  assert.equal(runtime.dispatches.length, 0, "a parent cannot be dropped inside its descendants");
-});
-
-for (const [kind, first, second] of [
-  ["bulleted", "- First", "+ Second"],
-  ["numbered", "1. First", "2) Second"],
-  ["mixed", "* First", "- [x] Second"]
-]) {
-  test(`${kind} list drag moves the subtree and accepts only siblings`, () => {
-    const runtime = createTaskRuntime();
-    const lines = [first, "    - Child", "        1. Grandchild", second,
-      "    - Other child", "Paragraph"];
-    const doc = fakeDoc(lines.join("\n"));
-    assert.deepEqual([...runtime.codeMirrorTaskSiblingTargetFroms(doc, lines, 0)],
-      [doc.line(4).from]);
-    assert.equal(runtime.codeMirrorTasksAreSiblings(lines, 1, 4), false,
-      "children under different parents are not siblings");
-    for (const [sourceLine, targetLine, dropAfter] of [[1, 4, true], [4, 1, false]]) {
-      runtime.setDrag({ state: { doc } }, {
-        pointerId: 1,
-        sourceFrom: doc.line(sourceLine).from,
-        targetFrom: doc.line(targetLine).from,
-        dropAfter,
-        dragging: true
-      });
-      runtime.finishCodeMirrorTaskDrag({ pointerId: 1 });
-      assert.equal(runtime.dispatches.length, 1);
-      assert.equal(runtime.dispatches[0].changes.insert,
-        [second, "    - Other child", first, "    - Child",
-          "        1. Grandchild", "Paragraph"].join("\n"));
-    }
-    runtime.setDrag({ state: { doc } }, {
-      pointerId: 1, sourceFrom: 0, targetFrom: doc.line(4).from,
-      dropAfter: true, dragging: true
-    });
-    runtime.finishCodeMirrorTaskDrag({ pointerId: 1 }, false);
-    assert.equal(runtime.dispatches.length, 0, "cancel leaves the document unchanged");
-  });
-}
 
 test("list conversion preserves nesting, replaces markers, and numbers each level", () => {
   const convert = (text, kind) => new Function("doc", "kind", `
@@ -374,7 +242,7 @@ test("Examples is draggable but keeps builtin deletion protections", () => {
     /sidebarMovable: true, sidebarDefaultFirst: true/);
 });
 
-test("sidebar and task drag affordances keep the source visible and show one drop line", () => {
+test("sidebar drag affordances keep the source visible and show one drop line", () => {
   assert.match(source, /\.LocalMarkdown-sidebar-drag-handle\s*\{[\s\S]*?opacity: 0; pointer-events: none;/);
   assert.match(source, /\.LocalMarkdown-file-row:hover > \.LocalMarkdown-file-drag-handle[\s\S]*?opacity: 1; pointer-events: auto;/);
   assert.match(source, /\.LocalMarkdown-file-row:has\(\.LocalMarkdown-file\.LocalMarkdown-dragging\)[\s\S]*?> \.LocalMarkdown-file-drag-handle/);
@@ -382,10 +250,7 @@ test("sidebar and task drag affordances keep the source visible and show one dro
   assert.match(source, /\.LocalMarkdown-sidebar-drop-before::after,[\s\S]*?height: 2px; background: var\(--lm-accent\)/);
   assert.match(extractFunction("markSidebarDropTarget"), /clearSidebarDropTargets\(\);/);
 
-  assert.match(source, /\.LocalMarkdown-cm-task-drag-handle\s*\{[\s\S]*?opacity: 0; pointer-events: none;/);
-  assert.match(source, /\.cm-line:hover \.LocalMarkdown-cm-task-drag-handle,[\s\S]*?opacity: 1; pointer-events: auto;/);
-  assert.match(source, /\.LocalMarkdown-cm-task-drag-source \.LocalMarkdown-cm-task-drag-handle/);
-  assert.match(extractFunction("markCodeMirrorTaskDragSource"), /session\.source\.from \+ 1[\s\S]*?session\.source\.to/);
+
 });
 
 test("sidebar file rows use the system cursor", () => {
@@ -521,7 +386,7 @@ test("generic image resize and alignment preserve source metadata", () => {
 });
 
 test("table images delegate to the same image controls and table-cell paste path", () => {
-  assert.match(extractFunction("appendTableCellPlainContent"), /configureCodeMirrorTableImage\(image\);/);
+  assert.match(extractFunction("appendTableInlineNodes"), /configureCodeMirrorTableImage\(image\);/);
   assert.match(extractFunction("configureCodeMirrorTableImage"), /showImageResizer\(image, true\)/);
   assert.match(source, /if \(tableCell\) void pasteEmbeddedImagesIntoTableCell\(images, tableCell\);/);
   assert.match(extractFunction("editableImageFromNode"), /element\?\.closest\?\.\("img"\)/);
@@ -539,7 +404,8 @@ const createDrawingRuntime = new Function(`
   const session = { files: [] };
   const drawingSaveButton = { disabled: false };
   const drawingStatus = { textContent: "" };
-  const drawingDialog = { open: true, close() { this.open = false; }, showModal() { this.open = true; } };
+  const appElement = {};
+  const drawingDialog = { open: true, close() { this.open = false; }, show() { this.open = true; } };
   const editor = { focus() { records.push(["focus"]); } };
   class XMLSerializer { serializeToString() { return "<svg/>"; } }
   function readBlobPayload() { return Promise.resolve({ type: "image/svg+xml", data: "svg-data", blob: {} }); }
@@ -567,6 +433,7 @@ const createDrawingRuntime = new Function(`
   }
   function updateStatus(message) { statuses.push(message); }
   ${extractFunction("isDrawingFile")}
+  ${extractFunction("setDrawingDialogOpen")}
   ${extractFunction("commitDrawing")}
   return {
     async run({ file, attachmentId = null }) {

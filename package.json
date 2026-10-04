@@ -1,0 +1,13 @@
+{
+  "name": "local-markdown",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/*.test.mjs"
+  },
+  "devDependencies": {
+    "@codemirror/merge": "6.12.2",
+    "@codemirror/state": "6.7.1",
+    "@lezer/markdown": "1.7.2",
+    "linkedom": "0.18.12"
+  }
+}

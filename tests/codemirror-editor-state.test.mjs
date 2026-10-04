@@ -85,7 +85,7 @@ const createActivationRuntime = new Function("files", `
   function hideTableResizeHandle() {}
   function hideImageResizer() {}
   function syncSidebarFileAvailability() {}
-  function setEditorValue(file) { calls.push(["set", file.id]); }
+  function loadEditorDocument(file) { calls.push(["set", file.id]); }
   function documentHistoryFor(file) { calls.push(["history", file.id]); }
   function restoreEditorSelection(file, selection, scroll) {
     calls.push(["restore", file.id, selection, scroll]);

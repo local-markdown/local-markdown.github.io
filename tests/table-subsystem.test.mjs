@@ -37,7 +37,7 @@ const tableRuntime = new Function(`
   ${extractFunction("markdownTableBlocks")}
   ${extractFunction("markdownTableRenderBlocks")}
   ${extractFunction("formattedTableWidth")}
-  ${extractFunction("replaceTableWidthsMetadata")}
+  ${extractFunction("tableWidthsMetadataChange")}
   ${extractFunction("codeMirrorTableDelimiter")}
   ${extractFunction("serializeCodeMirrorTableRow")}
   ${extractFunction("tableTextNodeMarkdown")}
@@ -49,7 +49,7 @@ const tableRuntime = new Function(`
     parseTableWidthsComment,
     markdownTableBlocks,
     markdownTableRenderBlocks,
-    replaceTableWidthsMetadata,
+    tableWidthsMetadataChange,
     codeMirrorTableDelimiter,
     serializeCodeMirrorTableRow,
     tableTextNodeMarkdown
@@ -208,21 +208,94 @@ test("editor width slider maximum follows the full available editing area", () =
 });
 
 test("width metadata inserts and replaces without changing table newlines", () => {
-  const plain = "| A | B |\r\n| --- | --- |\r\n| 1 | 2 |";
+  const prefix = "Before table\r\n\r\n";
+  const plain = prefix + "| A | B |\r\n| --- | --- |\r\n| 1 | 2 |";
   const plainBlock = tableRuntime.markdownTableBlocks(plain)[0];
-  assert.equal(
-    tableRuntime.replaceTableWidthsMetadata(plain, plainBlock, [1, 3], 75),
-    "<!-- local-markdown:table-widths=25,75;table-width=75 -->\r\n" + plain
+  assert.deepEqual(
+    tableRuntime.tableWidthsMetadataChange(plainBlock, [1, 3], 75),
+    {
+      from: prefix.length,
+      to: prefix.length,
+      insert: "<!-- local-markdown:table-widths=25,75;table-width=75 -->\r\n"
+    }
   );
 
-  const stored = "<!-- local-markdown:table-widths=50,50 -->\n"
-    + "| A | B |\n| --- | --- |\n| 1 | 2 |";
+  const metadata = "<!-- local-markdown:table-widths=50,50 -->\n";
+  const stored = prefix + metadata + "\n| A | B |\n| --- | --- |\n| 1 | 2 |";
   const storedBlock = tableRuntime.markdownTableBlocks(stored)[0];
-  assert.equal(
-    tableRuntime.replaceTableWidthsMetadata(stored, storedBlock, [2, 1], 100),
-    "<!-- local-markdown:table-widths=66.67,33.33 -->\n"
-      + "| A | B |\n| --- | --- |\n| 1 | 2 |"
+  assert.deepEqual(
+    tableRuntime.tableWidthsMetadataChange(storedBlock, [2, 1], 100),
+    {
+      from: prefix.length,
+      to: prefix.length + metadata.length,
+      insert: "<!-- local-markdown:table-widths=66.67,33.33 -->\n"
+    }
   );
+  assert.equal(tableRuntime.tableWidthsMetadataChange(storedBlock, [1]), null);
+});
+
+test("resize saves only metadata, preserves CodeMirror scroll and selection, and records one undo step", () => {
+  const createRuntime = new Function("value", `
+    let codeMirrorInputSuppression = 0;
+    const file = { text: value, dirty: false };
+    const history = [];
+    const dispatches = [];
+    const scrollEffect = {};
+    let mappedChanges;
+    const codeMirrorView = {
+      state: { changes(change) { return change; } },
+      scrollSnapshot() {
+        return { map(changes) { mappedChanges = changes; return scrollEffect; } };
+      },
+      dispatch(transaction) {
+        dispatches.push({ transaction, suppression: codeMirrorInputSuppression });
+      }
+    };
+    function documentSnapshot(file) { return { text: file.text }; }
+    function markFileDirty(file) { file.dirty = true; }
+    function renderFiles() {}
+    function updateStatus() {}
+    function scheduleAttachmentPreviews() {}
+    function scheduleTableWidths() {}
+    function renderCodeMirrorOutline() {}
+    function recordDocumentMutation(file, before, options) { history.push({ before, options }); }
+    ${extractFunction("applyEditorChanges")}
+    ${extractFunction("applyTableWidthTextUpdate")}
+    return {
+      file, history, dispatches, scrollEffect, applyTableWidthTextUpdate,
+      mappedChanges: () => mappedChanges,
+      suppression: () => codeMirrorInputSuppression
+    };
+  `);
+  const original = "Before table\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n\nAfter table";
+  const runtime = createRuntime(original);
+  for (const widths of [[25, 75], [40, 60]]) {
+    const value = runtime.file.text;
+    const table = tableRuntime.markdownTableBlocks(value)[0];
+    const change = tableRuntime.tableWidthsMetadataChange(table, widths);
+    const previousCount = runtime.history.length;
+    assert.equal(runtime.applyTableWidthTextUpdate(runtime.file, value, change, "Resized"), true);
+    const { transaction, suppression } = runtime.dispatches.at(-1);
+    assert.deepEqual(Object.keys(transaction).sort(), ["changes", "effects"]);
+    assert.deepEqual(transaction.changes, change);
+    assert.equal(transaction.effects, runtime.scrollEffect);
+    assert.equal(runtime.mappedChanges(), transaction.changes);
+    assert.equal(suppression, 1, "programmatic resize must not record another input edit");
+    assert.equal(runtime.suppression(), 0);
+    assert.equal(runtime.file.dirty, true);
+    assert.equal(runtime.file.text,
+      value.slice(0, change.from) + change.insert + value.slice(change.to));
+    assert.equal(runtime.file.text.replace(/<!-- local-markdown:table-widths[^\n]+\n/, ""), original);
+    assert.equal(runtime.history.length, previousCount + 1);
+    assert.deepEqual(runtime.history.at(-1), {
+      before: { text: value }, options: { label: "table resize", mergeWithPrevious: false }
+    });
+  }
+  const unchanged = tableRuntime.tableWidthsMetadataChange(
+    tableRuntime.markdownTableBlocks(runtime.file.text)[0], [40, 60]);
+  assert.equal(runtime.applyTableWidthTextUpdate(runtime.file, runtime.file.text, unchanged, "Resized"), false);
+  assert.equal(runtime.history.length, 2);
+  assert.equal(runtime.dispatches.length, 2);
 });
 
 test("table row and multiline-cell serialization is stable", () => {
@@ -526,6 +599,7 @@ test("inline formatting uses the table DOM selection instead of the source curso
   };
   let inserted;
   const range = {
+    toString: () => "beta",
     extractContents: () => content,
     insertNode(fragment) { inserted = fragment.nodes; },
     setStartAfter(node) { this.start = node; },
@@ -539,9 +613,7 @@ test("inline formatting uses the table DOM selection instead of the source curso
     removeAllRanges() {},
     addRange(value) { assert.equal(value, range); }
   };
-  const commands = [];
   const document = {
-    execCommand: (...args) => commands.push(args),
     createTextNode: textContent => ({ textContent }),
     createDocumentFragment: () => ({
       nodes: [],
@@ -551,19 +623,14 @@ test("inline formatting uses the table DOM selection instead of the source curso
   let sourceReads = 0;
   const wrap = new Function("document", "getSelection", "tableCellFromNode",
     "markEditorHistoryPending", "codeMirrorSelection", `
+    function revealTableCellMarkdown() {}
     ${extractFunction("wrapCodeMirrorTableSelection")}
     ${extractFunction("wrapCodeMirrorSelection")}
     return wrapCodeMirrorSelection;
   `)(document, () => selection, node => node === anchor ? cell : null,
     () => events.push("history"), () => { sourceReads += 1; return null; });
 
-  for (const [marker, command] of [["**", "bold"], ["*", "italic"], ["~~", "strikeThrough"]]) {
-    assert.equal(wrap(marker, marker, "placeholder"), true);
-    assert.deepEqual(commands.at(-2), ["styleWithCSS", false, false]);
-    assert.deepEqual(commands.at(-1), [command, false]);
-    assert.equal(inserted, undefined);
-  }
-  for (const marker of ["`"]) {
+  for (const marker of ["**", "*", "~~", "`"]) {
     assert.equal(wrap(marker, marker, "placeholder"), true);
     assert.equal(inserted[0].textContent, marker);
     assert.equal(inserted[1].nodes[0], selectedText);
@@ -573,6 +640,15 @@ test("inline formatting uses the table DOM selection instead of the source curso
   }
   assert.equal(sourceReads, 0);
   assert.deepEqual(events, Array(4).fill(["history", "input"]).flat());
+
+  range.toString = () => "**beta**";
+  range.cloneContents = () => ({ querySelector: () => null });
+  range.deleteContents = () => {};
+  range.insertNode = node => { inserted = node; };
+  range.selectNodeContents = node => { range.selected = node; };
+  assert.equal(wrap("**"), true);
+  assert.equal(inserted.textContent, "beta");
+  assert.equal(range.selected, inserted);
 
   // A cross-cell selection must not modify the stale document cursor either.
   selection.focusNode = {};
@@ -642,4 +718,49 @@ test("styled table cells serialize formatting without losing original delimiters
   assert.equal(serialize(element("CODE", [text("a`b")], {
     markdownOpen: "``", markdownClose: "``"
   })), "``a`b``");
+});
+
+test("revealing nested cell formatting preserves text nodes and selection boundaries", () => {
+  const text = nodeValue => ({ nodeType: 3, nodeValue, childNodes: [] });
+  const element = (childNodes, dataset = {}) => {
+    const node = { nodeType: 1, childNodes, dataset,
+      get lastChild() { return this.childNodes.at(-1); },
+      contains(target) {
+        return target === this || this.childNodes.some(child =>
+          child === target || child.contains?.(target));
+      },
+      replaceWith(...nodes) {
+        const parent = this.parentNode;
+        parent.childNodes.splice(parent.childNodes.indexOf(this), 1, ...nodes);
+        for (const child of nodes) child.parentNode = parent;
+      }
+    };
+    for (const child of childNodes) child.parentNode = node;
+    return node;
+  };
+  for (const selectWholeCell of [false, true]) {
+    const word = text("word");
+    const italic = element([word], { markdownOpen: "_", markdownClose: "_" });
+    const bold = element([italic], { markdownOpen: "**", markdownClose: "**" });
+    const image = element([]);
+    const cell = element([bold, image]);
+    cell.querySelectorAll = () => [bold, italic];
+    const selection = {
+      anchorNode: selectWholeCell ? cell : word,
+      anchorOffset: selectWholeCell ? 0 : 3,
+      focusNode: selectWholeCell ? cell : word,
+      focusOffset: selectWholeCell ? 2 : 1,
+      setBaseAndExtent(...points) { this.restored = points; }
+    };
+    const reveal = new Function("document", "Node", "getSelection", `
+      ${extractFunction("revealTableCellMarkdown")}
+      return revealTableCellMarkdown;
+    `)({ createTextNode: text }, { TEXT_NODE: 3 }, () => selection);
+    reveal(cell);
+    assert.equal(cell.childNodes.map(node => node.nodeValue || "").join(""), "**_word_**");
+    assert.equal(cell.childNodes[2], word);
+    assert.equal(cell.lastChild, image);
+    assert.deepEqual(selection.restored, selectWholeCell
+      ? [cell, 0, cell, 6] : [word, 3, word, 1]);
+  }
 });
