@@ -34,13 +34,16 @@ const createRuntime = new Function(`
   return { calls, markFileDirty };
 `);
 
-test("markFileDirty has only the shared dirty and save-scheduling effects", () => {
+test("markFileDirty records the latest edit and schedules saves without changing creation time", () => {
   const runtime = createRuntime();
-  const file = { dirty: false };
+  const file = { dirty: false, createdAt: 123, editedAt: 456 };
+  const before = Date.now();
 
   runtime.markFileDirty(file);
 
   assert.equal(file.dirty, true);
+  assert.equal(file.createdAt, 123);
+  assert.ok(file.editedAt >= before && file.editedAt <= Date.now());
   assert.deepEqual(runtime.calls, [
     ["auto-save", file],
     ["session-save"]
@@ -60,7 +63,7 @@ test("markFileDirty is the only dirty=true assignment", () => {
   );
   assert.match(
     markFileDirtySource,
-    /file\.dirty = true;\n\s+scheduleAutoSave\(file\);\n\s+scheduleSessionSave\(\);/
+    /file\.dirty = true;\n\s+file\.editedAt = Date\.now\(\);\n\s+scheduleAutoSave\(file\);\n\s+scheduleSessionSave\(\);/
   );
 });
 

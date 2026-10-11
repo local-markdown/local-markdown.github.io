@@ -231,14 +231,15 @@
       border: 0; border-radius: var(--lm-radius-control); background: transparent;
     }
     .LocalMarkdown-search {
-      position: relative; display: flex; align-items: center; padding: var(--lm-space-1) var(--lm-space-2);
+      position: relative; display: flex; align-items: center; gap: var(--lm-space-1);
+      padding: var(--lm-space-1) var(--lm-space-2);
     }
-    .LocalMarkdown-search svg {
+    .LocalMarkdown-search > svg {
       position: absolute; left: var(--lm-space-4); width: 16px; height: 16px;
       color: var(--lm-muted); pointer-events: none;
     }
     .LocalMarkdown-search-input {
-      width: 100%; height: var(--lm-control-height);
+      width: 100%; min-width: 0; height: var(--lm-control-height);
       padding: var(--lm-space-1) var(--lm-space-8) var(--lm-space-1) var(--lm-space-8);
       border: 1px solid transparent; border-radius: var(--lm-radius-control);
       color: var(--lm-text); background: transparent;
@@ -254,12 +255,46 @@
       box-shadow: 0 0 0 1px var(--lm-control-border);
     }
     .LocalMarkdown-search-clear {
-      position: absolute; right: var(--lm-space-3);
+      position: absolute; right: calc(var(--lm-control-height) + var(--lm-space-4));
       width: var(--lm-control-height-compact); height: var(--lm-control-height-compact); padding: 0;
       border: 0; border-radius: var(--lm-radius-control); color: var(--lm-muted); background: transparent;
       font-size: 18px; line-height: 1;
     }
     .LocalMarkdown-search-clear[hidden] { display: none; }
+    .LocalMarkdown-sort-toggle {
+      flex: 0 0 var(--lm-control-height); width: var(--lm-control-height);
+      height: var(--lm-control-height); display: grid; place-items: center; padding: 0;
+      border: 0; border-radius: var(--lm-radius-control);
+      color: var(--lm-muted); background: transparent;
+    }
+    .LocalMarkdown-sort-toggle svg { width: 16px; height: 16px; }
+    .LocalMarkdown-sort-toggle[aria-expanded="true"] { background: var(--lm-selected); }
+    .LocalMarkdown-file-sorting {
+      position: absolute; z-index: 21; top: calc(100% + var(--lm-space-1));
+      right: var(--lm-space-2); width: 220px; max-width: calc(100% - var(--lm-space-4));
+      display: flex; gap: var(--lm-space-2);
+      padding: var(--lm-space-2);
+      border: 1px solid var(--lm-control-border); border-radius: var(--lm-radius-surface);
+      background: var(--lm-background); box-shadow: 0 5px 18px var(--lm-menu-shadow);
+    }
+    .LocalMarkdown-file-sorting[hidden] { display: none; }
+    .LocalMarkdown-file-sorting > div {
+      flex: 1; min-width: 0; display: grid; gap: var(--lm-space-1);
+    }
+    .LocalMarkdown-file-sorting label {
+      color: var(--lm-secondary-text); font-size: 11px;
+    }
+    .LocalMarkdown-file-sorting select {
+      width: 100%; min-width: 0; height: var(--lm-control-height);
+      padding: 0 var(--lm-space-1); border: 1px solid var(--lm-control-border);
+      border-radius: var(--lm-radius-control); color: var(--lm-text);
+      background: var(--lm-sidebar-background); font: inherit;
+      font-size: var(--lm-type-control-size);
+    }
+    .LocalMarkdown-file-sorting select:focus-visible {
+      outline: 2px solid var(--lm-accent); outline-offset: 1px;
+    }
+    .LocalMarkdown-file-sorting select:disabled { opacity: .5; }
     .LocalMarkdown-files {
       min-height: 0; overflow: auto;
       padding: var(--lm-space-1) var(--lm-space-2) var(--lm-space-4);
@@ -1067,18 +1102,18 @@
     }
     .LocalMarkdown-drawing-header {
       display: flex; align-items: center; gap: var(--lm-space-2);
-      padding: 0 var(--lm-space-2) 0 var(--lm-space-4);
+      padding: 0 var(--lm-space-2);
       border-bottom: 1px solid var(--lm-border); background: var(--lm-background);
     }
     .LocalMarkdown-drawing-header strong {
-      font-size: var(--lm-type-heading-size); line-height: var(--lm-line-tight); white-space: nowrap;
+      font-size: var(--lm-type-control-size); line-height: var(--lm-line-tight); white-space: nowrap;
     }
     .LocalMarkdown-drawing-status {
       min-width: 0; flex: 1; overflow: hidden; color: var(--lm-muted);
       font-size: var(--lm-type-metadata-size); text-overflow: ellipsis; white-space: nowrap;
     }
     .LocalMarkdown-drawing-action {
-      height: var(--lm-control-height); padding: 0 var(--lm-space-3);
+      height: var(--lm-control-height); padding: 0 var(--lm-space-2);
     }
     .LocalMarkdown-drawing-save {
       color: var(--lm-background); border-color: var(--lm-accent); background: var(--lm-accent);
@@ -1086,6 +1121,24 @@
     .LocalMarkdown-drawing-save:hover { filter: brightness(1.08); background: var(--lm-accent); }
     .LocalMarkdown-drawing-stage { position: relative; min-width: 0; min-height: 0; }
     .LocalMarkdown-drawing-canvas { width: 100%; height: 100%; }
+    .LocalMarkdown-drawing-canvas .excalidraw .App-toolbar .HintViewer { display: none; }
+    @media (min-width: 651px) and (pointer: fine) {
+      .LocalMarkdown-drawing-shell { grid-template-rows: 36px minmax(0, 1fr); }
+      .LocalMarkdown-drawing-action { height: 28px; }
+      .LocalMarkdown-drawing-canvas .excalidraw { --editor-container-padding: .5rem; }
+      .LocalMarkdown-drawing-canvas .excalidraw .App-toolbar { --lg-button-size: 1.75rem; }
+      .LocalMarkdown-drawing-canvas .excalidraw .App-toolbar__extra-tools-trigger { padding: 6px; }
+      .LocalMarkdown-drawing-canvas .excalidraw .App-toolbar .ToolIcon__keybinding { display: none; }
+    }
+    @media (min-width: 900px) and (pointer: fine) {
+      .LocalMarkdown-drawing-shell { grid-template-rows: 44px minmax(0, 1fr); }
+      .LocalMarkdown-drawing-status { max-width: calc(50vw - 340px); }
+      #LocalMarkdown-drawing-cancel { margin-left: auto; }
+      /* Keep the React-owned toolbar intact while placing it in the header's free centre. */
+      .LocalMarkdown-drawing-canvas .excalidraw .shapes-section .App-toolbar-container {
+        position: fixed; top: 4px; left: 50%; transform: translateX(-50%);
+      }
+    }
     .LocalMarkdown-drawing-loading {
       position: absolute; z-index: 2; inset: 0; display: grid; place-items: center;
       color: var(--lm-muted); background: var(--lm-background);
@@ -1154,7 +1207,6 @@
       .LocalMarkdown-cm-outline {
         width: min(220px, 44vw); min-width: 150px; flex-basis: min(220px, 44vw);
       }
-      .LocalMarkdown-drawing-header { padding-left: var(--lm-space-2); }
       .LocalMarkdown-drawing-status { display: none; }
     }
 
@@ -1216,6 +1268,29 @@
         </svg>
         <input class="LocalMarkdown-search-input" id="LocalMarkdown-search-input" type="search" placeholder="Search" aria-label="Search files and content" autocomplete="off" spellcheck="false">
         <button class="LocalMarkdown-search-clear" id="LocalMarkdown-search-clear" type="button" aria-label="Clear search" title="Clear search" hidden>&times;</button>
+        <button class="LocalMarkdown-sort-toggle" id="LocalMarkdown-sort-toggle" type="button" aria-label="Sort files" title="Sort files" aria-haspopup="dialog" aria-expanded="false" aria-controls="LocalMarkdown-file-sorting">
+          <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+            <path d="M4 4v12m-2.5-2.5L4 16l2.5-2.5M9 5h8M9 10h6M9 15h3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+        </button>
+        <div class="LocalMarkdown-file-sorting" id="LocalMarkdown-file-sorting" role="dialog" aria-label="Sort files" hidden>
+          <div>
+            <label for="LocalMarkdown-sort-by">Sort by</label>
+            <select id="LocalMarkdown-sort-by">
+              <option value="manual">Manual</option>
+              <option value="created" title="When created or first opened in this app">Created</option>
+              <option value="edited">Edited</option>
+              <option value="name">Name</option>
+            </select>
+          </div>
+          <div>
+            <label for="LocalMarkdown-sort-order">Order by</label>
+            <select id="LocalMarkdown-sort-order" disabled>
+              <option value="asc">Asc</option>
+              <option value="desc">Desc</option>
+            </select>
+          </div>
+        </div>
       </div>
       <nav class="LocalMarkdown-files" id="LocalMarkdown-files" aria-label="Files"></nav>
     </aside>
@@ -1403,6 +1478,10 @@
       const sidebarDismiss = document.querySelector("#LocalMarkdown-sidebar-dismiss");
       const searchInput = document.querySelector("#LocalMarkdown-search-input");
       const searchClear = document.querySelector("#LocalMarkdown-search-clear");
+      const fileSortToggle = document.querySelector("#LocalMarkdown-sort-toggle");
+      const fileSortPopover = document.querySelector("#LocalMarkdown-file-sorting");
+      const fileSortBy = document.querySelector("#LocalMarkdown-sort-by");
+      const fileSortOrder = document.querySelector("#LocalMarkdown-sort-order");
       const newToggle = document.querySelector("#LocalMarkdown-new");
       const newMenu = document.querySelector("#LocalMarkdown-new-menu");
       const newOptions = Array.from(document.querySelectorAll(".LocalMarkdown-new-option"));
@@ -1675,6 +1754,18 @@
         newMenu.hidden = !open;
         newToggle.setAttribute("aria-expanded", String(open));
         if (open && focus) newOptions[0]?.focus();
+      }
+
+      function setFileSortOpen(open, { restoreFocus = false } = {}) {
+        fileSortPopover.hidden = !open;
+        fileSortToggle.setAttribute("aria-expanded", String(open));
+        if (open) {
+          closeFileContextMenu();
+          closeSectionContextMenu();
+          setNewMenuOpen(false);
+          setThemeMenuOpen(false);
+          fileSortBy.focus();
+        } else if (restoreFocus) fileSortToggle.focus();
       }
 
       function fileContextActionAvailable(action, target) {
@@ -1966,6 +2057,7 @@
       const session = {
         activeId: example.id,
         files: [example],
+        fileSort: { by: "manual", order: "asc" },
         sidebar: { sections: [], ungroupedFileIds: [example.id] },
         lastOpenHandle: null
       };
@@ -2434,9 +2526,47 @@
         return changed;
       }
 
+      function normalizedFileSort(sort) {
+        return {
+          by: ["manual", "created", "edited", "name"].includes(sort?.by) ? sort.by : "manual",
+          order: sort?.order === "desc" ? "desc" : "asc"
+        };
+      }
+
+      function compareSidebarFiles(left, right) {
+        const { by, order } = session.fileSort;
+        if (by === "manual") return 0;
+        // Keep the built-in Examples entry ahead of sorted user files in its group.
+        if (left.builtin || right.builtin) {
+          return Number(Boolean(right.builtin)) - Number(Boolean(left.builtin));
+        }
+        const difference = by === "name"
+          ? left.name.localeCompare(right.name, undefined, { numeric: true, sensitivity: "base" })
+          : (left[by === "edited" ? "editedAt" : "createdAt"] || 0)
+            - (right[by === "edited" ? "editedAt" : "createdAt"] || 0);
+        return order === "desc" ? -difference : difference;
+      }
+
+      function setFileSort(by, order) {
+        session.fileSort = normalizedFileSort({ by, order });
+        renderFiles();
+        scheduleSessionSave();
+      }
+
       function sidebarFiles(fileIds) {
         const filesById = new Map(session.files.map(file => [file.id, file]));
-        return fileIds.map(id => filesById.get(id)).filter(Boolean);
+        return fileIds.map(id => filesById.get(id)).filter(Boolean).sort(compareSidebarFiles);
+      }
+
+      function useManualFileOrder() {
+        if (session.fileSort.by === "manual") return;
+        // Start a manual drag from the visible order, including the other groups.
+        for (const section of session.sidebar.sections) {
+          section.fileIds = sidebarFiles(section.fileIds).map(file => file.id);
+        }
+        session.sidebar.ungroupedFileIds = sidebarFiles(session.sidebar.ungroupedFileIds)
+          .map(file => file.id);
+        session.fileSort.by = "manual";
       }
 
       async function createSection() {
@@ -2492,6 +2622,7 @@
         const file = session.files.find(candidate => candidate.id === fileId);
         const section = sectionId ? sectionForId(sectionId) : null;
         if (!isStandaloneSidebarFile(file) || (sectionId && !section)) return;
+        if (targetFileId) useManualFileOrder();
         removeFileFromSidebarLayout(fileId);
         const fileIds = section ? section.fileIds : session.sidebar.ungroupedFileIds;
         const targetIndex = targetFileId ? fileIds.indexOf(targetFileId) : -1;
@@ -2570,6 +2701,7 @@
           version: 2,
           activeId: session.activeId,
           lastOpenHandle: session.lastOpenHandle,
+          fileSort: { ...session.fileSort },
           sidebar: {
             sections: session.sidebar.sections.map(section => ({
               id: section.id,
@@ -2587,6 +2719,8 @@
             .map(file => ({
               id: file.id,
               name: file.name,
+              createdAt: file.createdAt,
+              editedAt: file.editedAt,
               text: file.text,
               handle: file.handle || null,
               dirty: Boolean(file.dirty),
@@ -2620,6 +2754,7 @@
 
       function markFileDirty(file) {
         file.dirty = true;
+        file.editedAt = Date.now();
         scheduleAutoSave(file);
         scheduleSessionSave();
       }
@@ -2656,6 +2791,7 @@
         const diskFile = await file.handle.getFile();
         const parsed = parseStoredMarkdown(await diskFile.text());
         file.name = diskFile.name;
+        if (Number.isFinite(diskFile.lastModified)) file.editedAt = diskFile.lastModified;
         file.text = parsed.text;
         replaceFileAttachments(file, parsed.attachments);
         file.dirty = false;
@@ -2689,12 +2825,16 @@
         }
 
         if ([1, 2].includes(storedSession?.version) && Array.isArray(storedSession.files)) {
+          session.fileSort = normalizedFileSort(storedSession.fileSort);
           const restoredFiles = storedSession.files
             .filter(file => file && typeof file.id === "string"
               && typeof file.name === "string" && typeof file.text === "string")
             .map(file => ({
               id: file.id,
               name: file.name,
+              // Older sessions have no creation date; equal dates keep their existing order.
+              createdAt: Number.isFinite(file.createdAt) && file.createdAt >= 0 ? file.createdAt : 0,
+              editedAt: Number.isFinite(file.editedAt) && file.editedAt >= 0 ? file.editedAt : 0,
               text: file.text,
               handle: file.handle || null,
               attachments: restoredAttachments(file.attachments),
@@ -2788,6 +2928,13 @@
       }
 
       function renderFiles() {
+        fileSortBy.value = session.fileSort.by;
+        fileSortOrder.value = session.fileSort.order;
+        fileSortOrder.disabled = session.fileSort.by === "manual";
+        fileSortToggle.title = `Sort files: ${fileSortBy.selectedOptions[0].textContent}`
+          + (fileSortOrder.disabled ? "" : `, ${session.fileSort.order === "asc" ? "ascending" : "descending"}`);
+        fileSortBy.title = session.fileSort.by === "created"
+          ? "When created or first opened in this app" : "Sort files within each section";
         filesElement.replaceChildren();
         const query = searchInput.value.trim();
         searchClear.hidden = !query;
@@ -3075,6 +3222,10 @@
           })
           .filter(result => result.nameScore !== null || result.matches.length)
           .sort((left, right) => {
+            if (session.fileSort.by !== "manual") {
+              return compareSidebarFiles(left.candidate.file, right.candidate.file)
+                || left.candidate.order - right.candidate.order;
+            }
             if (left.nameScore !== null && right.nameScore === null) return -1;
             if (left.nameScore === null && right.nameScore !== null) return 1;
             if (left.nameScore !== null && right.nameScore !== null
@@ -3338,6 +3489,8 @@
         hideImageResizer();
         if (!(file.attachments instanceof Map)) file.attachments = new Map();
         if (!session.files.includes(file)) {
+          file.createdAt ??= Date.now();
+          file.editedAt ??= file.createdAt;
           session.files.push(file);
           syncSidebarFileAvailability(file);
         }
@@ -6557,6 +6710,7 @@
           const parsed = parseStoredMarkdown(await localFile.text());
           const file = {
             id: createId(), name: localFile.name, text: parsed.text, handle,
+            editedAt: localFile.lastModified,
             attachments: parsed.attachments, builtin: false, dirty: false,
             needsPermission: false
           };
@@ -6718,6 +6872,22 @@
         else editor?.focus();
       }
 
+      fileSortBy.addEventListener("change", () => setFileSort(fileSortBy.value, fileSortOrder.value));
+      fileSortOrder.addEventListener("change", () => setFileSort(fileSortBy.value, fileSortOrder.value));
+      fileSortToggle.addEventListener("click", () => setFileSortOpen(fileSortPopover.hidden));
+      fileSortPopover.addEventListener("keydown", event => {
+        if (event.key !== "Escape") return;
+        event.preventDefault();
+        event.stopPropagation();
+        setFileSortOpen(false, { restoreFocus: true });
+      });
+      for (const eventType of ["pointerdown", "focusin"]) {
+        document.addEventListener(eventType, event => {
+          if (fileSortPopover.hidden || fileSortPopover.contains(event.target)
+              || fileSortToggle.contains(event.target)) return;
+          setFileSortOpen(false);
+        });
+      }
       sidebarToggle.addEventListener("click", toggleSidebar);
       sidebarDismiss.addEventListener("click", () => setSidebarOpen(false));
       sidebarBackdrop.addEventListener("click", () => setSidebarOpen(false));
@@ -7308,7 +7478,7 @@
           if (pendingEditorHistoryInput?.fileId === file.id) pendingEditorHistoryInput = null;
         } else if (synchronizeHistory) synchronizeDocumentHistoryPresent(file, canonical);
         else recordDocumentMutation(file, before, editorHistoryDetails(file));
-        if (!wasDirty && file.dirty) renderFiles();
+        if ((!wasDirty && file.dirty) || session.fileSort.by === "edited") renderFiles();
         updateStatus();
         renderCodeMirrorOutline();
         scheduleAttachmentPreviews();

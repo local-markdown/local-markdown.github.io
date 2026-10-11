@@ -182,6 +182,7 @@ const createSidebarRuntime = new Function(`
   ${extractFunction("removeFileFromSidebarLayout")}
   ${extractFunction("normalizeSidebarLayout")}
   ${extractFunction("moveSectionRelative")}
+  ${extractFunction("useManualFileOrder")}
   ${extractFunction("moveFileToSection")}
   return {
     setSession(value) { session = value; renderCount = 0; saveCount = 0; },
@@ -195,6 +196,7 @@ const createSidebarRuntime = new Function(`
 test("sidebar normalization keeps each eligible file in exactly one hierarchy location", () => {
   const runtime = createSidebarRuntime();
   const session = {
+    fileSort: { by: "manual", order: "asc" },
     files: [
       { id: "example", builtin: true, sidebarMovable: true, sidebarDefaultFirst: true },
       { id: "a" }, { id: "b" }, { id: "c" },

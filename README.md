@@ -25,6 +25,7 @@ Open Local Markdown in desktop Chrome or Edge, choose a Markdown file, and start
 - Every Markdown newline is preserved through editing, undo, refresh, and live preview
 - White, Solarized Light, and Solarized Dark color themes
 - Multiple open files in a collapsible, responsive sidebar
+- Sort files by created date, edited date, or name, in ascending or descending order
 - Persistent topic sections for grouping, collapsing, renaming, and reordering open files
 - File context actions for saving, renaming, closing, and confirmed deletion
 - Filename and content search across open files
@@ -53,6 +54,8 @@ Click a rendered Mermaid diagram to edit its source. Hover over it and select th
 Pasting a URL by itself creates a Markdown link. Local Markdown uses a copied link label when available, the filename for document and media URLs, supported sites' oEmbed titles, or a directly accessible HTML page title. If metadata is unavailable, it falls back to a readable name from the URL.
 
 Use the toolbar’s **Download** button to choose **Download Markdown (.md)** or **Download Word (.docx)**. Both options download a copy. Word export preserves headings, inline formatting, lists, tables, and accessible images. Mermaid diagrams export as source code; images that cannot be loaded are replaced with a text label. Word export loads its conversion libraries on demand and runs in your browser.
+
+Select the **Sort files** icon to the right of the sidebar search to choose **Sort by** and **Order by**. Sorting applies within each section and in search results, and your selection is remembered after refresh. **Created** means created or first opened in this app; browsers do not expose the original creation date. **Edited** uses the file’s last modification time and updates as you edit. Files restored from older sessions may have unknown dates and retain their relative order when dates match. **Manual** preserves drag-and-drop ordering; dropping a file before or after another switches back to Manual.
 
 ## Draw with Excalidraw
 
