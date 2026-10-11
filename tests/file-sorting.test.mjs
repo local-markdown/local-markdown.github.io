@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { parseHTML } from "linkedom";
 
 const source = readFileSync(new URL("../local-markdown.html", import.meta.url), "utf8");
 function extractFunction(name) {
@@ -10,27 +11,29 @@ function extractFunction(name) {
   return source.slice(match.index, end);
 }
 
-const createRuntime = new Function("storedSession", `
+const createRuntime = new Function("storedSession", "document", `
   const example = { id: "example", name: "Examples", builtin: true,
     sidebarMovable: true, sidebarDefaultFirst: true };
   const session = { files: [example], fileSort: { by: "manual", order: "asc" },
     sidebar: { sections: [], ungroupedFileIds: [example.id] } };
   let sessionNeedsSave = false, sessionRestored = false;
+  const fileSortToggle = document.querySelector("#LocalMarkdown-sort-toggle");
+  const fileSortOptions = Array.from(document.querySelectorAll("[data-file-sort]"));
   function activeFile() { return session.files.find(file => file.id === session.activeId); }
   async function readStoredSession() { return storedSession; }
   function scheduleSessionSave() {}
   function scheduleAutoSave() {}
-  function renderFiles() {}
+  function renderFiles() { renderFileSort(); }
   function storedAttachments() { return []; }
   function parseStoredMarkdown(text) { return { text, attachments: new Map() }; }
   function replaceFileAttachments(file, attachments) { file.attachments = attachments; }
   function resetDocumentHistory() {}
-  ${["normalizedFileSort", "compareSidebarFiles", "setFileSort", "sidebarFiles",
+  ${["normalizedFileSort", "compareSidebarFiles", "setFileSort", "selectFileSort", "renderFileSort", "sidebarFiles",
     "useManualFileOrder", "isStandaloneSidebarFile", "sectionForId",
     "removeFileFromSidebarLayout", "moveFileToSection", "normalizeSidebarLayout",
     "restoredAttachments", "handlePermission", "loadFileFromHandle", "refreshRestoredFile",
     "restoreSession", "sessionSnapshot", "markFileDirty"].map(extractFunction).join("\n")}
-  return { session, restoreSession, sessionSnapshot, setFileSort, sidebarFiles,
+  return { session, document, renderFiles, restoreSession, sessionSnapshot, setFileSort, selectFileSort, sidebarFiles,
     moveFileToSection, markFileDirty, loadFileFromHandle };
 `);
 
@@ -48,8 +51,10 @@ const fixture = () => ({
 });
 const ids = files => files.map(file => file.id);
 async function runtime(snapshot = fixture()) {
-  const app = createRuntime(snapshot);
+  const { document } = parseHTML(source);
+  const app = createRuntime(snapshot, document);
   await app.restoreSession();
+  app.renderFiles();
   return app;
 }
 
@@ -77,11 +82,37 @@ test("sort preferences and dates survive a session snapshot and restore", async 
   const snapshot = app.sessionSnapshot();
   const restored = await runtime(snapshot);
   assert.deepEqual(restored.session.fileSort, { by: "edited", order: "desc" });
+  const selected = restored.document.querySelector('[data-file-sort="edited"]');
+  assert.equal(selected.getAttribute("aria-label"), "Edited, descending");
+  assert.equal(selected.querySelector(".LocalMarkdown-file-sort-direction").textContent, "↓");
   assert.deepEqual(restored.sessionSnapshot(), snapshot);
   assert.deepEqual(ids(restored.sidebarFiles(["a", "b", "c"])), ["b", "a", "c"]);
 });
 
-test("legacy sessions and invalid metadata retain stable ordering", async () => {
+test("the combined menu starts each new sort ascending and toggles repeated selections", async () => {
+  const app = await runtime();
+  for (const [by, order] of [
+    ["created", "asc"], ["created", "desc"], ["created", "asc"],
+    ["edited", "asc"], ["edited", "desc"],
+    ["name", "asc"], ["name", "desc"], ["created", "asc"],
+    ["manual", "asc"], ["manual", "asc"]
+  ]) {
+    app.selectFileSort(by);
+    assert.deepEqual(app.session.fileSort, { by, order });
+    const checked = app.document.querySelectorAll('[data-file-sort][aria-checked="true"]');
+    assert.equal(checked.length, 1);
+    assert.equal(checked[0].dataset.fileSort, by);
+    assert.equal(checked[0].querySelector(".LocalMarkdown-file-sort-direction").textContent,
+      by === "manual" ? "" : order === "asc" ? "↑" : "↓");
+    for (const option of app.document.querySelectorAll('[data-file-sort][aria-checked="false"]')) {
+      assert.equal(option.querySelector(".LocalMarkdown-file-sort-direction").textContent, "");
+    }
+    assert.equal(app.document.querySelector("#LocalMarkdown-sort-toggle").dataset.order,
+      by === "manual" ? "manual" : order);
+  }
+});
+
+test("legacy sessions keep manual order but date sorts use names when dates are unknown", async () => {
   const snapshot = fixture();
   snapshot.version = 1;
   delete snapshot.sidebar;
@@ -92,11 +123,27 @@ test("legacy sessions and invalid metadata retain stable ordering", async () => 
   }
   const app = await runtime(snapshot);
   assert.deepEqual(app.session.fileSort, { by: "manual", order: "asc" });
+  assert.deepEqual(ids(app.sidebarFiles(app.session.sidebar.ungroupedFileIds)), snapshot.fileOrder);
   for (const by of ["created", "edited"]) {
     for (const order of ["asc", "desc"]) {
       app.setFileSort(by, order);
-      assert.deepEqual(ids(app.sidebarFiles(app.session.sidebar.ungroupedFileIds)), snapshot.fileOrder);
+      assert.deepEqual(ids(app.sidebarFiles(app.session.sidebar.ungroupedFileIds)),
+        order === "asc" ? ["example", "c", "d", "b", "a"] : ["example", "a", "b", "d", "c"]);
     }
+  }
+});
+
+test("matching dates sort names naturally in the selected direction", async () => {
+  const app = await runtime();
+  for (const file of app.session.files.filter(file => !file.builtin)) {
+    file.createdAt = 100;
+    file.editedAt = 100;
+  }
+  for (const by of ["created", "edited"]) {
+    app.setFileSort(by, "asc");
+    assert.deepEqual(ids(app.sidebarFiles(["a", "b", "c"])), ["c", "b", "a"]);
+    app.setFileSort(by, "desc");
+    assert.deepEqual(ids(app.sidebarFiles(["a", "b", "c"])), ["a", "b", "c"]);
   }
 });
 

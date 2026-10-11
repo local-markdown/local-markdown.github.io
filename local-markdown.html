@@ -268,33 +268,28 @@
       color: var(--lm-muted); background: transparent;
     }
     .LocalMarkdown-sort-toggle svg { width: 16px; height: 16px; }
+    .LocalMarkdown-sort-toggle[data-order="asc"] .LocalMarkdown-sort-direction {
+      transform: translateY(20px) scaleY(-1);
+    }
     .LocalMarkdown-sort-toggle[aria-expanded="true"] { background: var(--lm-selected); }
     .LocalMarkdown-file-sorting {
       position: absolute; z-index: 21; top: calc(100% + var(--lm-space-1));
-      right: var(--lm-space-2); width: 220px; max-width: calc(100% - var(--lm-space-4));
-      display: flex; gap: var(--lm-space-2);
-      padding: var(--lm-space-2);
+      right: var(--lm-space-2); width: 160px; max-width: calc(100% - var(--lm-space-4));
+      padding: var(--lm-space-1);
       border: 1px solid var(--lm-control-border); border-radius: var(--lm-radius-surface);
       background: var(--lm-background); box-shadow: 0 5px 18px var(--lm-menu-shadow);
     }
     .LocalMarkdown-file-sorting[hidden] { display: none; }
-    .LocalMarkdown-file-sorting > div {
-      flex: 1; min-width: 0; display: grid; gap: var(--lm-space-1);
+    .LocalMarkdown-file-sort-option {
+      width: 100%; min-height: var(--lm-control-height); padding: var(--lm-space-1) var(--lm-space-2);
+      display: grid; grid-template-columns: 16px 1fr 16px; align-items: center; gap: var(--lm-space-2);
+      border: 0; border-radius: var(--lm-radius-control); color: var(--lm-text); background: transparent;
+      font-size: var(--lm-type-control-size); text-align: left;
     }
-    .LocalMarkdown-file-sorting label {
-      color: var(--lm-secondary-text); font-size: 11px;
+    .LocalMarkdown-file-sort-option[aria-checked="true"] { background: var(--lm-selected); }
+    .LocalMarkdown-file-sort-option:focus-visible {
+      outline: 0; box-shadow: inset 0 0 0 1px var(--lm-accent);
     }
-    .LocalMarkdown-file-sorting select {
-      width: 100%; min-width: 0; height: var(--lm-control-height);
-      padding: 0 var(--lm-space-1); border: 1px solid var(--lm-control-border);
-      border-radius: var(--lm-radius-control); color: var(--lm-text);
-      background: var(--lm-sidebar-background); font: inherit;
-      font-size: var(--lm-type-control-size);
-    }
-    .LocalMarkdown-file-sorting select:focus-visible {
-      outline: 2px solid var(--lm-accent); outline-offset: 1px;
-    }
-    .LocalMarkdown-file-sorting select:disabled { opacity: .5; }
     .LocalMarkdown-files {
       min-height: 0; overflow: auto;
       padding: var(--lm-space-1) var(--lm-space-2) var(--lm-space-4);
@@ -1268,28 +1263,25 @@
         </svg>
         <input class="LocalMarkdown-search-input" id="LocalMarkdown-search-input" type="search" placeholder="Search" aria-label="Search files and content" autocomplete="off" spellcheck="false">
         <button class="LocalMarkdown-search-clear" id="LocalMarkdown-search-clear" type="button" aria-label="Clear search" title="Clear search" hidden>&times;</button>
-        <button class="LocalMarkdown-sort-toggle" id="LocalMarkdown-sort-toggle" type="button" aria-label="Sort files" title="Sort files" aria-haspopup="dialog" aria-expanded="false" aria-controls="LocalMarkdown-file-sorting">
-          <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
-            <path d="M4 4v12m-2.5-2.5L4 16l2.5-2.5M9 5h8M9 10h6M9 15h3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+        <button class="LocalMarkdown-sort-toggle" id="LocalMarkdown-sort-toggle" type="button" aria-label="Sort files" title="Sort files" aria-haspopup="menu" aria-expanded="false" aria-controls="LocalMarkdown-file-sorting">
+          <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path class="LocalMarkdown-sort-direction" d="M4 4v12m-2.5-2.5L4 16l2.5-2.5"></path>
+            <path d="M9 5h8M9 10h6M9 15h3"></path>
           </svg>
         </button>
-        <div class="LocalMarkdown-file-sorting" id="LocalMarkdown-file-sorting" role="dialog" aria-label="Sort files" hidden>
-          <div>
-            <label for="LocalMarkdown-sort-by">Sort by</label>
-            <select id="LocalMarkdown-sort-by">
-              <option value="manual">Manual</option>
-              <option value="created" title="When created or first opened in this app">Created</option>
-              <option value="edited">Edited</option>
-              <option value="name">Name</option>
-            </select>
-          </div>
-          <div>
-            <label for="LocalMarkdown-sort-order">Order by</label>
-            <select id="LocalMarkdown-sort-order" disabled>
-              <option value="asc">Asc</option>
-              <option value="desc">Desc</option>
-            </select>
-          </div>
+        <div class="LocalMarkdown-file-sorting" id="LocalMarkdown-file-sorting" role="menu" aria-label="Sort files" hidden>
+          <button class="LocalMarkdown-file-sort-option" type="button" role="menuitemradio" aria-checked="true" data-file-sort="manual" tabindex="0">
+            <span class="LocalMarkdown-file-sort-check" aria-hidden="true">✓</span><span class="LocalMarkdown-file-sort-name">Manual</span><span class="LocalMarkdown-file-sort-direction" aria-hidden="true"></span>
+          </button>
+          <button class="LocalMarkdown-file-sort-option" type="button" role="menuitemradio" aria-checked="false" data-file-sort="created" tabindex="-1" title="Created or first opened in this app; matching or unknown dates sort by name">
+            <span class="LocalMarkdown-file-sort-check" aria-hidden="true"></span><span class="LocalMarkdown-file-sort-name">Created</span><span class="LocalMarkdown-file-sort-direction" aria-hidden="true"></span>
+          </button>
+          <button class="LocalMarkdown-file-sort-option" type="button" role="menuitemradio" aria-checked="false" data-file-sort="edited" tabindex="-1">
+            <span class="LocalMarkdown-file-sort-check" aria-hidden="true"></span><span class="LocalMarkdown-file-sort-name">Edited</span><span class="LocalMarkdown-file-sort-direction" aria-hidden="true"></span>
+          </button>
+          <button class="LocalMarkdown-file-sort-option" type="button" role="menuitemradio" aria-checked="false" data-file-sort="name" tabindex="-1">
+            <span class="LocalMarkdown-file-sort-check" aria-hidden="true"></span><span class="LocalMarkdown-file-sort-name">Name</span><span class="LocalMarkdown-file-sort-direction" aria-hidden="true"></span>
+          </button>
         </div>
       </div>
       <nav class="LocalMarkdown-files" id="LocalMarkdown-files" aria-label="Files"></nav>
@@ -1480,8 +1472,7 @@
       const searchClear = document.querySelector("#LocalMarkdown-search-clear");
       const fileSortToggle = document.querySelector("#LocalMarkdown-sort-toggle");
       const fileSortPopover = document.querySelector("#LocalMarkdown-file-sorting");
-      const fileSortBy = document.querySelector("#LocalMarkdown-sort-by");
-      const fileSortOrder = document.querySelector("#LocalMarkdown-sort-order");
+      const fileSortOptions = Array.from(fileSortPopover.querySelectorAll("[data-file-sort]"));
       const newToggle = document.querySelector("#LocalMarkdown-new");
       const newMenu = document.querySelector("#LocalMarkdown-new-menu");
       const newOptions = Array.from(document.querySelectorAll(".LocalMarkdown-new-option"));
@@ -1764,7 +1755,8 @@
           closeSectionContextMenu();
           setNewMenuOpen(false);
           setThemeMenuOpen(false);
-          fileSortBy.focus();
+          (fileSortOptions.find(option => option.getAttribute("aria-checked") === "true")
+            || fileSortOptions[0]).focus();
         } else if (restoreFocus) fileSortToggle.focus();
       }
 
@@ -2540,10 +2532,12 @@
         if (left.builtin || right.builtin) {
           return Number(Boolean(right.builtin)) - Number(Boolean(left.builtin));
         }
-        const difference = by === "name"
-          ? left.name.localeCompare(right.name, undefined, { numeric: true, sensitivity: "base" })
+        const dateDifference = by === "name" ? 0
           : (left[by === "edited" ? "editedAt" : "createdAt"] || 0)
             - (right[by === "edited" ? "editedAt" : "createdAt"] || 0);
+        // Older sessions have no dates. Names give date ties a useful, reversible order.
+        const difference = dateDifference
+          || left.name.localeCompare(right.name, undefined, { numeric: true, sensitivity: "base" });
         return order === "desc" ? -difference : difference;
       }
 
@@ -2551,6 +2545,30 @@
         session.fileSort = normalizedFileSort({ by, order });
         renderFiles();
         scheduleSessionSave();
+      }
+
+      function selectFileSort(by) {
+        const order = by !== "manual" && session.fileSort.by === by
+          && session.fileSort.order === "asc" ? "desc" : "asc";
+        setFileSort(by, order);
+      }
+
+      function renderFileSort() {
+        const { by, order } = session.fileSort;
+        const direction = order === "asc" ? "ascending" : "descending";
+        fileSortToggle.dataset.order = by === "manual" ? "manual" : order;
+        for (const option of fileSortOptions) {
+          const selected = option.dataset.fileSort === by;
+          const label = option.querySelector(".LocalMarkdown-file-sort-name").textContent;
+          const ordered = selected && by !== "manual";
+          option.setAttribute("aria-checked", String(selected));
+          option.setAttribute("aria-label", label + (ordered ? `, ${direction}` : ""));
+          option.tabIndex = selected ? 0 : -1;
+          option.querySelector(".LocalMarkdown-file-sort-check").textContent = selected ? "✓" : "";
+          option.querySelector(".LocalMarkdown-file-sort-direction").textContent = ordered
+            ? (order === "asc" ? "↑" : "↓") : "";
+          if (selected) fileSortToggle.title = `Sort files: ${label}` + (ordered ? `, ${direction}` : "");
+        }
       }
 
       function sidebarFiles(fileIds) {
@@ -2832,7 +2850,7 @@
             .map(file => ({
               id: file.id,
               name: file.name,
-              // Older sessions have no creation date; equal dates keep their existing order.
+              // Keep unknown dates explicit; the comparator breaks date ties by name.
               createdAt: Number.isFinite(file.createdAt) && file.createdAt >= 0 ? file.createdAt : 0,
               editedAt: Number.isFinite(file.editedAt) && file.editedAt >= 0 ? file.editedAt : 0,
               text: file.text,
@@ -2928,13 +2946,7 @@
       }
 
       function renderFiles() {
-        fileSortBy.value = session.fileSort.by;
-        fileSortOrder.value = session.fileSort.order;
-        fileSortOrder.disabled = session.fileSort.by === "manual";
-        fileSortToggle.title = `Sort files: ${fileSortBy.selectedOptions[0].textContent}`
-          + (fileSortOrder.disabled ? "" : `, ${session.fileSort.order === "asc" ? "ascending" : "descending"}`);
-        fileSortBy.title = session.fileSort.by === "created"
-          ? "When created or first opened in this app" : "Sort files within each section";
+        renderFileSort();
         filesElement.replaceChildren();
         const query = searchInput.value.trim();
         searchClear.hidden = !query;
@@ -6872,14 +6884,37 @@
         else editor?.focus();
       }
 
-      fileSortBy.addEventListener("change", () => setFileSort(fileSortBy.value, fileSortOrder.value));
-      fileSortOrder.addEventListener("change", () => setFileSort(fileSortBy.value, fileSortOrder.value));
+      for (const option of fileSortOptions) {
+        option.addEventListener("click", () => {
+          selectFileSort(option.dataset.fileSort);
+          setFileSortOpen(false, { restoreFocus: true });
+        });
+      }
       fileSortToggle.addEventListener("click", () => setFileSortOpen(fileSortPopover.hidden));
+      fileSortToggle.addEventListener("keydown", event => {
+        if (!["ArrowDown", "ArrowUp"].includes(event.key)) return;
+        event.preventDefault();
+        setFileSortOpen(true);
+        fileSortOptions[event.key === "ArrowDown" ? 0 : fileSortOptions.length - 1].focus();
+      });
       fileSortPopover.addEventListener("keydown", event => {
-        if (event.key !== "Escape") return;
+        if (event.key === "Tab") {
+          setFileSortOpen(false, { restoreFocus: true });
+          return;
+        }
+        if (event.key === "Escape") {
+          event.preventDefault();
+          event.stopPropagation();
+          setFileSortOpen(false, { restoreFocus: true });
+          return;
+        }
+        if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
         event.preventDefault();
         event.stopPropagation();
-        setFileSortOpen(false, { restoreFocus: true });
+        const current = fileSortOptions.indexOf(document.activeElement);
+        const next = event.key === "Home" ? 0 : event.key === "End" ? fileSortOptions.length - 1
+          : (current + (event.key === "ArrowDown" ? 1 : -1) + fileSortOptions.length) % fileSortOptions.length;
+        fileSortOptions[next].focus();
       });
       for (const eventType of ["pointerdown", "focusin"]) {
         document.addEventListener(eventType, event => {
