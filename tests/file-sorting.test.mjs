@@ -17,24 +17,35 @@ const createRuntime = new Function("storedSession", "document", `
   const session = { files: [example], fileSort: { by: "manual", order: "asc" },
     sidebar: { sections: [], ungroupedFileIds: [example.id] } };
   let sessionNeedsSave = false, sessionRestored = false;
+  let pickedHandle;
+  const activeSaves = new Map(), editorReady = false;
+  const window = { showSaveFilePicker() {} };
+  const attachmentBlockStart = "<!-- LocalMarkdown attachments:v1";
   const fileSortToggle = document.querySelector("#LocalMarkdown-sort-toggle");
   const fileSortOptions = Array.from(document.querySelectorAll("[data-file-sort]"));
   function activeFile() { return session.files.find(file => file.id === session.activeId); }
   async function readStoredSession() { return storedSession; }
   function scheduleSessionSave() {}
   function scheduleAutoSave() {}
+  function captureEditorValue() {}
+  function cancelAutoSave() {}
+  function updateStatus() {}
+  async function pickMarkdownFile() { return pickedHandle; }
+  async function waitForFileAttachments() { return true; }
+  function serializeFile(file) { return file.text; }
   function renderFiles() { renderFileSort(); }
   function storedAttachments() { return []; }
-  function parseStoredMarkdown(text) { return { text, attachments: new Map() }; }
   function replaceFileAttachments(file, attachments) { file.attachments = attachments; }
   function resetDocumentHistory() {}
   ${["normalizedFileSort", "compareSidebarFiles", "setFileSort", "selectFileSort", "renderFileSort", "sidebarFiles",
     "useManualFileOrder", "isStandaloneSidebarFile", "sectionForId",
     "removeFileFromSidebarLayout", "moveFileToSection", "normalizeSidebarLayout",
     "restoredAttachments", "handlePermission", "loadFileFromHandle", "refreshRestoredFile",
-    "restoreSession", "sessionSnapshot", "markFileDirty"].map(extractFunction).join("\n")}
+    "restoreSession", "sessionSnapshot", "markFileDirty", "parseStoredMarkdown",
+    "syncSidebarFileAvailability", "saveFile", "saveActiveFile", "saveActiveFileAs", "writeText"].map(extractFunction).join("\n")}
   return { session, document, renderFiles, restoreSession, sessionSnapshot, setFileSort, selectFileSort, sidebarFiles,
-    moveFileToSection, markFileDirty, loadFileFromHandle };
+    moveFileToSection, markFileDirty, loadFileFromHandle, saveActiveFile, saveActiveFileAs,
+    chooseHandle(handle) { pickedHandle = handle; } };
 `);
 
 const fixture = () => ({
@@ -112,7 +123,7 @@ test("the combined menu starts each new sort ascending and toggles repeated sele
   }
 });
 
-test("legacy sessions keep manual order but date sorts use names when dates are unknown", async () => {
+test("legacy sessions retain their layout order when dates are unknown", async () => {
   const snapshot = fixture();
   snapshot.version = 1;
   delete snapshot.sidebar;
@@ -128,12 +139,12 @@ test("legacy sessions keep manual order but date sorts use names when dates are 
     for (const order of ["asc", "desc"]) {
       app.setFileSort(by, order);
       assert.deepEqual(ids(app.sidebarFiles(app.session.sidebar.ungroupedFileIds)),
-        order === "asc" ? ["example", "c", "d", "b", "a"] : ["example", "a", "b", "d", "c"]);
+        snapshot.fileOrder);
     }
   }
 });
 
-test("matching dates sort names naturally in the selected direction", async () => {
+test("matching dates retain the layout order regardless of names and direction", async () => {
   const app = await runtime();
   for (const file of app.session.files.filter(file => !file.builtin)) {
     file.createdAt = 100;
@@ -141,9 +152,92 @@ test("matching dates sort names naturally in the selected direction", async () =
   }
   for (const by of ["created", "edited"]) {
     app.setFileSort(by, "asc");
-    assert.deepEqual(ids(app.sidebarFiles(["a", "b", "c"])), ["c", "b", "a"]);
+    assert.deepEqual(ids(app.sidebarFiles(["a", "b", "c"])), ["a", "b", "c"]);
     app.setFileSort(by, "desc");
     assert.deepEqual(ids(app.sidebarFiles(["a", "b", "c"])), ["a", "b", "c"]);
+  }
+});
+
+function localHandle(name, text = "", lastModified = 5000) {
+  return {
+    name, queryPermission: async () => "granted",
+    getFile: async () => ({ name, lastModified, text: async () => text }),
+    createWritable: async () => ({
+      write: async value => { text = value; },
+      close: async () => {}
+    })
+  };
+}
+
+test("first save and Save As preserve date order and timestamps through reload", async () => {
+  for (const date of [0, 100]) {
+    for (const by of ["created", "edited"]) {
+      for (const order of ["asc", "desc"]) {
+        const snapshot = fixture();
+        for (const file of snapshot.files) file.createdAt = file.editedAt = date;
+        snapshot.files[0].name = "Untitled.md";
+        snapshot.files[0].dirty = true;
+        const app = await runtime(snapshot);
+        app.setFileSort(by, order);
+        const fileIds = app.session.sidebar.sections[0].fileIds;
+        const before = ids(app.sidebarFiles(fileIds));
+        const file = app.session.files.find(file => file.id === "a");
+        app.chooseHandle(localHandle("Alpha.md"));
+        await app.saveActiveFile();
+        assert.equal(file.name, "Alpha.md");
+        assert.equal(file.dirty, false);
+        assert.deepEqual(ids(app.sidebarFiles(fileIds)), before);
+        app.chooseHandle(localHandle("Zebra.md"));
+        await app.saveActiveFileAs();
+        assert.equal(file.name, "Zebra.md");
+        assert.equal(file.createdAt, date);
+        assert.equal(file.editedAt, date);
+        assert.deepEqual(ids(app.sidebarFiles(fileIds)), before);
+        const restored = await runtime(app.sessionSnapshot());
+        assert.deepEqual(ids(restored.sidebarFiles(fileIds)), before);
+        const recovered = restored.session.files.find(file => file.id === "a");
+        assert.equal(recovered.createdAt, date);
+        assert.equal(recovered.editedAt, date);
+      }
+    }
+  }
+});
+
+test("renaming still changes position when sorting by name", async () => {
+  const app = await runtime();
+  const file = app.session.files.find(file => file.id === "a");
+  app.setFileSort("name", "asc");
+  file.name = "Zebra.md";
+  assert.deepEqual(ids(app.sidebarFiles(["a", "b", "c"])), ["c", "b", "a"]);
+  file.name = "Aardvark.md";
+  assert.deepEqual(ids(app.sidebarFiles(["a", "b", "c"])), ["a", "c", "b"]);
+});
+
+test("unchanged disk content preserves edited time even if name or modification time changes", async () => {
+  const snapshot = fixture();
+  snapshot.fileSort = { by: "edited", order: "desc" };
+  snapshot.files[0].handle = localHandle("Renamed.md", "common");
+  const app = await runtime(snapshot);
+  const file = app.session.files.find(file => file.id === "a");
+  assert.equal(file.name, "Renamed.md");
+  assert.equal(file.editedAt, 600);
+  assert.equal(file.createdAt, 200);
+  assert.deepEqual(ids(app.sidebarFiles(["a", "b", "c"])), ["b", "a", "c"]);
+});
+
+test("embedded attachment changes count as edits but reconstructed objects do not", async () => {
+  for (const change of [{}, { data: "new image" }, { type: "image/svg+xml" }, { kind: "excalidraw" }]) {
+    const app = await runtime();
+    const file = app.session.files.find(file => file.id === "a");
+    const attachment = { id: "image", type: "image/png", data: "original image", kind: null };
+    file.text = "![image](lmd/image)";
+    file.attachments = new Map([[attachment.id, attachment]]);
+    const manifest = { version: 1, attachments: [{ ...attachment, ...change }] };
+    const stored = file.text + "\n\n<!-- LocalMarkdown attachments:v1\n" + JSON.stringify(manifest) + "\n-->\n";
+    file.handle = localHandle("Image.md", stored);
+    await app.loadFileFromHandle(file);
+    assert.equal(file.editedAt, Object.keys(change).length ? 5000 : 600);
+    assert.equal(file.createdAt, 200);
   }
 });
 

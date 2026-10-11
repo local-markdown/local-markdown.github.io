@@ -1252,7 +1252,7 @@
           <button class="LocalMarkdown-file-sort-option" type="button" role="menuitemradio" aria-checked="true" data-file-sort="manual" tabindex="0">
             <span class="LocalMarkdown-file-sort-check" aria-hidden="true">✓</span><span class="LocalMarkdown-file-sort-name">Manual</span><span class="LocalMarkdown-file-sort-direction" aria-hidden="true"></span>
           </button>
-          <button class="LocalMarkdown-file-sort-option" type="button" role="menuitemradio" aria-checked="false" data-file-sort="created" tabindex="-1" title="Created or first opened in this app; matching or unknown dates sort by name">
+          <button class="LocalMarkdown-file-sort-option" type="button" role="menuitemradio" aria-checked="false" data-file-sort="created" tabindex="-1" title="Created or first opened in this app; matching or unknown dates keep their order">
             <span class="LocalMarkdown-file-sort-check" aria-hidden="true"></span><span class="LocalMarkdown-file-sort-name">Created</span><span class="LocalMarkdown-file-sort-direction" aria-hidden="true"></span>
           </button>
           <button class="LocalMarkdown-file-sort-option" type="button" role="menuitemradio" aria-checked="false" data-file-sort="edited" tabindex="-1">
@@ -2532,12 +2532,12 @@
         if (left.builtin || right.builtin) {
           return Number(Boolean(right.builtin)) - Number(Boolean(left.builtin));
         }
-        const dateDifference = by === "name" ? 0
+        // Stable sorting preserves the layout order for equal or unknown dates,
+        // so saving with a new name cannot move a file in a date-sorted list.
+        const difference = by === "name"
+          ? left.name.localeCompare(right.name, undefined, { numeric: true, sensitivity: "base" })
           : (left[by === "edited" ? "editedAt" : "createdAt"] || 0)
             - (right[by === "edited" ? "editedAt" : "createdAt"] || 0);
-        // Older sessions have no dates. Names give date ties a useful, reversible order.
-        const difference = dateDifference
-          || left.name.localeCompare(right.name, undefined, { numeric: true, sensitivity: "base" });
         return order === "desc" ? -difference : difference;
       }
 
@@ -2808,8 +2808,19 @@
       async function loadFileFromHandle(file) {
         const diskFile = await file.handle.getFile();
         const parsed = parseStoredMarkdown(await diskFile.text());
+        const contentChanged = parsed.text !== file.text
+          || parsed.attachments.size !== file.attachments.size
+          || Array.from(parsed.attachments).some(([id, attachment]) => {
+            const previous = file.attachments.get(id);
+            return !previous || previous.type !== attachment.type
+              || previous.data !== attachment.data
+              || (previous.kind || null) !== (attachment.kind || null);
+          });
         file.name = diskFile.name;
-        if (Number.isFinite(diskFile.lastModified)) file.editedAt = diskFile.lastModified;
+        // A save or rename can change disk metadata without editing the content.
+        if (contentChanged && Number.isFinite(diskFile.lastModified)) {
+          file.editedAt = diskFile.lastModified;
+        }
         file.text = parsed.text;
         replaceFileAttachments(file, parsed.attachments);
         file.dirty = false;
@@ -2850,7 +2861,7 @@
             .map(file => ({
               id: file.id,
               name: file.name,
-              // Keep unknown dates explicit; the comparator breaks date ties by name.
+              // Keep unknown dates explicit and retain their relative layout order.
               createdAt: Number.isFinite(file.createdAt) && file.createdAt >= 0 ? file.createdAt : 0,
               editedAt: Number.isFinite(file.editedAt) && file.editedAt >= 0 ? file.editedAt : 0,
               text: file.text,
