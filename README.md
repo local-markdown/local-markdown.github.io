@@ -28,6 +28,7 @@ Open Local Markdown in desktop Chrome or Edge, choose a Markdown file, and start
 - Sort files by created date, edited date, or name, in ascending or descending order
 - Persistent topic sections for grouping, collapsing, renaming, and reordering open files
 - File context actions for saving, renaming, closing, and confirmed deletion
+- Red, yellow, and green file tags, with multiple tags shown before filenames
 - Filename and content search across open files
 - Open-file and unsaved edit recovery after refresh
 - Screenshot and copied image pasting
@@ -56,6 +57,8 @@ Pasting a URL by itself creates a Markdown link. Local Markdown uses a copied li
 Use the toolbar’s **Download** button to choose **Download Markdown (.md)** or **Download Word (.docx)**. Both options download a copy. Word export preserves headings, inline formatting, lists, tables, and accessible images. Mermaid diagrams export as source code; images that cannot be loaded are replaced with a text label. Word export loads its conversion libraries on demand and runs in your browser.
 
 Select the **Sort files** icon to the right of the sidebar search, then choose **Created**, **Edited**, or **Name**. Selecting a different sort starts at **↑ ascending**; selecting the current sort again toggles between **↓ descending** and **↑ ascending**. Sorting applies within each section and in search results, and your selection is remembered after refresh. **Created** means created or first opened in this app; browsers do not expose the original creation date. **Edited** uses the file’s last modification time and updates as you edit. Matching or unknown dates sort by filename in the selected direction. **Manual** preserves drag-and-drop ordering; dropping a file before or after another switches back to Manual.
+
+Right-click a file or open its **⋯** menu to toggle **Red**, **Yellow**, and **Green** tags. A file can have several tags; select **Clear all tags** to remove them together. Tags appear before filenames in the sidebar and search results and are remembered in this browser after refresh.
 
 ## Draw with Excalidraw
 

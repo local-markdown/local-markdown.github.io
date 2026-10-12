@@ -41,7 +41,7 @@ const createRuntime = new Function("storedSession", "document", `
     "useManualFileOrder", "isStandaloneSidebarFile", "sectionForId",
     "removeFileFromSidebarLayout", "moveFileToSection", "normalizeSidebarLayout",
     "restoredAttachments", "handlePermission", "loadFileFromHandle", "refreshRestoredFile",
-    "restoreSession", "sessionSnapshot", "markFileDirty", "parseStoredMarkdown",
+    "restoreSession", "sessionSnapshot", "normalizedFileTags", "markFileDirty", "parseStoredMarkdown",
     "syncSidebarFileAvailability", "saveFile", "saveActiveFile", "saveActiveFileAs", "writeText"].map(extractFunction).join("\n")}
   return { session, document, renderFiles, restoreSession, sessionSnapshot, setFileSort, selectFileSort, sidebarFiles,
     moveFileToSection, markFileDirty, loadFileFromHandle, saveActiveFile, saveActiveFileAs,
@@ -98,6 +98,36 @@ test("sort preferences and dates survive a session snapshot and restore", async 
   assert.equal(selected.querySelector(".LocalMarkdown-file-sort-direction").textContent, "↓");
   assert.deepEqual(restored.sessionSnapshot(), snapshot);
   assert.deepEqual(ids(restored.sidebarFiles(["a", "b", "c"])), ["b", "a", "c"]);
+});
+
+test("file tags survive saving, Save As, section moves, and session restore", async () => {
+  const snapshot = fixture();
+  snapshot.files[0].tags = ["red", "yellow", "green"];
+  snapshot.files[2].tags = ["yellow", "green"];
+  const app = await runtime(snapshot);
+  const file = app.session.files.find(file => file.id === "a");
+  app.chooseHandle(localHandle("Tagged.md"));
+  await app.saveActiveFile();
+  app.chooseHandle(localHandle("Renamed.md"));
+  await app.saveActiveFileAs();
+  app.moveFileToSection(file.id, null);
+  const restored = await runtime(app.sessionSnapshot());
+  const recovered = restored.session.files.find(file => file.id === "a");
+  assert.equal(recovered.name, "Renamed.md");
+  assert.deepEqual(recovered.tags, ["red", "yellow", "green"]);
+  assert.equal(recovered.text, snapshot.files[0].text);
+  assert.equal(recovered.editedAt, snapshot.files[0].editedAt);
+  assert.ok(restored.session.sidebar.ungroupedFileIds.includes(file.id));
+  assert.deepEqual(restored.session.files.find(file => file.id === "c").tags, ["yellow", "green"]);
+});
+
+test("restoring old or malformed tag metadata keeps only supported unique colors", async () => {
+  const snapshot = fixture();
+  snapshot.files[0].tags = ["green", "red", "red", "blue", null];
+  snapshot.files[1].tags = "red";
+  snapshot.files[2].tags = { red: true };
+  const app = await runtime(snapshot);
+  assert.deepEqual(app.sessionSnapshot().files.map(file => file.tags), [["red", "green"], [], [], []]);
 });
 
 test("the combined menu starts each new sort ascending and toggles repeated selections", async () => {

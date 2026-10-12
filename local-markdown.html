@@ -314,6 +314,17 @@
       padding-left: calc(var(--lm-control-height-compact) + var(--lm-space-1));
     }
     .LocalMarkdown-file-name { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; }
+    .LocalMarkdown-file-tags {
+      display: inline-flex; align-items: center; gap: 3px; flex: 0 0 auto;
+      margin-right: 2px;
+    }
+    .LocalMarkdown-file-tags[hidden] { display: none; }
+    .LocalMarkdown-tag-dot {
+      display: inline-block; width: 8px; height: 8px; flex: 0 0 auto; border-radius: 50%;
+    }
+    .LocalMarkdown-tag-dot[data-tag="red"] { background: #ed4240; }
+    .LocalMarkdown-tag-dot[data-tag="yellow"] { background: #f5c733; }
+    .LocalMarkdown-tag-dot[data-tag="green"] { background: #4fc759; }
     .LocalMarkdown-file:hover,
     .LocalMarkdown-search-file:hover,
     .LocalMarkdown-search-hit:hover { background: var(--lm-subtle); }
@@ -620,6 +631,19 @@
       outline: 0; box-shadow: inset 0 0 0 1px var(--lm-accent);
     }
     .LocalMarkdown-file-context-item:disabled { color: var(--lm-faint); }
+    .LocalMarkdown-file-tag-group {
+      margin: var(--lm-space-1) 0; padding: var(--lm-space-1) 0;
+      border-block: 1px solid var(--lm-border);
+    }
+    .LocalMarkdown-file-tag-heading {
+      padding: var(--lm-space-1) var(--lm-space-2); color: var(--lm-muted);
+      font-size: var(--lm-type-metadata-size);
+    }
+    .LocalMarkdown-file-context-item .LocalMarkdown-tag-dot { width: 16px; height: 16px; }
+    .LocalMarkdown-file-tag-check { margin-left: auto; visibility: hidden; }
+    .LocalMarkdown-file-context-item[aria-checked="true"] .LocalMarkdown-file-tag-check {
+      visibility: visible;
+    }
     .LocalMarkdown-file-context-item[data-action="delete"] {
       margin-top: var(--lm-space-1); border-top: 1px solid var(--lm-border);
       border-radius: 0 0 var(--lm-radius-control) var(--lm-radius-control);
@@ -1355,6 +1379,25 @@
       <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m4 14.75.65-3.15 8.7-8.7 3 3-8.7 8.7-3.15.65Zm7.9-10.4 3 3" fill="none" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"></path></svg>
       Rename
     </button>
+    <div class="LocalMarkdown-file-tag-group" role="group" aria-labelledby="LocalMarkdown-file-tag-heading">
+      <div class="LocalMarkdown-file-tag-heading" id="LocalMarkdown-file-tag-heading">Tags</div>
+      <button class="LocalMarkdown-file-context-item" type="button" role="menuitemcheckbox" aria-checked="false" data-action="toggle-tag" data-file-tag="red">
+        <span class="LocalMarkdown-tag-dot" data-tag="red" aria-hidden="true"></span>
+        Red <span class="LocalMarkdown-file-tag-check" aria-hidden="true">✓</span>
+      </button>
+      <button class="LocalMarkdown-file-context-item" type="button" role="menuitemcheckbox" aria-checked="false" data-action="toggle-tag" data-file-tag="yellow">
+        <span class="LocalMarkdown-tag-dot" data-tag="yellow" aria-hidden="true"></span>
+        Yellow <span class="LocalMarkdown-file-tag-check" aria-hidden="true">✓</span>
+      </button>
+      <button class="LocalMarkdown-file-context-item" type="button" role="menuitemcheckbox" aria-checked="false" data-action="toggle-tag" data-file-tag="green">
+        <span class="LocalMarkdown-tag-dot" data-tag="green" aria-hidden="true"></span>
+        Green <span class="LocalMarkdown-file-tag-check" aria-hidden="true">✓</span>
+      </button>
+      <button class="LocalMarkdown-file-context-item" type="button" role="menuitem" data-action="clear-tags">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6" fill="none" stroke="currentColor" stroke-width="1.4"></circle><path d="m8 8 4 4m0-4-4 4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path></svg>
+        Clear all tags
+      </button>
+    </div>
     <button class="LocalMarkdown-file-context-item" type="button" role="menuitem" data-action="close">
       <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>
       Close
@@ -1762,6 +1805,8 @@
 
       function fileContextActionAvailable(action, target) {
         const file = target?.file;
+        if (action === "toggle-tag") return Boolean(file && !file.builtin);
+        if (action === "clear-tags") return Boolean(file && !file.builtin && normalizedFileTags(file.tags).length);
         if (action === "save") return Boolean(file
           && (!file.handle || file.needsPermission || file.dirty));
         if (action === "save-as") return Boolean(file?.handle && file.needsPermission);
@@ -1810,6 +1855,7 @@
             ? "No unsaved changes"
             : (item.disabled ? "This action is unavailable for this file" : "");
         }
+        updateFileTagMenu(file);
         fileContextMenu.setAttribute("aria-label", `Actions for ${targetName(target)}`);
         fileContextMenu.hidden = false;
         const triggerBounds = trigger.getBoundingClientRect();
@@ -1863,8 +1909,13 @@
         activateFile(file);
       }
 
-      async function runFileContextAction(action, target) {
-        if (action === "save" && target.file) {
+      async function runFileContextAction(action, target, tag = null) {
+        if (action === "toggle-tag" && target.file) {
+          const tags = normalizedFileTags(target.file.tags);
+          setFileTags(target.file, tags.includes(tag) ? tags.filter(value => value !== tag) : [...tags, tag]);
+        } else if (action === "clear-tags" && target.file) {
+          setFileTags(target.file, []);
+        } else if (action === "save" && target.file) {
           activateContextFile(target.file);
           await saveActiveFile();
         } else if (action === "save-as" && target.file) {
@@ -2739,6 +2790,7 @@
               name: file.name,
               createdAt: file.createdAt,
               editedAt: file.editedAt,
+              tags: normalizedFileTags(file.tags),
               text: file.text,
               handle: file.handle || null,
               dirty: Boolean(file.dirty),
@@ -2864,6 +2916,7 @@
               // Keep unknown dates explicit and retain their relative layout order.
               createdAt: Number.isFinite(file.createdAt) && file.createdAt >= 0 ? file.createdAt : 0,
               editedAt: Number.isFinite(file.editedAt) && file.editedAt >= 0 ? file.editedAt : 0,
+              tags: normalizedFileTags(file.tags),
               text: file.text,
               handle: file.handle || null,
               attachments: restoredAttachments(file.attachments),
@@ -3087,6 +3140,7 @@
         name.textContent = file === example
           ? "Examples"
           : file.name;
+        appendFileTags(button, file);
         button.append(name);
         appendUnsavedMark(button, !file.builtin && file.dirty);
         button.title = name.textContent;
@@ -3121,6 +3175,59 @@
           enableFileReordering(dragHandle, button, row, file.id, sectionId);
         }
         container.append(row);
+      }
+
+      function normalizedFileTags(tags) {
+        return ["red", "yellow", "green"].filter(tag => Array.isArray(tags) && tags.includes(tag));
+      }
+
+      function renderFileTagDots(element, file) {
+        const tags = normalizedFileTags(file.tags);
+        element.replaceChildren();
+        element.hidden = !tags.length;
+        const label = `Tags: ${tags.map(tag => tag[0].toUpperCase() + tag.slice(1)).join(", ")}`;
+        element.setAttribute("aria-label", label);
+        element.title = label;
+        for (const tag of tags) {
+          const dot = document.createElement("span");
+          dot.className = "LocalMarkdown-tag-dot";
+          dot.dataset.tag = tag;
+          dot.setAttribute("aria-hidden", "true");
+          element.append(dot);
+        }
+      }
+
+      function appendFileTags(element, file) {
+        if (!file || file.builtin) return;
+        const tags = document.createElement("span");
+        tags.className = "LocalMarkdown-file-tags";
+        tags.dataset.fileId = file.id;
+        tags.setAttribute("role", "img");
+        renderFileTagDots(tags, file);
+        element.append(tags);
+      }
+
+      function updateFileTagMenu(file) {
+        const tags = normalizedFileTags(file?.tags);
+        for (const item of fileContextItems) {
+          if (item.dataset.action === "toggle-tag") {
+            item.setAttribute("aria-checked", String(tags.includes(item.dataset.fileTag)));
+          } else if (item.dataset.action === "clear-tags") {
+            item.disabled = !fileContextActionAvailable("clear-tags", { file });
+            item.title = tags.length ? "" : "No tags to clear";
+          }
+        }
+      }
+
+      function setFileTags(file, tags) {
+        if (!file || file.builtin || !session.files.includes(file)) return;
+        file.tags = normalizedFileTags(tags);
+        // Update in place so the open menu keeps its focus and sidebar trigger.
+        for (const element of filesElement.querySelectorAll(".LocalMarkdown-file-tags")) {
+          if (element.dataset.fileId === file.id) renderFileTagDots(element, file);
+        }
+        if (fileContextTarget?.file === file) updateFileTagMenu(file);
+        scheduleSessionSave();
       }
 
       function appendUnsavedMark(element, dirty) {
@@ -3284,6 +3391,7 @@
           const displayName = candidate.name;
           if (nameScore !== null) appendHighlightedText(name, displayName, query);
           else name.textContent = displayName;
+          appendFileTags(fileButton, candidate.file);
           fileButton.append(name);
           appendUnsavedMark(fileButton, candidate.file?.dirty);
           if (matches.length) {
@@ -7041,6 +7149,16 @@
         if (!item || item.disabled || !fileContextTarget) return;
         const target = fileContextTarget;
         const action = item.dataset.action;
+        if (action === "toggle-tag") {
+          void runFileContextAction(action, target, item.dataset.fileTag);
+          return;
+        }
+        if (action === "clear-tags") {
+          // Clearing disables this item; leave focus on an available tag toggle.
+          void runFileContextAction(action, target);
+          fileContextItems.find(option => option.dataset.action === "toggle-tag")?.focus();
+          return;
+        }
         closeFileContextMenu();
         void runFileContextAction(action, target);
       });
