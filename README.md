@@ -24,7 +24,7 @@ Open Local Markdown in desktop Chrome or Edge, choose a Markdown file, and start
 - One Obsidian-style Markdown view powered by CodeMirror 6
 - Every Markdown newline is preserved through editing, undo, refresh, and live preview
 - White, Solarized Light, and Solarized Dark color themes
-- Multiple open files in a collapsible, responsive sidebar
+- Multiple open files in a resizable, collapsible, responsive sidebar
 - Sort files by created date, edited date, or name, in ascending or descending order
 - Persistent topic sections for grouping, collapsing, renaming, and reordering open files
 - File context actions for saving, renaming, closing, and confirmed deletion
@@ -59,6 +59,8 @@ Use the toolbar’s **Download** button to choose **Download Markdown (.md)** or
 Select the **Sort files** icon to the right of the sidebar search, then choose **Created**, **Edited**, or **Name**. Selecting a different sort starts at **↑ ascending**; selecting the current sort again toggles between **↓ descending** and **↑ ascending**. Sorting applies within each section and in search results, and your selection is remembered after refresh. **Created** means created or first opened in this app; browsers do not expose the original creation date. **Edited** uses the file’s last modification time and updates as you edit. Matching or unknown dates sort by filename in the selected direction. **Manual** preserves drag-and-drop ordering; dropping a file before or after another switches back to Manual.
 
 Right-click a file or open its **⋯** menu to toggle **Red**, **Yellow**, and **Green** tags. A file can have several tags; select **Clear all tags** to remove them together. Tags appear before filenames in the sidebar and search results and are remembered in this browser after refresh.
+
+On desktop, drag the sidebar’s right edge to adjust its width. The width is remembered after refresh. You can also focus the edge and use Left/Right arrows (hold Shift for larger steps), or double-click it to reset.
 
 ## Draw with Excalidraw
 

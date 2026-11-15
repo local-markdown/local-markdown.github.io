@@ -152,13 +152,14 @@
     button:focus-visible { outline: 2px solid var(--lm-accent); outline-offset: 2px; }
 
     .LocalMarkdown-app {
-      --sidebar-width: 240px;
+      --sidebar-width: var(--sidebar-preferred-width, 240px);
       height: 100%; display: grid;
       grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
       transition: grid-template-columns 160ms ease;
     }
     .LocalMarkdown-app[data-sidebar="closed"] { --sidebar-width: 0px; }
     .LocalMarkdown-sidebar {
+      position: relative;
       min-width: 0; min-height: 0; overflow: hidden; border-right: 1px solid var(--lm-border);
       background: var(--lm-sidebar-background);
       display: grid; grid-template-rows: var(--lm-control-height-large) 42px minmax(0, 1fr);
@@ -170,6 +171,24 @@
       transition: opacity 100ms ease, visibility 0s 100ms;
     }
     .LocalMarkdown-sidebar-backdrop { display: none; }
+    .LocalMarkdown-sidebar-resizer {
+      position: absolute; z-index: 3; inset: 0 0 0 auto; width: 8px;
+      cursor: col-resize; touch-action: none; outline: none;
+    }
+    .LocalMarkdown-sidebar-resizer::after {
+      content: ""; position: absolute; inset: 0 0 0 auto; width: 2px;
+      background: transparent;
+    }
+    .LocalMarkdown-sidebar-resizer:hover::after,
+    .LocalMarkdown-sidebar-resizer:focus-visible::after,
+    .LocalMarkdown-app[data-sidebar-resizing] .LocalMarkdown-sidebar-resizer::after {
+      background: var(--lm-accent);
+    }
+    .LocalMarkdown-app[data-sidebar-resizing] { transition: none; }
+    .LocalMarkdown-app[data-sidebar-resizing],
+    .LocalMarkdown-app[data-sidebar-resizing] * {
+      cursor: col-resize !important; user-select: none; -webkit-user-select: none;
+    }
     .LocalMarkdown-drawing-file {
       min-width: 0; min-height: 0; padding: 24px;
       display: flex; flex-direction: column; gap: 16px;
@@ -292,7 +311,8 @@
     }
     .LocalMarkdown-files {
       min-height: 0; overflow: auto;
-      padding: var(--lm-space-1) var(--lm-space-2) var(--lm-space-4);
+      margin-right: 8px;
+      padding: var(--lm-space-1) 0 var(--lm-space-4) var(--lm-space-2);
     }
     .LocalMarkdown-file-row {
       position: relative; width: 100%; margin: 0 0 1px;
@@ -1204,6 +1224,7 @@
       }
       .LocalMarkdown-sidebar-header { padding: 0 var(--lm-space-2); }
       .LocalMarkdown-sidebar-dismiss { display: inline-grid; place-items: center; }
+      .LocalMarkdown-sidebar-resizer { display: none; }
       .LocalMarkdown-main { grid-template-columns: minmax(0, 1fr); }
       .LocalMarkdown-toolbar { padding: 0 var(--lm-space-2); gap: var(--lm-space-1); }
       .LocalMarkdown-status { display: none; }
@@ -1309,6 +1330,10 @@
         </div>
       </div>
       <nav class="LocalMarkdown-files" id="LocalMarkdown-files" aria-label="Files"></nav>
+      <div class="LocalMarkdown-sidebar-resizer" id="LocalMarkdown-sidebar-resizer"
+        role="separator" tabindex="0" aria-label="Sidebar width" aria-orientation="vertical"
+        aria-controls="LocalMarkdown-sidebar" aria-valuemin="200" aria-valuemax="560" aria-valuenow="240"
+        title="Drag to resize sidebar. Use Left/Right arrow keys; double-click to reset."></div>
     </aside>
 
     <main class="LocalMarkdown-main">
@@ -1511,6 +1536,7 @@
       const sidebarBackdrop = document.querySelector("#LocalMarkdown-sidebar-backdrop");
       const sidebarToggle = document.querySelector("#LocalMarkdown-sidebar-toggle");
       const sidebarDismiss = document.querySelector("#LocalMarkdown-sidebar-dismiss");
+      const sidebarResizer = document.querySelector("#LocalMarkdown-sidebar-resizer");
       const searchInput = document.querySelector("#LocalMarkdown-search-input");
       const searchClear = document.querySelector("#LocalMarkdown-search-clear");
       const fileSortToggle = document.querySelector("#LocalMarkdown-sort-toggle");
@@ -1602,6 +1628,9 @@
       let sessionRestored = false;
       let draggedSidebarItem = null;
       let sidebarDragPreview = null;
+      let preferredSidebarWidth = null;
+      let sidebarResizeSession = null;
+      let sidebarWidthRefreshFrame = null;
       let excalidrawStylesPromise = null;
       let excalidrawModulesPromise = null;
       let drawingRoot = null;
@@ -1673,6 +1702,11 @@
       const sessionStorageKey = "current:v1";
       const sessionSaveDelay = 200;
       const sidebarStorageKey = "LocalMarkdown:sidebar:v1";
+      const sidebarWidthStorageKey = "LocalMarkdown:sidebar-width:v1";
+      const defaultSidebarWidth = 240;
+      const minimumSidebarWidth = 200;
+      const maximumSidebarWidth = 560;
+      const minimumMainWidth = 480;
       const outlineStorageKey = "LocalMarkdown:outline:v1";
       const themeStorageKey = "LocalMarkdown:theme:v1";
       const editorWidthStorageKey = "LocalMarkdown:editor-width:v1";
@@ -1986,7 +2020,101 @@
       try { storedEditorWidth = localStorage.getItem(editorWidthStorageKey); } catch {}
       setEditorWidth(storedEditorWidth, { persist: false });
 
+      function sidebarWidthMaximum() {
+        return Math.max(minimumSidebarWidth,
+          Math.min(maximumSidebarWidth, appElement.clientWidth - minimumMainWidth));
+      }
+
+      function scheduleSidebarWidthRefresh() {
+        if (sidebarWidthRefreshFrame !== null) return;
+        sidebarWidthRefreshFrame = requestAnimationFrame(() => {
+          sidebarWidthRefreshFrame = null;
+          refreshEditorWidthBounds();
+          codeMirrorView?.requestMeasure();
+          positionImageResizer();
+        });
+      }
+
+      function setSidebarWidth(value, { persist = true, remember = true } = {}) {
+        const parsed = value === null || value === "" ? NaN : Number(value);
+        const requested = Math.round(Math.max(minimumSidebarWidth, Math.min(maximumSidebarWidth,
+          Number.isFinite(parsed) ? parsed : defaultSidebarWidth)));
+        const maximum = sidebarWidthMaximum();
+        const width = Math.min(requested, maximum);
+        if (remember) preferredSidebarWidth = requested;
+        appElement.style.setProperty("--sidebar-preferred-width", `${width}px`);
+        sidebarResizer.setAttribute("aria-valuemax", String(maximum));
+        sidebarResizer.setAttribute("aria-valuenow", String(width));
+        sidebarResizer.setAttribute("aria-valuetext", `${width} pixels`);
+        scheduleSidebarWidthRefresh();
+        if (persist) {
+          try { localStorage.setItem(sidebarWidthStorageKey, String(requested)); } catch {}
+        }
+      }
+
+      function startSidebarResize(event) {
+        if (sidebarResizeSession || event.button !== 0 || mobileSidebarQuery.matches
+            || appElement.dataset.sidebar !== "open") return;
+        event.preventDefault();
+        sidebarResizeSession = {
+          pointerId: event.pointerId,
+          startX: event.clientX,
+          startWidth: sidebarElement.getBoundingClientRect().width,
+          containerWidth: appElement.clientWidth,
+          preferredWidth: preferredSidebarWidth
+        };
+        sidebarResizer.focus();
+        sidebarResizer.setPointerCapture(event.pointerId);
+        appElement.toggleAttribute("data-sidebar-resizing", true);
+        closeTableContextMenu();
+        hideTableResizeHandle();
+        closeFileContextMenu();
+        closeSectionContextMenu();
+      }
+
+      function continueSidebarResize(event) {
+        const resize = sidebarResizeSession;
+        if (!resize || resize.pointerId !== event.pointerId) return;
+        if (mobileSidebarQuery.matches || appElement.clientWidth !== resize.containerWidth) {
+          finishSidebarResize(null, false);
+          return;
+        }
+        const width = resize.startWidth + event.clientX - resize.startX;
+        setSidebarWidth(Math.max(minimumSidebarWidth, Math.min(sidebarWidthMaximum(), width)),
+          { persist: false });
+      }
+
+      function finishSidebarResize(event, commit = true) {
+        const resize = sidebarResizeSession;
+        if (!resize || (event && resize.pointerId !== event.pointerId)) return;
+        commit = commit && !mobileSidebarQuery.matches
+          && appElement.clientWidth === resize.containerWidth;
+        if (commit && event) continueSidebarResize(event);
+        sidebarResizeSession = null;
+        setSidebarWidth(commit ? preferredSidebarWidth : resize.preferredWidth, { persist: commit });
+        appElement.removeAttribute("data-sidebar-resizing");
+        if (sidebarResizer.hasPointerCapture(resize.pointerId)) {
+          sidebarResizer.releasePointerCapture(resize.pointerId);
+        }
+      }
+
+      function resizeSidebarFromKeyboard(event) {
+        if (mobileSidebarQuery.matches || appElement.dataset.sidebar !== "open"
+            || sidebarResizeSession || event.altKey || event.ctrlKey || event.metaKey) return;
+        const width = Number(sidebarResizer.getAttribute("aria-valuenow"));
+        const step = event.shiftKey ? 50 : 10;
+        let nextWidth;
+        if (event.key === "ArrowLeft") nextWidth = width - step;
+        else if (event.key === "ArrowRight") nextWidth = width + step;
+        else if (event.key === "Home") nextWidth = minimumSidebarWidth;
+        else if (event.key === "End") nextWidth = sidebarWidthMaximum();
+        else return;
+        event.preventDefault();
+        setSidebarWidth(Math.max(minimumSidebarWidth, Math.min(sidebarWidthMaximum(), nextWidth)));
+      }
+
       function setSidebarOpen(open, { persist = true } = {}) {
+        finishSidebarResize(null, false);
         const focusToggle = !open && sidebarElement.contains(document.activeElement);
         const focusDismiss = open && mobileSidebarQuery.matches && mainElement.contains(document.activeElement);
         appElement.dataset.sidebar = open ? "open" : "closed";
@@ -2010,6 +2138,9 @@
         setSidebarOpen(appElement.dataset.sidebar !== "open");
       }
 
+      let storedSidebarWidth = null;
+      try { storedSidebarWidth = localStorage.getItem(sidebarWidthStorageKey); } catch {}
+      setSidebarWidth(storedSidebarWidth, { persist: false });
       let storedSidebarState = null;
       try { storedSidebarState = localStorage.getItem(sidebarStorageKey); } catch {}
       setSidebarOpen(storedSidebarState ? storedSidebarState === "open" : !mobileSidebarQuery.matches, { persist: false });
@@ -7045,6 +7176,19 @@
       sidebarToggle.addEventListener("click", toggleSidebar);
       sidebarDismiss.addEventListener("click", () => setSidebarOpen(false));
       sidebarBackdrop.addEventListener("click", () => setSidebarOpen(false));
+      sidebarResizer.addEventListener("pointerdown", startSidebarResize);
+      sidebarResizer.addEventListener("pointermove", continueSidebarResize);
+      sidebarResizer.addEventListener("pointerup", event => finishSidebarResize(event));
+      sidebarResizer.addEventListener("pointercancel", event => finishSidebarResize(event, false));
+      sidebarResizer.addEventListener("lostpointercapture", event => finishSidebarResize(event, false));
+      sidebarResizer.addEventListener("keydown", resizeSidebarFromKeyboard);
+      sidebarResizer.addEventListener("dblclick", () => setSidebarWidth(defaultSidebarWidth));
+      appElement.addEventListener("transitionend", event => {
+        if (event.target === appElement && event.propertyName === "grid-template-columns") {
+          scheduleSidebarWidthRefresh();
+        }
+      });
+      addEventListener("blur", () => finishSidebarResize(null, false));
       searchInput.addEventListener("input", () => {
         captureEditorValue();
         renderFiles();
@@ -7295,6 +7439,8 @@
         positionImageResizer();
       }, true);
       addEventListener("resize", () => {
+        finishSidebarResize(null, false);
+        setSidebarWidth(preferredSidebarWidth, { persist: false, remember: false });
         closeTableContextMenu();
         hideTableResizeHandle();
         closeFileContextMenu();
@@ -7304,6 +7450,11 @@
       });
       addEventListener("keydown", event => {
         if (drawingSession) return;
+        if (event.key === "Escape" && sidebarResizeSession) {
+          event.preventDefault();
+          finishSidebarResize(null, false);
+          return;
+        }
         if (event.key === "Escape" && mermaidPreviewDialog.open) {
           event.preventDefault();
           closeMermaidPreview();
